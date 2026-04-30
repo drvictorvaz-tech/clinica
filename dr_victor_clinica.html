@@ -998,12 +998,13 @@ async function startAnalysis() {
       system: SYSTEM,
       messages:[{role:'user',content:prompt}]
     };
-    const resp = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
         'x-api-key': cfg.key,
-        'anthropic-version':'2023-06-01'
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-tool-use':'true'
       },
       body: JSON.stringify(payload)
     });
@@ -1195,9 +1196,9 @@ async function saveConfig() {
   if(!cfg.key){ el.innerHTML='<span class="api-status err">❌ Chave vazia</span>'; return; }
 
   try {
-    const r = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01'},
+      headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-tool-use':'true'}},
       body:JSON.stringify({model:cfg.model,max_tokens:10,messages:[{role:'user',content:'ok'}]})
     });
     if(r.ok||r.status===400) {
