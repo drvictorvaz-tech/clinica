@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Victor — Clínica Integrativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Syne:wght@400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F0E;
+  --bg2:#131614;
+  --bg3:#181C1A;
+  --bg4:#1E2320;
+  --border:#2A302C;
+  --border2:#333C37;
+  --green:#3DBA7E;
+  --green2:#2D9B68;
+  --green-dim:#1A4D35;
+  --green-glow:rgba(61,186,126,0.08);
+  --green-glow2:rgba(61,186,126,0.15);
+  --text:#E8EDE9;
+  --text2:#9BA89E;
+  --text3:#5C6B62;
+  --amber:#D48B3A;
+  --amber-dim:#3D2A0F;
+  --red:#C05050;
+  --red-dim:#3D1515;
+  --blue:#4A8FD4;
+  --blue-dim:#152840;
+  --purple:#9B7ED4;
+  --purple-dim:#2A1F40;
+  --r:10px;
+  --r-sm:6px;
+  --shadow:0 2px 12px rgba(0,0,0,0.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.6);
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'Syne',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{font-size:15px}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── Noise texture overlay ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.4;
+}
+
+/* ── Layout ── */
+.app{display:grid;grid-template-columns:240px 1fr;grid-template-rows:56px 1fr;min-height:100vh;position:relative;z-index:1}
+
+/* ── Header ── */
+.header{
+  grid-column:1/-1;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:1rem;
+  padding:0 1.5rem;
+}
+.logo{
+  font-family:var(--font-display);
+  font-size:1.25rem;font-weight:400;
+  color:var(--text);letter-spacing:0.02em;
+}
+.logo em{color:var(--green);font-style:italic}
+.header-sep{width:1px;height:18px;background:var(--border2)}
+.header-tag{
+  font-family:var(--font-mono);font-size:0.65rem;
+  color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;
+}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:0.75rem}
+.pulse{
+  width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 3px rgba(61,186,126,0.2);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(61,186,126,0.2)}50%{box-shadow:0 0 0 7px rgba(61,186,126,0.05)}}
+.pulse-label{font-family:var(--font-mono);font-size:0.65rem;color:var(--text3)}
+
+/* ── Sidebar ── */
+.sidebar{
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  padding:1.25rem 0;
+  overflow-y:auto;
+}
+.nav-section{
+  font-family:var(--font-mono);font-size:0.6rem;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);padding:0 1rem;
+  margin:1rem 0 0.4rem;
+}
+.nav-section:first-child{margin-top:0}
+.nav-btn{
+  display:flex;align-items:center;gap:0.6rem;
+  width:100%;padding:0.5rem 1rem;
+  background:none;border:none;
+  color:var(--text2);font-family:var(--font-body);font-size:0.825rem;
+  cursor:pointer;text-align:left;
+  border-left:2px solid transparent;
+  transition:all 0.15s;
+}
+.nav-btn:hover{color:var(--text);background:var(--bg3)}
+.nav-btn.active{color:var(--green);background:var(--green-glow);border-left-color:var(--green)}
+.nav-icon{width:15px;height:15px;opacity:0.6;flex-shrink:0}
+.nav-btn.active .nav-icon{opacity:1}
+
+.sidebar-card{
+  margin:1rem 0.75rem 0;
+  padding:0.875rem;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+}
+.sidebar-card-title{
+  font-family:var(--font-mono);font-size:0.6rem;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:0.6rem;
+}
+.sidebar-stat{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:0.775rem;color:var(--text2);margin-bottom:0.25rem;
+}
+.sidebar-stat:last-child{margin-bottom:0}
+.sidebar-stat-val{
+  font-family:var(--font-mono);font-size:0.725rem;color:var(--green);
+}
+
+/* ── Main ── */
+.main{overflow-y:auto;display:flex;flex-direction:column;min-height:0}
+.view{display:none;flex:1;flex-direction:column;min-height:0}
+.view.active{display:flex}
+
+/* ── View header ── */
+.vheader{
+  padding:1.5rem 1.75rem 0;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+  flex-shrink:0;
+}
+.vtitle{
+  font-family:var(--font-display);
+  font-size:1.6rem;font-weight:400;
+  color:var(--text);margin-bottom:0.15rem;
+}
+.vtitle em{color:var(--green);font-style:italic}
+.vsub{font-size:0.775rem;color:var(--text3);margin-bottom:1.25rem}
+
+/* Steps */
+.steps{display:flex;gap:0;margin-bottom:-1px;overflow-x:auto}
+.step-tab{
+  display:flex;align-items:center;gap:0.5rem;
+  padding:0.55rem 1rem;
+  font-size:0.775rem;color:var(--text3);
+  cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;font-family:var(--font-body);
+  transition:all 0.15s;
+}
+.step-tab:hover{color:var(--text2)}
+.step-tab.active{color:var(--green);border-bottom-color:var(--green)}
+.step-tab.done{color:var(--green2)}
+.step-n{
+  width:17px;height:17px;border-radius:50%;
+  border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:0.6rem;font-weight:400;
+  flex-shrink:0;
+}
+.step-tab.done .step-n{background:var(--green2);border-color:var(--green2);color:#0D0F0E}
+
+/* ── Form ── */
+.form-scroll{flex:1;overflow-y:auto;padding:1.5rem 1.75rem}
+.fstep{display:none}
+.fstep.active{display:block;animation:fadein 0.2s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+.fsection{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.25rem;
+  margin-bottom:1rem;
+  box-shadow:var(--shadow);
+}
+.fsection-head{
+  display:flex;align-items:center;gap:0.6rem;
+  margin-bottom:1.125rem;
+  padding-bottom:0.75rem;
+  border-bottom:1px solid var(--border);
+}
+.fsection-icon{
+  width:26px;height:26px;border-radius:var(--r-sm);
+  background:var(--green-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;flex-shrink:0;
+}
+.fsection-title{font-size:0.825rem;font-weight:600;color:var(--text)}
+.fsection-desc{font-size:0.72rem;color:var(--text3)}
+
+.fgrid{display:grid;gap:0.875rem}
+.fgrid.c2{grid-template-columns:1fr 1fr}
+.fgrid.c3{grid-template-columns:1fr 1fr 1fr}
+.fgrid.c4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+.field label{
+  display:block;font-size:0.7rem;font-weight:500;
+  color:var(--text2);margin-bottom:0.3rem;letter-spacing:0.01em;
+}
+.field label .req{color:var(--green)}
+.field input,.field select,.field textarea{
+  width:100%;padding:0.45rem 0.7rem;
+  font-size:0.825rem;font-family:var(--font-body);
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  color:var(--text);outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  -webkit-appearance:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--green2);
+  box-shadow:0 0 0 3px rgba(61,186,126,0.1);
+  background:var(--bg4);
+}
+.field textarea{resize:vertical;min-height:72px;line-height:1.5}
+.field select{cursor:pointer}
+.field select option{background:var(--bg3)}
+
+/* EVA */
+.eva-row{display:flex;gap:4px}
+.eva-btn{
+  flex:1;height:34px;
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  background:var(--bg3);color:var(--text2);
+  font-family:var(--font-mono);font-size:0.75rem;
+  cursor:pointer;transition:all 0.12s;
+}
+.eva-btn:hover{border-color:var(--green);color:var(--green)}
+.eva-btn.s-low{background:var(--green-dim);border-color:var(--green);color:var(--green);font-weight:600}
+.eva-btn.s-mid{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);font-weight:600}
+.eva-btn.s-high{background:var(--red-dim);border-color:var(--red);color:var(--red);font-weight:600}
+
+/* Checkboxes */
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:5px}
+.chk{
+  display:flex;align-items:center;gap:7px;
+  padding:0.4rem 0.7rem;
+  border:1px solid var(--border2);
+  border-radius:var(--r-sm);
+  cursor:pointer;font-size:0.775rem;
+  color:var(--text2);background:var(--bg3);
+  transition:all 0.12s;user-select:none;
+}
+.chk:hover{border-color:var(--border2);color:var(--text)}
+.chk.on{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.chk input{display:none}
+.chk-box{
+  width:13px;height:13px;border-radius:3px;
+  border:1.5px solid var(--text3);flex-shrink:0;
+  transition:all 0.12s;
+}
+.chk.on .chk-box{
+  background:var(--green);border-color:var(--green);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%230D0F0E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-size:9px;background-position:center;background-repeat:no-repeat;
+}
+
+/* Form nav */
+.fnav{
+  padding:0.875rem 1.75rem;
+  border-top:1px solid var(--border);
+  background:var(--bg2);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:0.35rem;
+  padding:0.45rem 1.125rem;
+  border-radius:var(--r-sm);font-size:0.825rem;
+  font-family:var(--font-body);font-weight:500;
+  cursor:pointer;border:1px solid transparent;
+  transition:all 0.15s;
+}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-green{background:var(--green);color:#0D0F0E;border-color:var(--green)}
+.btn-green:hover{background:var(--green2)}
+.btn-green:disabled{opacity:0.35;cursor:not-allowed}
+.btn-sm{padding:0.3rem 0.75rem;font-size:0.75rem}
+
+/* ── Análise view ── */
+.analise-wrap{flex:1;display:grid;grid-template-columns:1fr 280px;overflow:hidden;min-height:0}
+.analise-main{overflow-y:auto;padding:1.5rem 1.75rem;border-right:1px solid var(--border)}
+.analise-side{overflow-y:auto;padding:1.25rem;background:var(--bg2)}
+
+/* Empty */
+.empty{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:320px;text-align:center;padding:2rem;
+}
+.empty-glyph{
+  font-family:var(--font-display);font-size:3rem;
+  color:var(--text3);margin-bottom:1rem;opacity:0.4;
+}
+.empty-t{font-family:var(--font-display);font-size:1.2rem;font-weight:400;color:var(--text2);margin-bottom:0.3rem}
+.empty-d{font-size:0.775rem;color:var(--text3);max-width:260px}
+
+/* Loading */
+.loading{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:320px;text-align:center;padding:2rem}
+.loading.on{display:flex}
+.loader{
+  width:48px;height:48px;border-radius:50%;
+  border:2px solid var(--border2);border-top-color:var(--green);
+  animation:spin 0.9s linear infinite;margin-bottom:1.25rem;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-t{font-family:var(--font-display);font-size:1.1rem;color:var(--text2);margin-bottom:0.4rem}
+.loading-s{font-family:var(--font-mono);font-size:0.7rem;color:var(--text3)}
+
+/* Result */
+.result{display:none;flex-direction:column}
+.result.on{display:flex}
+
+.patient-bar{
+  display:flex;align-items:center;gap:0.875rem;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:1rem 1.25rem;
+  margin-bottom:1rem;
+}
+.p-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--green-dim);border:1px solid var(--green-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:0.9rem;color:var(--green);
+  flex-shrink:0;
+}
+.p-name{font-weight:600;font-size:0.875rem}
+.p-meta{font-size:0.72rem;color:var(--text3)}
+.p-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:0.5rem}
+.p-chip{
+  font-family:var(--font-mono);font-size:0.62rem;
+  padding:0.18rem 0.5rem;border-radius:20px;
+  background:var(--bg4);border:1px solid var(--border2);color:var(--text2);
+}
+.p-chip.g{background:var(--green-dim);border-color:var(--green-dim);color:var(--green)}
+
+/* Result sections */
+.rsec{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:0.75rem;overflow:hidden;
+}
+.rsec-head{
+  display:flex;align-items:center;gap:0.75rem;
+  padding:0.75rem 1.125rem;cursor:pointer;
+  transition:background 0.12s;border-bottom:1px solid var(--border);
+}
+.rsec-head:hover{background:var(--bg3)}
+.rtag{
+  font-family:var(--font-mono);font-size:0.6rem;
+  font-weight:400;letter-spacing:0.08em;text-transform:uppercase;
+  padding:0.18rem 0.55rem;border-radius:20px;
+}
+.t-corr{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,126,212,0.2)}
+.t-hipo{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,143,212,0.2)}
+.t-exam{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(212,139,58,0.2)}
+.t-plan{background:var(--green-dim);color:var(--green);border:1px solid rgba(61,186,126,0.2)}
+.t-pac {background:var(--bg4);color:var(--text2);border:1px solid var(--border2)}
+.rsec-title{flex:1;font-size:0.825rem;font-weight:500}
+.rsec-arr{color:var(--text3);font-size:0.7rem;transition:transform 0.2s}
+.rsec.col .rsec-arr{transform:rotate(-90deg)}
+.rsec-body{
+  padding:1.125rem;
+  font-size:0.825rem;line-height:1.8;
+  color:var(--text2);white-space:pre-wrap;word-break:break-word;
+}
+.rsec.col .rsec-body{display:none}
+
+/* Sources sidebar */
+.s-title{font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:0.875rem}
+.src-card{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:0.7rem;margin-bottom:0.5rem;
+}
+.src-area{font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.2rem}
+.src-name{font-size:0.775rem;font-weight:500;color:var(--text)}
+.src-sec{font-size:0.72rem;color:var(--text3);font-style:italic}
+.src-rel{display:flex;align-items:center;gap:5px;margin-top:0.35rem;font-family:var(--font-mono);font-size:0.65rem;color:var(--green2)}
+.rbar{width:50px;height:2px;background:var(--border2);border-radius:1px}
+.rfill{height:100%;background:var(--green2);border-radius:1px}
+
+/* ── Config view ── */
+.cfg-wrap{flex:1;overflow-y:auto;padding:1.5rem 1.75rem}
+.cfg-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.25rem;
+  margin-bottom:1rem;max-width:560px;
+}
+.cfg-title{
+  font-size:0.825rem;font-weight:600;
+  margin-bottom:1rem;padding-bottom:0.75rem;
+  border-bottom:1px solid var(--border);
+}
+.cfg-field{margin-bottom:0.875rem}
+.cfg-field:last-child{margin-bottom:0}
+.cfg-field label{display:block;font-size:0.7rem;font-weight:500;color:var(--text2);margin-bottom:0.3rem}
+.cfg-field input,.cfg-field select{
+  width:100%;padding:0.45rem 0.7rem;
+  font-size:0.825rem;font-family:var(--font-body);
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r-sm);color:var(--text);outline:none;
+}
+.cfg-field input:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(61,186,126,0.1)}
+.cfg-field .hint{font-size:0.68rem;color:var(--text3);margin-top:0.25rem}
+.cfg-save{
+  display:inline-flex;align-items:center;gap:0.35rem;
+  padding:0.45rem 1.125rem;
+  background:var(--green);color:#0D0F0E;
+  border:none;border-radius:var(--r-sm);
+  font-size:0.825rem;font-weight:500;font-family:var(--font-body);
+  cursor:pointer;transition:background 0.15s;
+}
+.cfg-save:hover{background:var(--green2)}
+.api-status{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  font-family:var(--font-mono);font-size:0.7rem;
+  padding:0.3rem 0.7rem;border-radius:20px;
+  margin-top:0.5rem;
+}
+.api-status.ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(61,186,126,0.2)}
+.api-status.err{background:var(--red-dim);color:var(--red);border:1px solid rgba(192,80,80,0.2)}
+
+/* ── Histórico ── */
+.hist-wrap{flex:1;overflow-y:auto;padding:1.5rem 1.75rem}
+.hist-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:1rem 1.25rem;
+  margin-bottom:0.75rem;cursor:pointer;
+  transition:border-color 0.15s,box-shadow 0.15s;
+}
+.hist-card:hover{border-color:var(--green-dim);box-shadow:var(--shadow-lg)}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.4rem}
+.hist-name{font-weight:600;font-size:0.875rem}
+.hist-time{font-family:var(--font-mono);font-size:0.68rem;color:var(--text3)}
+.hist-q{font-size:0.775rem;color:var(--text2);margin-bottom:0.4rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hist-tags{display:flex;flex-wrap:wrap;gap:4px}
+.hist-tag{font-family:var(--font-mono);font-size:0.6rem;padding:0.15rem 0.45rem;border-radius:20px;background:var(--green-dim);color:var(--green);border:1px solid rgba(61,186,126,0.15)}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:1.25rem;right:1.25rem;
+  background:var(--bg4);color:var(--text);
+  border:1px solid var(--border2);
+  padding:0.65rem 1.125rem;border-radius:var(--r);
+  font-size:0.8rem;box-shadow:var(--shadow-lg);
+  transform:translateY(120%);
+  transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  z-index:9999;max-width:300px;
+}
+.toast.show{transform:translateY(0)}
+.toast.ok{border-color:var(--green-dim);background:var(--green-dim);color:var(--green)}
+.toast.err{border-color:var(--red-dim);background:var(--red-dim);color:var(--red)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+@media(max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .analise-wrap{grid-template-columns:1fr}
+  .analise-side{display:none}
+  .fgrid.c3,.fgrid.c4{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">Dr. <em>Victor</em></div>
+  <div class="header-sep"></div>
+  <div class="header-tag">Clínica Integrativa · DTM · Sono · Bruxismo</div>
+  <div class="header-right">
+    <div class="pulse" id="pulseDot"></div>
+    <div class="pulse-label" id="pulseLabel">IA pronta</div>
+  </div>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-section">Consulta</div>
+  <button class="nav-btn active" id="nb-anamnese" onclick="goView('anamnese',this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Nova Anamnese
+  </button>
+  <button class="nav-btn" id="nb-analise" onclick="goView('analise',this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+    Análise IA
+  </button>
+  <button class="nav-btn" id="nb-historico" onclick="goView('historico',this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Histórico
+  </button>
+  <div class="nav-section">Sistema</div>
+  <button class="nav-btn" id="nb-config" onclick="goView('config',this)">
+    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Configurações
+  </button>
+  <div class="sidebar-card">
+    <div class="sidebar-card-title">Sistema</div>
+    <div class="sidebar-stat"><span>Modelo</span><span class="sidebar-stat-val" id="sModel">—</span></div>
+    <div class="sidebar-stat"><span>API</span><span class="sidebar-stat-val" id="sApi">—</span></div>
+    <div class="sidebar-stat"><span>Análises</span><span class="sidebar-stat-val" id="sCount">0</span></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ── VIEW ANAMNESE ── -->
+<section class="view active" id="view-anamnese">
+  <div class="vheader">
+    <div class="vtitle">Nova <em>anamnese</em></div>
+    <div class="vsub">Preencha os dados clínicos para análise integrativa completa</div>
+    <div class="steps">
+      <button class="step-tab active" id="tab0" onclick="goStep(0)"><div class="step-n">1</div>Identificação</button>
+      <button class="step-tab" id="tab1" onclick="goStep(1)"><div class="step-n">2</div>Dor & Queixa</button>
+      <button class="step-tab" id="tab2" onclick="goStep(2)"><div class="step-n">3</div>Sono & Bruxismo</button>
+      <button class="step-tab" id="tab3" onclick="goStep(3)"><div class="step-n">4</div>DTM & Sistêmico</button>
+      <button class="step-tab" id="tab4" onclick="goStep(4)"><div class="step-n">5</div>Exames & Histórico</button>
+    </div>
+  </div>
+  <div class="form-scroll">
+
+    <!-- STEP 0 -->
+    <div class="fstep active" id="fs0">
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">👤</div><div><div class="fsection-title">Dados do paciente</div><div class="fsection-desc">Informações gerais</div></div></div>
+        <div class="fgrid c3">
+          <div class="field" style="grid-column:1/3"><label>Nome completo <span class="req">*</span></label><input id="f_nome" placeholder="Nome do paciente"></div>
+          <div class="field"><label>Idade</label><input id="f_idade" type="number" placeholder="anos" min="0" max="120"></div>
+        </div>
+        <div class="fgrid c4" style="margin-top:0.875rem">
+          <div class="field"><label>Sexo biológico</label><select id="f_sexo"><option value="">—</option><option>Feminino</option><option>Masculino</option></select></div>
+          <div class="field"><label>Profissão</label><input id="f_profissao" placeholder="Ex: professora"></div>
+          <div class="field"><label>Estado civil</label><select id="f_ecivil"><option value="">—</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></div>
+          <div class="field"><label>Estresse (1–10)</label><input id="f_estresse" type="number" min="1" max="10" placeholder="1–10"></div>
+        </div>
+      </div>
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">💬</div><div><div class="fsection-title">Queixa principal</div></div></div>
+        <div class="field"><label>Queixa nas palavras do paciente <span class="req">*</span></label><textarea id="f_queixa" placeholder="Ex: Acordo todo dia com dor na cabeça e a mandíbula travada..."></textarea></div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Tempo de evolução</label><input id="f_evolucao" placeholder="Ex: 2 anos, desde o divórcio..."></div>
+          <div class="field"><label>Evento desencadeante</label><input id="f_evento" placeholder="Ex: acidente, extração, estresse..."></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="fstep" id="fs1">
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">⚡</div><div><div class="fsection-title">Caracterização da dor</div></div></div>
+        <div class="field" style="margin-bottom:0.875rem">
+          <label>Localização (selecione todas)</label>
+          <div class="checks">
+            <label class="chk"><input type="checkbox" class="cl" value="ATM bilateral"><div class="chk-box"></div>ATM bilateral</label>
+            <label class="chk"><input type="checkbox" class="cl" value="ATM direita"><div class="chk-box"></div>ATM direita</label>
+            <label class="chk"><input type="checkbox" class="cl" value="ATM esquerda"><div class="chk-box"></div>ATM esquerda</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Temporal bilateral"><div class="chk-box"></div>Temporal bilateral</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Masseter"><div class="chk-box"></div>Masseter</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Cervical / pescoço"><div class="chk-box"></div>Cervical / pescoço</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Occipital"><div class="chk-box"></div>Occipital</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Ombros"><div class="chk-box"></div>Ombros</label>
+            <label class="chk"><input type="checkbox" class="cl" value="Difusa / generalizada"><div class="chk-box"></div>Difusa</label>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0.875rem">
+          <label>Intensidade — EVA (0 a 10)</label>
+          <div class="eva-row" id="evaRow">
+            <button class="eva-btn" onclick="setEva(this,0)">0</button><button class="eva-btn" onclick="setEva(this,1)">1</button><button class="eva-btn" onclick="setEva(this,2)">2</button><button class="eva-btn" onclick="setEva(this,3)">3</button><button class="eva-btn" onclick="setEva(this,4)">4</button><button class="eva-btn" onclick="setEva(this,5)">5</button><button class="eva-btn" onclick="setEva(this,6)">6</button><button class="eva-btn" onclick="setEva(this,7)">7</button><button class="eva-btn" onclick="setEva(this,8)">8</button><button class="eva-btn" onclick="setEva(this,9)">9</button><button class="eva-btn" onclick="setEva(this,10)">10</button>
+          </div>
+        </div>
+        <div class="fgrid c2">
+          <div class="field"><label>Padrão temporal</label><select id="f_dpadrao"><option value="">—</option><option>Pior ao acordar</option><option>Piora ao longo do dia</option><option>Constante</option><option>Episódica / em crises</option><option>Noturna</option></select></div>
+          <div class="field"><label>Fatores de piora</label><input id="f_dpiora" placeholder="Ex: mastigação, estresse, frio..."></div>
+        </div>
+      </div>
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">🧠</div><div><div class="fsection-title">Sintomas associados</div></div></div>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" class="cs" value="Cefaleia / enxaqueca"><div class="chk-box"></div>Cefaleia / enxaqueca</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Zumbido (tinnitus)"><div class="chk-box"></div>Zumbido (tinnitus)</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Tontura / vertigem"><div class="chk-box"></div>Tontura / vertigem</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Otalgia (dor no ouvido)"><div class="chk-box"></div>Otalgia</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Ouvido entupido"><div class="chk-box"></div>Ouvido entupido</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Fadiga crônica"><div class="chk-box"></div>Fadiga crônica</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Ansiedade"><div class="chk-box"></div>Ansiedade</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Depressão"><div class="chk-box"></div>Depressão</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Fibromialgia"><div class="chk-box"></div>Fibromialgia</label>
+          <label class="chk"><input type="checkbox" class="cs" value="Fotofobia / fonofobia"><div class="chk-box"></div>Fotofobia</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="fstep" id="fs2">
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">🌙</div><div><div class="fsection-title">Padrão de sono</div></div></div>
+        <div class="fgrid c2">
+          <div class="field"><label>Qualidade subjetiva</label><select id="f_sonoq"><option value="">—</option><option>Boa — acorda descansado</option><option>Regular — às vezes cansado</option><option>Ruim — frequentemente cansado</option><option>Péssima — sempre cansado</option></select></div>
+          <div class="field"><label>Horas de sono (média)</label><input id="f_sonoh" type="number" placeholder="horas" min="0" max="24" step="0.5"></div>
+        </div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Tipo de insônia</label><select id="f_insonia"><option value="">Sem insônia</option><option>Inicial (difícil adormecer)</option><option>Manutenção (acorda à noite)</option><option>Terminal (acorda cedo)</option><option>Mista</option></select></div>
+          <div class="field"><label>Posição de dormir</label><select id="f_posicao"><option value="">—</option><option>De costas</option><option>Lateral direito</option><option>Lateral esquerdo</option><option>De barriga</option><option>Varia muito</option></select></div>
+        </div>
+        <div class="field" style="margin-top:0.875rem"><label>Observações sobre o sono</label><textarea id="f_sonoobs" placeholder="Ex: apneia diagnosticada, acorda com cefaleia, pesadelos frequentes..."></textarea></div>
+      </div>
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">😬</div><div><div class="fsection-title">Bruxismo e parafunções</div></div></div>
+        <div class="fgrid c2">
+          <div class="field"><label>Bruxismo relatado</label><select id="f_brux"><option value="">—</option><option>Não relatado</option><option>Noturno (relatado por terceiros)</option><option>Diurno (consciente)</option><option>Misto (noturno e diurno)</option></select></div>
+          <div class="field"><label>Dispositivo intraoral</label><select id="f_placa"><option value="">—</option><option>Não usa</option><option>Placa Michigan</option><option>Placa de mordida anterior</option><option>Outro dispositivo</option><option>Já usou, parou</option></select></div>
+        </div>
+        <div class="field" style="margin-top:0.875rem"><label>Parafunções (selecione)</label>
+          <div class="checks">
+            <label class="chk"><input type="checkbox" class="cp" value="Morder unhas"><div class="chk-box"></div>Morder unhas</label>
+            <label class="chk"><input type="checkbox" class="cp" value="Morder objetos"><div class="chk-box"></div>Morder objetos</label>
+            <label class="chk"><input type="checkbox" class="cp" value="Morder bochecha/lábio"><div class="chk-box"></div>Morder bochecha/lábio</label>
+            <label class="chk"><input type="checkbox" class="cp" value="Apertar dentes em vigília"><div class="chk-box"></div>Apertar dentes</label>
+            <label class="chk"><input type="checkbox" class="cp" value="Apoiar mento na mão"><div class="chk-box"></div>Apoiar mento</label>
+            <label class="chk"><input type="checkbox" class="cp" value="Mascar chiclete frequente"><div class="chk-box"></div>Mascar chiclete</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="fstep" id="fs3">
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">🦷</div><div><div class="fsection-title">Sinais de DTM</div></div></div>
+        <div class="checks">
+          <label class="chk"><input type="checkbox" class="cd" value="Travamento mandibular"><div class="chk-box"></div>Travamento</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Estalido na ATM"><div class="chk-box"></div>Estalido ATM</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Crepitação na ATM"><div class="chk-box"></div>Crepitação</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Limitação de abertura"><div class="chk-box"></div>Limitação abertura</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Desvio mandibular na abertura"><div class="chk-box"></div>Desvio mandibular</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Dificuldade para mastigar"><div class="chk-box"></div>Dif. mastigar</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Dor ao mastigar"><div class="chk-box"></div>Dor ao mastigar</label>
+          <label class="chk"><input type="checkbox" class="cd" value="Sensibilidade dental difusa"><div class="chk-box"></div>Sensib. dental</label>
+        </div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Abertura bucal estimada</label><input id="f_abertura" placeholder="Ex: 32mm, limitada, normal"></div>
+          <div class="field"><label>Diagnóstico DTM prévio</label><select id="f_diagdtm"><option value="">—</option><option>Sem diagnóstico prévio</option><option>DTM articular</option><option>DTM muscular</option><option>DTM misto</option><option>Deslocamento de disco</option></select></div>
+        </div>
+      </div>
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">🫀</div><div><div class="fsection-title">Sistêmico e medicamentos</div></div></div>
+        <div class="fgrid c2">
+          <div class="field"><label>Doenças sistêmicas</label><input id="f_sistemicas" placeholder="Ex: hipotireoidismo, fibromialgia..."></div>
+          <div class="field"><label>Tratamentos anteriores para DTM</label><input id="f_tratant" placeholder="Ex: placa, fisio, botox..."></div>
+        </div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Medicamentos em uso</label><textarea id="f_meds" style="min-height:60px" placeholder="Nome, dose, frequência..."></textarea></div>
+          <div class="field"><label>Suplementos em uso</label><textarea id="f_sups" style="min-height:60px" placeholder="Ex: magnésio, vitamina D..."></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="fstep" id="fs4">
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">🔬</div><div><div class="fsection-title">Exames disponíveis</div><div class="fsection-desc">Cole os valores ou descreva os resultados</div></div></div>
+        <div class="field"><label>Exames laboratoriais</label><textarea id="f_labs" placeholder="Ex: ferritina 19, vitamina D 33, TSH 1.96, PCR 0.02, magnésio 2.2, testosterona 3.4..."></textarea></div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Exames de imagem</label><textarea id="f_img" style="min-height:60px" placeholder="Ex: RNM ATM — deslocamento de disco sem redução à esquerda..."></textarea></div>
+          <div class="field"><label>Polissonografia</label><textarea id="f_poli" style="min-height:60px" placeholder="Ex: IAH 12, bruxismo 8 episódios/h..."></textarea></div>
+        </div>
+      </div>
+      <div class="fsection">
+        <div class="fsection-head"><div class="fsection-icon">📋</div><div><div class="fsection-title">Histórico e contexto</div></div></div>
+        <div class="field"><label>Histórico clínico relevante</label><textarea id="f_hist" placeholder="Tratamentos anteriores, cirurgias, traumas, histórico familiar..."></textarea></div>
+        <div class="fgrid c2" style="margin-top:0.875rem">
+          <div class="field"><label>Contexto de vida atual</label><input id="f_ctx" placeholder="Ex: home office, sobrecarga, conflitos..."></div>
+          <div class="field"><label>Observações do dentista</label><input id="f_obs" placeholder="Achados clínicos, hipóteses iniciais..."></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /form-scroll -->
+  <div class="fnav">
+    <button class="btn btn-ghost" id="btnV" onclick="goStep(cur-1)" style="display:none">← Voltar</button>
+    <div style="display:flex;gap:0.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="clearForm()">Limpar</button>
+      <button class="btn btn-ghost" id="btnA" onclick="goStep(cur+1)">Avançar →</button>
+      <button class="btn btn-green" id="btnI" onclick="startAnalysis()" style="display:none">Analisar com IA ✦</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── VIEW ANÁLISE ── -->
+<section class="view" id="view-analise">
+  <div class="vheader">
+    <div class="vtitle">Análise <em>integrativa</em></div>
+    <div class="vsub" id="aSubtitle">Resultado da análise clínica com base no raciocínio integrativo</div>
+  </div>
+  <div class="analise-wrap">
+    <div class="analise-main">
+      <div class="empty" id="emptyA">
+        <div class="empty-glyph">✦</div>
+        <div class="empty-t">Nenhuma análise ainda</div>
+        <div class="empty-d">Preencha a anamnese e clique em "Analisar com IA"</div>
+      </div>
+      <div class="loading" id="loadingA">
+        <div class="loader"></div>
+        <div class="loading-t">Analisando quadro clínico</div>
+        <div class="loading-s" id="loadingMsg">Processando correlações clínicas...</div>
+      </div>
+      <div class="result" id="resultA">
+        <div id="patientBar"></div>
+        <div id="resultSecs"></div>
+      </div>
+    </div>
+    <div class="analise-side">
+      <div class="s-title">Raciocínio clínico</div>
+      <div id="sourcesBox"><div style="font-size:0.75rem;color:var(--text3)">As áreas clínicas identificadas aparecerão aqui.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VIEW HISTÓRICO ── -->
+<section class="view" id="view-historico">
+  <div class="vheader">
+    <div class="vtitle"><em>Histórico</em> de análises</div>
+    <div class="vsub">Análises realizadas nesta sessão</div>
+  </div>
+  <div class="hist-wrap" id="histWrap">
+    <div class="empty">
+      <div class="empty-glyph">📂</div>
+      <div class="empty-t" style="font-size:1rem">Sem registros</div>
+      <div class="empty-d">As análises realizadas aparecerão aqui</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VIEW CONFIG ── -->
+<section class="view" id="view-config">
+  <div class="vheader">
+    <div class="vtitle"><em>Configurações</em></div>
+    <div class="vsub">Configure sua API key da Anthropic para usar o sistema</div>
+  </div>
+  <div class="cfg-wrap">
+    <div class="cfg-card">
+      <div class="cfg-title">🔑 API Key da Anthropic</div>
+      <div class="cfg-field">
+        <label>Sua API Key</label>
+        <input type="password" id="cfg_key" placeholder="sk-ant-api03-...">
+        <div class="hint">
+          Obtenha em <strong>console.anthropic.com</strong> → API Keys → Create Key.<br>
+          A chave é salva no seu navegador e não sai do seu dispositivo.
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.875rem;margin-top:0.875rem">
+        <button class="cfg-save" onclick="saveConfig()">Salvar e testar conexão</button>
+        <div id="apiStatusEl"></div>
+      </div>
+    </div>
+    <div class="cfg-card">
+      <div class="cfg-title">⚙️ Parâmetros da análise</div>
+      <div class="cfg-field">
+        <label>Modelo Claude</label>
+        <select id="cfg_model">
+          <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 — Rápido e preciso (recomendado)</option>
+          <option value="claude-opus-4-6">Claude Opus 4.6 — Máxima profundidade</option>
+        </select>
+        <div class="hint">Sonnet é ideal para uso diário em clínica. Opus para casos muito complexos.</div>
+      </div>
+      <button class="cfg-save" onclick="saveConfig()">Salvar</button>
+    </div>
+    <div class="cfg-card">
+      <div class="cfg-title">📖 Como usar</div>
+      <div style="font-size:0.8rem;color:var(--text2);line-height:1.8">
+        <strong style="color:var(--green)">1.</strong> Gere sua API key em <strong>console.anthropic.com</strong><br>
+        <strong style="color:var(--green)">2.</strong> Cole a chave acima e clique em "Salvar e testar"<br>
+        <strong style="color:var(--green)">3.</strong> Vá em "Nova Anamnese" e preencha os dados do paciente<br>
+        <strong style="color:var(--green)">4.</strong> Clique em "Analisar com IA" no último passo<br>
+        <strong style="color:var(--green)">5.</strong> A análise integrativa completa será gerada em segundos<br><br>
+        <strong style="color:var(--text3)">Custo estimado:</strong> ~R$ 0,10–0,30 por análise completa<br>
+        <strong style="color:var(--text3)">Funciona em:</strong> PC, notebook, tablet (qualquer navegador)
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Estado global ──────────────────────────────────────────────────────────
+let cur = 0;
+const STEPS = 5;
+let evaVal = null;
+let sessions = [];
+let cfg = {
+  key:   localStorage.getItem('dv_key')   || '',
+  model: localStorage.getItem('dv_model') || 'claude-sonnet-4-6'
+};
+
+// Aplica config
+if(cfg.key)   document.getElementById('cfg_key').value   = cfg.key;
+if(cfg.model) document.getElementById('cfg_model').value = cfg.model;
+updateSidebar();
+
+// ── Navegação views ────────────────────────────────────────────────────────
+function goView(id, btn) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── Steps ──────────────────────────────────────────────────────────────────
+function goStep(n) {
+  if(n<0||n>=STEPS) return;
+  document.getElementById('fs'+cur).classList.remove('active');
+  document.getElementById('tab'+cur).classList.remove('active');
+  if(cur<n) document.getElementById('tab'+cur).classList.add('done');
+  cur=n;
+  document.getElementById('fs'+cur).classList.add('active');
+  document.getElementById('tab'+cur).classList.remove('done');
+  document.getElementById('tab'+cur).classList.add('active');
+  document.getElementById('btnV').style.display = n>0?'inline-flex':'none';
+  document.getElementById('btnA').style.display = n<STEPS-1?'inline-flex':'none';
+  document.getElementById('btnI').style.display = n===STEPS-1?'inline-flex':'none';
+}
+
+// ── EVA ────────────────────────────────────────────────────────────────────
+function setEva(btn,v) {
+  evaVal=v;
+  document.querySelectorAll('.eva-btn').forEach(b=>b.className='eva-btn');
+  btn.className='eva-btn '+(v<=3?'s-low':v<=6?'s-mid':'s-high');
+}
+
+// ── Checkboxes ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.chk').forEach(el=>{
+  el.addEventListener('click',()=>{
+    el.classList.toggle('on');
+    el.querySelector('input').checked=el.classList.contains('on');
+  });
+});
+
+// ── Coletar dados ──────────────────────────────────────────────────────────
+function g(id){return(document.getElementById(id)||{}).value||''}
+function checks(cls){return Array.from(document.querySelectorAll('.'+cls+':checked')).map(i=>i.value).join(', ')||''}
+
+function getDados(){
+  return {
+    nome:          g('f_nome'),
+    idade:         g('f_idade'),
+    sexo:          g('f_sexo'),
+    profissao:     g('f_profissao'),
+    estado_civil:  g('f_ecivil'),
+    estresse:      g('f_estresse'),
+    queixa:        g('f_queixa'),
+    evolucao:      g('f_evolucao'),
+    evento:        g('f_evento'),
+    dor_local:     checks('cl'),
+    eva:           evaVal!==null?String(evaVal):'',
+    dor_padrao:    g('f_dpadrao'),
+    dor_piora:     g('f_dpiora'),
+    sintomas:      checks('cs'),
+    sono_qual:     g('f_sonoq'),
+    sono_horas:    g('f_sonoh'),
+    insonia:       g('f_insonia'),
+    posicao_sono:  g('f_posicao'),
+    sono_obs:      g('f_sonoobs'),
+    bruxismo:      g('f_brux'),
+    placa:         g('f_placa'),
+    parafuncoes:   checks('cp'),
+    dtm_sinais:    checks('cd'),
+    abertura:      g('f_abertura'),
+    diag_dtm:      g('f_diagdtm'),
+    sistemicas:    g('f_sistemicas'),
+    trat_anterior: g('f_tratant'),
+    medicamentos:  g('f_meds'),
+    suplementos:   g('f_sups'),
+    labs:          g('f_labs'),
+    imagem:        g('f_img'),
+    polissonografia: g('f_poli'),
+    historico:     g('f_hist'),
+    contexto:      g('f_ctx'),
+    obs:           g('f_obs'),
+  };
+}
+
+function clearForm() {
+  document.querySelectorAll('#view-anamnese input[type=text],#view-anamnese input[type=number],#view-anamnese textarea').forEach(i=>i.value='');
+  document.querySelectorAll('#view-anamnese select').forEach(s=>s.value='');
+  document.querySelectorAll('.chk').forEach(c=>{c.classList.remove('on');c.querySelector('input').checked=false;});
+  document.querySelectorAll('.eva-btn').forEach(b=>b.className='eva-btn');
+  evaVal=null;
+  goStep(0);
+  toast('Formulário limpo','ok');
+}
+
+// ── System prompt clínico ──────────────────────────────────────────────────
+const SYSTEM = `Você é o assistente clínico do Dr. Victor Vaz, cirurgião-dentista especialista em DTM (Disfunção Temporomandibular), bruxismo, sono e dor crônica, com pós-graduação em dor e foco em saúde integrativa e funcional.
+
+Seu raciocínio clínico segue o modelo biopsicossocial e integra:
+- Eixo estrutural/oclusal: ATM, músculos mastigatórios, coluna cervical
+- Eixo neurológico: sensibilização central, processamento da dor, sistema trigeminal
+- Eixo do sono: bruxismo do sono, apneia, qualidade e arquitetura do sono
+- Eixo inflamatório/metabólico: marcadores laboratoriais, nutrição, suplementação
+- Eixo hormonal: cortisol, tireoide, testosterona, estrogênio e impacto na dor
+- Eixo emocional-comportamental: estresse, ansiedade, catastrofização da dor, ACT/TCC
+
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA — use exatamente estes títulos:
+
+## 1. CORRELAÇÕES CLÍNICAS
+Analise as conexões entre os sistemas envolvidos. Sempre explore:
+→ Tríade DTM–sono–bruxismo (presente em praticamente todos os casos)
+→ Eixo neuroinflamatório e sensibilização central se EVA ≥ 5
+→ Eixo hormonal/metabólico se dados laboratoriais disponíveis
+→ Carga alostática: estresse + sono ruim + dor = ciclo vicioso
+
+## 2. HIPÓTESES DIAGNÓSTICAS INTEGRADAS
+Liste por probabilidade clínica. Para cada hipótese:
+- Mecanismo fisiopatológico
+- Evidências que sustentam (dados do paciente)
+- Classificação RDC/TMD quando aplicável
+
+## 3. EXAMES COMPLEMENTARES SUGERIDOS
+Para cada exame: justificativa clínica específica para ESTE paciente.
+Considere: laboratoriais (ferritina, vitamina D, TSH, cortisol salivar, magnésio, PCR-us), imagem (RNM ATM, CBCT), funcionais (polissonografia, EMG de superfície)
+
+## 4. PLANO DE TRATAMENTO INTEGRATIVO
+Organizado em fases:
+FASE 1 — Controle da dor aguda (primeiras 2-4 semanas)
+FASE 2 — Modulação causal (1-3 meses)
+FASE 3 — Manutenção e prevenção (longo prazo)
+Inclua: dispositivo oclusal, fisioterapia, suplementação, abordagem comportamental, encaminhamentos
+
+## 5. RESUMO PARA O PACIENTE
+Linguagem simples, empática, sem jargão técnico.
+Explique: o que está acontecendo, por que acontece, o que será feito e o que o paciente pode fazer em casa já hoje.
+
+REGRAS:
+- Seja clinicamente preciso e específico para os dados apresentados
+- Evite generalizações — use os dados do paciente para personalizar
+- Se dados insuficientes em alguma área, mencione e sugira como obtê-los
+- Tom profissional e direto`;
+
+// ── Análise ────────────────────────────────────────────────────────────────
+async function startAnalysis() {
+  if(!cfg.key) {
+    toast('Configure sua API key em Configurações','err');
+    goView('config', document.getElementById('nb-config'));
+    return;
+  }
+  const dados = getDados();
+  if(!dados.nome || !dados.queixa) { toast('Preencha nome e queixa principal','err'); return; }
+
+  // Muda para view análise
+  goView('analise', document.getElementById('nb-analise'));
+  document.getElementById('emptyA').style.display='none';
+  document.getElementById('loadingA').classList.add('on');
+  document.getElementById('resultA').classList.remove('on');
+
+  const msgs = [
+    'Identificando padrões clínicos...',
+    'Correlacionando DTM, sono e bruxismo...',
+    'Analisando eixo neuroinflamatório...',
+    'Verificando dados laboratoriais...',
+    'Sintetizando plano integrativo...',
+    'Gerando resumo para o paciente...'
+  ];
+  let mi=0;
+  const iv = setInterval(()=>{ mi=(mi+1)%msgs.length; document.getElementById('loadingMsg').textContent=msgs[mi]; },2200);
+
+  try {
+    const prompt = montarPrompt(dados);
+    const payload = {
+      model: cfg.model,
+      max_tokens: 4000,
+      system: SYSTEM,
+      messages:[{role:'user',content:prompt}]
+    };
+    const resp = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': cfg.key,
+        'anthropic-version':'2023-06-01'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if(!resp.ok) {
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message || 'Erro '+resp.status);
+    }
+
+    const data = await resp.json();
+    const texto = data.content[0].text;
+    clearInterval(iv);
+    renderResult(dados, texto);
+    addHistory(dados, texto);
+    updateSidebar();
+
+  } catch(e) {
+    clearInterval(iv);
+    document.getElementById('loadingA').classList.remove('on');
+    document.getElementById('emptyA').style.display='flex';
+    document.getElementById('emptyA').innerHTML=`
+      <div style="background:var(--red-dim);border:1px solid rgba(192,80,80,0.3);border-radius:var(--r);padding:1.25rem;text-align:left;max-width:440px">
+        <div style="color:var(--red);font-weight:600;margin-bottom:0.5rem">Erro ao chamar a API</div>
+        <div style="font-size:0.8rem;color:var(--text2);line-height:1.6">${e.message}</div>
+        <div style="font-size:0.75rem;color:var(--text3);margin-top:0.75rem">
+          Verifique se a API key está correta em Configurações.<br>
+          Acesse <strong>console.anthropic.com</strong> para criar ou copiar sua chave.
+        </div>
+      </div>`;
+    toast('Erro: '+e.message,'err');
+  }
+}
+
+function montarPrompt(d) {
+  const linhas = ['DADOS DO PACIENTE:\n'];
+  const add = (label,val) => { if(val && val!=='Nenhum' && val!=='—') linhas.push(`• ${label}: ${val}`); };
+  add('Nome', d.nome);
+  add('Idade', d.idade ? d.idade+' anos' : '');
+  add('Sexo', d.sexo);
+  add('Profissão', d.profissao);
+  add('Estado civil', d.estado_civil);
+  add('Nível de estresse percebido', d.estresse ? d.estresse+'/10' : '');
+  add('Queixa principal', d.queixa);
+  add('Tempo de evolução', d.evolucao);
+  add('Evento desencadeante', d.evento);
+  add('Localização da dor', d.dor_local);
+  add('Intensidade da dor (EVA)', d.eva ? d.eva+'/10' : '');
+  add('Padrão temporal da dor', d.dor_padrao);
+  add('Fatores de piora', d.dor_piora);
+  add('Sintomas associados', d.sintomas);
+  add('Qualidade do sono', d.sono_qual);
+  add('Horas de sono', d.sono_horas ? d.sono_horas+'h/noite' : '');
+  add('Tipo de insônia', d.insonia);
+  add('Posição ao dormir', d.posicao_sono);
+  add('Observações sobre sono', d.sono_obs);
+  add('Bruxismo', d.bruxismo);
+  add('Dispositivo intraoral', d.placa);
+  add('Parafunções', d.parafuncoes);
+  add('Sinais de DTM', d.dtm_sinais);
+  add('Abertura bucal', d.abertura);
+  add('Diagnóstico DTM prévio', d.diag_dtm);
+  add('Doenças sistêmicas', d.sistemicas);
+  add('Tratamentos anteriores', d.trat_anterior);
+  add('Medicamentos em uso', d.medicamentos);
+  add('Suplementos em uso', d.suplementos);
+  add('Exames laboratoriais', d.labs);
+  add('Exames de imagem', d.imagem);
+  add('Polissonografia', d.polissonografia);
+  add('Histórico clínico', d.historico);
+  add('Contexto de vida atual', d.contexto);
+  add('Observações do dentista', d.obs);
+  return linhas.join('\n') + '\n\nGere a análise clínica integrativa completa.';
+}
+
+// ── Renderizar resultado ───────────────────────────────────────────────────
+function renderResult(dados, texto) {
+  document.getElementById('loadingA').classList.remove('on');
+
+  // Patient bar
+  const ini = (dados.nome||'P').split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase();
+  const areas = detectAreas(dados);
+  document.getElementById('patientBar').innerHTML=`
+    <div class="patient-bar">
+      <div class="p-avatar">${ini}</div>
+      <div style="flex:1">
+        <div class="p-name">${dados.nome||'Paciente'}</div>
+        <div class="p-meta">${[dados.idade?dados.idade+' anos':'',dados.sexo,dados.profissao].filter(Boolean).join(' · ')}</div>
+        <div class="p-chips">
+          ${dados.queixa?`<span class="p-chip">"${dados.queixa.substring(0,55)}${dados.queixa.length>55?'...':''}"</span>`:''}
+          ${areas.map(a=>`<span class="p-chip g">${a}</span>`).join('')}
+          ${dados.eva?`<span class="p-chip">EVA ${dados.eva}/10</span>`:''}
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text3)">${new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`;
+
+  // Seções
+  const secoes = [
+    {marker:['1.','CORRELAÇÕES','CORRELACOES'], tag:'t-corr', label:'Correlações Clínicas',      emoji:'🔗'},
+    {marker:['2.','HIPÓTESES','HIPOTESES'],     tag:'t-hipo', label:'Hipóteses Diagnósticas',    emoji:'🧬'},
+    {marker:['3.','EXAMES'],                    tag:'t-exam', label:'Exames Complementares',     emoji:'🔬'},
+    {marker:['4.','PLANO','TRATAMENTO'],        tag:'t-plan', label:'Plano de Tratamento',       emoji:'📋'},
+    {marker:['5.','RESUMO','PACIENTE'],         tag:'t-pac',  label:'Resumo para o Paciente',   emoji:'💬'},
+  ];
+
+  // Parse seções do texto
+  const parts = texto.split(/\n##\s+/);
+  const map = {};
+  parts.forEach(p=>{
+    if(!p.trim()) return;
+    const h = p.split('\n')[0].toUpperCase();
+    const body = p.split('\n').slice(1).join('\n').trim();
+    secoes.forEach(s=>{
+      if(s.marker.some(m=>h.includes(m))) map[s.label]=body;
+    });
+  });
+  if(Object.keys(map).length===0) map['Correlações Clínicas']=texto;
+
+  document.getElementById('resultSecs').innerHTML = secoes.filter(s=>map[s.label]).map(s=>`
+    <div class="rsec" onclick="this.classList.toggle('col')">
+      <div class="rsec-head">
+        <span class="rtag ${s.tag}">${s.emoji} ${s.label.toUpperCase()}</span>
+        <span class="rsec-title"></span>
+        <span class="rsec-arr">▾</span>
+      </div>
+      <div class="rsec-body">${esc(map[s.label]||'')}</div>
+    </div>`).join('');
+
+  // Sidebar de áreas
+  document.getElementById('sourcesBox').innerHTML = areas.length>0
+    ? areas.map(a=>`
+        <div class="src-card">
+          <div class="src-area">${a}</div>
+          <div class="src-name">Raciocínio integrativo</div>
+          <div class="src-sec">Base clínica Dr. Victor</div>
+          <div class="src-rel"><div class="rbar"><div class="rfill" style="width:${75+Math.random()*25|0}%"></div></div>alta</div>
+        </div>`).join('')
+    : '<div style="font-size:0.75rem;color:var(--text3)">Análise geral sem área específica detectada.</div>';
+
+  document.getElementById('resultA').classList.add('on');
+  document.getElementById('aSubtitle').textContent = dados.nome+' · '+new Date().toLocaleDateString('pt-BR');
+}
+
+function detectAreas(d) {
+  const txt = [d.queixa,d.dtm_sinais,d.bruxismo,d.sintomas,d.sono_obs,d.labs,d.historico].join(' ').toLowerCase();
+  const areas=[];
+  if(/atm|dtm|mandíbula|mastig|abertura|estalido/.test(txt)) areas.push('DTM');
+  if(/bruxismo|apertar|ranger|parafun/.test(txt)) areas.push('Bruxismo');
+  if(/sono|insônia|apneia|circadian|melatonin/.test(txt)) areas.push('Sono');
+  if(/cefaleia|enxaqueca|migraine|dor de cabeça/.test(txt)) areas.push('Cefaleia');
+  if(/cervical|pescoço|ombro|fibromialgia/.test(txt)) areas.push('Dor crônica');
+  if(/zumbido|tinnitus|ouvido/.test(txt)) areas.push('Tinnitus');
+  if(/ferritina|vitamina|cortisol|tireoide|tsh|testosterona|inflamação|pcr/.test(txt)) areas.push('Metabólico');
+  if(/ansiedade|depressão|estresse|emocional/.test(txt)) areas.push('Emocional');
+  return areas;
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ── Histórico ──────────────────────────────────────────────────────────────
+function addHistory(dados, texto) {
+  sessions.unshift({dados, texto, ts: new Date()});
+  const areas = detectAreas(dados);
+  const hw = document.getElementById('histWrap');
+  if(sessions.length===1) hw.innerHTML='';
+  const card = document.createElement('div');
+  card.className='hist-card';
+  card.innerHTML=`
+    <div class="hist-top">
+      <div class="hist-name">${dados.nome||'Paciente'}</div>
+      <div class="hist-time">${sessions[0].ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+    <div class="hist-q">${dados.queixa||'—'}</div>
+    <div class="hist-tags">${areas.map(a=>`<span class="hist-tag">${a}</span>`).join('')}</div>`;
+  card.onclick=()=>{ goView('analise',document.getElementById('nb-analise')); renderResult(sessions[0].dados,sessions[0].texto); };
+  hw.insertBefore(card, hw.firstChild);
+}
+
+// ── Config ─────────────────────────────────────────────────────────────────
+async function saveConfig() {
+  cfg.key   = document.getElementById('cfg_key').value.trim();
+  cfg.model = document.getElementById('cfg_model').value;
+  localStorage.setItem('dv_key',   cfg.key);
+  localStorage.setItem('dv_model', cfg.model);
+
+  const el = document.getElementById('apiStatusEl');
+  el.innerHTML='<span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text3)">Testando...</span>';
+
+  if(!cfg.key){ el.innerHTML='<span class="api-status err">❌ Chave vazia</span>'; return; }
+
+  try {
+    const r = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01',},
+      body:JSON.stringify({model:cfg.model,max_tokens:10,messages:[{role:'user',content:'ok'}]})
+    });
+    if(r.ok||r.status===400) {
+      el.innerHTML='<span class="api-status ok">✓ Conectado</span>';
+      toast('API key válida!','ok');
+      updateSidebar();
+    } else {
+      const err=await r.json().catch(()=>({}));
+      el.innerHTML=`<span class="api-status err">❌ ${err.error?.type||'Erro '+r.status}</span>`;
+    }
+  } catch(e) {
+    el.innerHTML=`<span class="api-status err">❌ ${e.message}</span>`;
+  }
+}
+
+function updateSidebar() {
+  document.getElementById('sModel').textContent = cfg.model.includes('sonnet')?'Sonnet 4.6':'Opus 4.6';
+  document.getElementById('sApi').textContent   = cfg.key?'Configurada':'Não configurada';
+  document.getElementById('sCount').textContent = sessions.length;
+  if(cfg.key){
+    document.getElementById('pulseDot').style.background='var(--green)';
+    document.getElementById('pulseLabel').textContent='IA pronta';
+  } else {
+    document.getElementById('pulseDot').style.background='var(--amber)';
+    document.getElementById('pulseLabel').textContent='Configure a API key';
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast'+(type?' '+type:'');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// Init: se não tem key, vai para config
+if(!cfg.key){
+  setTimeout(()=>{
+    toast('Configure sua API key para começar','');
+  },800);
+}
+</script>
+</body>
+</html>
