@@ -237,6 +237,96 @@ async def analisar_com_arquivos(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+MODALIDADES_TRATAMENTO = [
+    {"id": "avaliacao_multidisciplinar", "nome": "Avaliação Multidisciplinar", "descricao": "Avaliação integrada com dentista especializado em dor orofacial, fisioterapeuta e outros especialistas conforme necessidade."},
+    {"id": "terapia_manual", "nome": "Terapia Manual (Fisioterapia)", "descricao": "Técnica para aliviar dor e tensão muscular na região da mandíbula e pescoço, realizada pelo fisioterapeuta."},
+    {"id": "exercicios", "nome": "Exercícios de Fortalecimento e Alongamento", "descricao": "Exercícios específicos para fortalecer e alongar os músculos da mandíbula e pescoço, ajudando a aliviar dor e tensão."},
+    {"id": "placa_oclusal", "nome": "Placa Oclusal / Placa Estabilizadora", "descricao": "Dispositivo personalizado que alivia a pressão na articulação da mandíbula, reduzindo dor e protegendo os dentes."},
+    {"id": "agulhamento_seco", "nome": "Agulhamento Seco (Dry Needling)", "descricao": "Técnica que alivia a dor muscular reduzindo tensão na região da mandíbula e pescoço através de agulhas finas."},
+    {"id": "laser_terapia", "nome": "Laser Terapia", "descricao": "Terapia com luz laser para aliviar dor, reduzir inflamação e promover cicatrização dos tecidos."},
+    {"id": "viscossuplementacao", "nome": "Viscosuplementação", "descricao": "Procedimento que melhora a lubrificação e reduz a inflamação dentro da articulação da mandíbula."},
+    {"id": "disbiose_intestinal", "nome": "Controle da Disbiose Intestinal", "descricao": "Orientação sobre dieta e suplementação com probióticos para melhorar o equilíbrio intestinal e reduzir inflamação."},
+    {"id": "regulacao_sono", "nome": "Regulação do Sono", "descricao": "Orientações sobre higiene do sono e estratégias para melhorar a qualidade e duração do sono."},
+    {"id": "controle_estresse", "nome": "Controle do Estresse e Ansiedade", "descricao": "Técnicas de relaxamento e gerenciamento do estresse, que agravam os sintomas de DTM e bruxismo."},
+    {"id": "atividade_fisica", "nome": "Orientações sobre Atividade Física", "descricao": "Exercícios físicos regulares que reduzem a dor muscular e melhoram o bem-estar geral."}
+]
+
+
+class PropostaRequest(BaseModel):
+    nome: Optional[str] = ""
+    queixa: Optional[str] = ""
+    hipoteses: Optional[str] = ""
+    plano: Optional[str] = ""
+    resumo_paciente: Optional[str] = ""
+
+
+@app.post("/gerar-proposta")
+def gerar_proposta(dados: PropostaRequest):
+    """Gera proposta de tratamento personalizada para o paciente"""
+    if not ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=500, detail="API key não configurada")
+
+    modalidades_lista = "\n".join([f"- {m['id']}: {m['nome']}" for m in MODALIDADES_TRATAMENTO])
+
+    prompt = f"""Você é o assistente clínico do Dr. Victor Vaz, especialista em DTM, bruxismo, sono e dor crônica.
+
+Com base nos dados clínicos abaixo, selecione quais modalidades são indicadas e gere uma proposta personalizada.
+
+DADOS:
+Nome: {dados.nome}
+Queixa: {dados.queixa}
+Hipóteses: {dados.hipoteses}
+Plano clínico: {dados.plano}
+Resumo: {dados.resumo_paciente}
+
+MODALIDADES DISPONÍVEIS:
+{modalidades_lista}
+
+Retorne SOMENTE JSON válido:
+{{
+  "introducao": "Texto personalizado para {dados.nome} (2-3 frases, linguagem simples)",
+  "modalidades_indicadas": ["id1", "id2"],
+  "justificativas": {{"id": "justificativa em 1-2 frases acessíveis"}},
+  "timeline": "tempo estimado para este caso",
+  "proximos_passos": "2-3 passos concretos para o paciente",
+  "observacoes": "expectativas realistas (máx 3 linhas)"
+}}"""
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        texto = message.content[0].text
+        json_match = re.search(r'\{.*\}', texto, re.DOTALL)
+        if not json_match:
+            raise ValueError("JSON não encontrado")
+        proposta_ia = json.loads(json_match.group())
+        modalidades_completas = []
+        for mid in proposta_ia.get("modalidades_indicadas", []):
+            modal = next((m for m in MODALIDADES_TRATAMENTO if m["id"] == mid), None)
+            if modal:
+                modalidades_completas.append({
+                    "id": modal["id"],
+                    "nome": modal["nome"],
+                    "descricao": modal["descricao"],
+                    "justificativa": proposta_ia.get("justificativas", {}).get(mid, "")
+                })
+        return {
+            "nome_paciente": dados.nome,
+            "introducao": proposta_ia.get("introducao", ""),
+            "modalidades": modalidades_completas,
+            "timeline": proposta_ia.get("timeline", "Aproximadamente 60 dias"),
+            "proximos_passos": proposta_ia.get("proximos_passos", ""),
+            "observacoes": proposta_ia.get("observacoes", "")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
