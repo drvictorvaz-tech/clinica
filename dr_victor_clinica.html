@@ -1246,85 +1246,52 @@ if(!cfg.key){
 (function(){
 var B='https://clinica-production-22e0.up.railway.app';
 var _arquivos=[];
+var _transcricao='';
+var _recognition=null;
+var _gravando=false;
 
-// ── Toolbar flutuante ──────────────────────────────────────────────
 var toolbar=document.createElement('div');
 toolbar.id='vc-toolbar';
 toolbar.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;';
-toolbar.innerHTML=`
-  <div id="vc-exames-panel" style="display:none;background:#1a2332;border:1px solid #2d4a6e;border-radius:12px;padding:14px;max-width:320px;font-size:13px;color:#ccc;">
-    <div style="font-weight:600;color:#4f8ef7;margin-bottom:8px;">📎 Exames anexados</div>
-    <div id="vc-lista-arquivos"></div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;padding:8px 12px;background:rgba(79,142,247,0.15);border-radius:8px;border:1px dashed #4f8ef7;">
-      <span>➕ Adicionar exame</span>
-      <input id="vc-file-input" type="file" accept="image/*,.pdf" multiple style="display:none;">
-    </label>
-  </div>
-  <div id="vc-audio-panel" style="display:none;background:#1a2332;border:1px solid #2d4a6e;border-radius:12px;padding:14px;max-width:320px;font-size:13px;color:#ccc;">
-    <div style="font-weight:600;color:#4f8ef7;margin-bottom:8px;">🎙️ Transcrição da consulta</div>
-    <div id="vc-transcript" style="min-height:60px;max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px;line-height:1.5;color:#e0e0e0;font-style:italic;">Clique em gravar e fale...</div>
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button id="vc-btn-gravar" onclick="window.vcToggleAudio()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#4f8ef7;color:#fff;cursor:pointer;font-weight:600;">🎙️ Gravar</button>
-      <button id="vc-btn-preencher" onclick="window.vcPreencherFormulario()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#2ecc71;color:#fff;cursor:pointer;font-weight:600;">✅ Preencher</button>
-    </div>
-  </div>
-  <div style="display:flex;gap:10px;">
-    <button onclick="window.vcToggleAudioPanel()" title="Gravar consulta" style="width:52px;height:52px;border-radius:50%;border:none;background:#1a2332;box-shadow:0 4px 16px rgba(0,0,0,0.4);cursor:pointer;font-size:22px;color:#4f8ef7;transition:all 0.2s;" id="vc-btn-mic">🎙️</button>
-    <button onclick="window.vcToggleExamesPanel()" title="Anexar exames" style="width:52px;height:52px;border-radius:50%;border:none;background:#1a2332;box-shadow:0 4px 16px rgba(0,0,0,0.4);cursor:pointer;font-size:22px;color:#4f8ef7;transition:all 0.2s;" id="vc-btn-exame">📎</button>
-  </div>
-`;
+toolbar.innerHTML='<div id="vc-exames-panel" style="display:none;background:#1a2332;border:1px solid #2d4a6e;border-radius:12px;padding:14px;max-width:320px;font-size:13px;color:#ccc;"><div style="font-weight:600;color:#4f8ef7;margin-bottom:8px;">📎 Exames anexados</div><div id="vc-lista-arquivos"></div><label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;padding:8px 12px;background:rgba(79,142,247,0.15);border-radius:8px;border:1px solid rgba(79,142,247,0.3);color:#4f8ef7;"><span>＋ Adicionar exame</span><input id="vc-file-input" type="file" accept="image/*,.pdf" multiple style="display:none;"></label></div><div id="vc-audio-panel" style="display:none;background:#1a2332;border:1px solid #2d4a6e;border-radius:12px;padding:14px;max-width:320px;font-size:13px;color:#ccc;"><div style="font-weight:600;color:#4f8ef7;margin-bottom:8px;">🎙 Transcrição da consulta</div><div id="vc-transcript" style="min-height:60px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px;line-height:1.5;color:#e0e0e0;font-size:12px;white-space:pre-wrap;word-break:break-word;">Clique em gravar e fale...</div><div style="display:flex;gap:8px;margin-top:10px;"><button id="vc-btn-gravar" onclick="window.vcToggleAudio()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#4f8ef7;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">🎙 Gravar</button><button id="vc-btn-preencher" onclick="window.vcPreencherFormulario()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#2ecc71;color:#fff;cursor:pointer;font-size:12px;font-weight:600;">✅ Preencher</button></div><div style="display:flex;gap:8px;margin-top:6px;"><button onclick="window.vcCopiarTranscricao(event)" style="flex:1;padding:6px;border-radius:8px;border:1px solid #2d4a6e;background:transparent;color:#9ba;cursor:pointer;font-size:11px;">📋 Copiar texto</button><button onclick="window.vcLimparTranscricao()" style="flex:1;padding:6px;border-radius:8px;border:1px solid #2d4a6e;background:transparent;color:#9ba;cursor:pointer;font-size:11px;">🗑 Limpar</button></div></div><div style="display:flex;gap:10px;"><button id="vc-btn-mic" onclick="window.vcToggleAudioPanel()" title="Gravar consulta" style="width:52px;height:52px;border-radius:50%;border:none;background:#1a2332;box-shadow:0 4px 12px rgba(0,0,0,0.4);cursor:pointer;font-size:22px;color:#fff;display:flex;align-items:center;justify-content:center;">🎤</button><button id="vc-btn-exame" onclick="window.vcToggleExamesPanel()" title="Anexar exame" style="position:relative;width:52px;height:52px;border-radius:50%;border:none;background:#1a2332;box-shadow:0 4px 12px rgba(0,0,0,0.4);cursor:pointer;font-size:22px;color:#fff;display:flex;align-items:center;justify-content:center;">📎<span id="vc-badge" style="position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:none;align-items:center;justify-content:center;font-weight:700;"></span></button></div>';
 document.body.appendChild(toolbar);
 
-// Badge contador de arquivos
-var badge=document.createElement('span');
-badge.id='vc-badge';
-badge.style.cssText='position:absolute;top:-4px;right:-4px;background:#e74c3c;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:none;align-items:center;justify-content:center;font-weight:700;';
-document.getElementById('vc-btn-exame').style.position='relative';
-document.getElementById('vc-btn-exame').appendChild(badge);
-
-// ── Toggle painéis ─────────────────────────────────────────────────
-window.vcToggleExamesPanel=function(){
-  var p=document.getElementById('vc-exames-panel');
-  document.getElementById('vc-audio-panel').style.display='none';
-  p.style.display=p.style.display==='none'?'block':'none';
-};
 window.vcToggleAudioPanel=function(){
-  var p=document.getElementById('vc-audio-panel');
-  document.getElementById('vc-exames-panel').style.display='none';
-  p.style.display=p.style.display==='none'?'block':'none';
+  var ap=document.getElementById('vc-audio-panel');
+  var ep=document.getElementById('vc-exames-panel');
+  var showing=ap.style.display!=='none';
+  ep.style.display='none';
+  ap.style.display=showing?'none':'block';
+};
+window.vcToggleExamesPanel=function(){
+  var ap=document.getElementById('vc-audio-panel');
+  var ep=document.getElementById('vc-exames-panel');
+  var showing=ep.style.display!=='none';
+  ap.style.display='none';
+  ep.style.display=showing?'none':'block';
 };
 
-// ── Upload de arquivos ─────────────────────────────────────────────
 document.getElementById('vc-file-input').addEventListener('change',function(e){
   Array.from(e.target.files).forEach(function(f){_arquivos.push(f);});
   vcAtualizarListaArquivos();
   e.target.value='';
 });
-
 function vcAtualizarListaArquivos(){
   var lista=document.getElementById('vc-lista-arquivos');
+  var badge=document.getElementById('vc-badge');
   if(_arquivos.length===0){lista.innerHTML='<em style="color:#666;">Nenhum arquivo</em>';badge.style.display='none';return;}
   badge.style.display='flex';badge.textContent=_arquivos.length;
   lista.innerHTML=_arquivos.map(function(f,i){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);">'+
-      '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;">'+f.name+'</span>'+
-      '<button onclick="window.vcRemoverArquivo('+i+')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">×</button>'+
-      '</div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;">'+f.name+'</span><button onclick="window.vcRemoverArquivo('+i+')" style="background:none;border:none;color:#e74c3c;cursor:pointer;font-size:16px;">×</button></div>';
   }).join('');
 }
 window.vcRemoverArquivo=function(i){_arquivos.splice(i,1);vcAtualizarListaArquivos();};
 vcAtualizarListaArquivos();
 
-// ── Gravação de áudio (Web Speech API) ────────────────────────────
-var _recognition=null;
-var _transcricao='';
-var _gravando=false;
-
 window.vcToggleAudio=function(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
-    alert('Seu navegador não suporta reconhecimento de voz. Use o Chrome.');return;
-  }
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){alert('Use o Chrome para reconhecimento de voz.');return;}
   if(_gravando){
+    _gravando=false;
     _recognition&&_recognition.stop();
     return;
   }
@@ -1338,9 +1305,10 @@ window.vcToggleAudio=function(){
   var transcript=document.getElementById('vc-transcript');
   _recognition.onstart=function(){
     _gravando=true;
-    btn.textContent='⏹️ Parar';
+    btn.textContent='⏹ Parar';
     btn.style.background='#e74c3c';
     document.getElementById('vc-btn-mic').style.background='#e74c3c';
+    if(!_transcricao.trim())transcript.textContent='';
   };
   _recognition.onresult=function(e){
     var interim='';var final='';
@@ -1353,17 +1321,45 @@ window.vcToggleAudio=function(){
     transcript.scrollTop=transcript.scrollHeight;
   };
   _recognition.onend=function(){
-    _gravando=false;
-    btn.textContent='🎙️ Gravar';
+    if(_gravando){try{_recognition.start();}catch(e){}return;}
+    btn.textContent='🎙 Gravar';
     btn.style.background='#4f8ef7';
     document.getElementById('vc-btn-mic').style.background='#1a2332';
+    if(_transcricao.trim())transcript.textContent=_transcricao;
   };
-  _recognition.onerror=function(e){console.error('Speech error:',e);};
+  _recognition.onerror=function(e){
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      _gravando=false;
+      alert('Permissão de microfone negada. Permita o acesso no navegador.');
+      document.getElementById('vc-btn-gravar').textContent='🎙 Gravar';
+      document.getElementById('vc-btn-gravar').style.background='#4f8ef7';
+    }
+    console.error('Speech error:',e.error);
+  };
   _recognition.start();
 };
 
+window.vcCopiarTranscricao=function(evt){
+  if(!_transcricao.trim()){alert('Nenhuma transcrição disponível.');return;}
+  var ta=document.createElement('textarea');
+  ta.value=_transcricao;
+  document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  var b=evt&&evt.target;
+  if(b){var o=b.textContent;b.textContent='✅ Copiado!';setTimeout(function(){b.textContent=o;},2000);}
+};
+window.vcLimparTranscricao=function(){
+  if(!confirm('Limpar a transcrição?'))return;
+  _transcricao='';
+  document.getElementById('vc-transcript').textContent='Clique em gravar e fale...';
+};
+
 window.vcPreencherFormulario=function(){
-  if(!_transcricao.trim()){alert('Grave a consulta primeiro.');return;}
+  if(!_transcricao.trim()){alert('Grave a consulta primeiro.
+
+1. Clique em Gravar
+2. Fale com o paciente
+3. Clique em Parar
+4. Clique em Preencher');return;}
   var btn=document.getElementById('vc-btn-preencher');
   btn.textContent='⏳ Processando...';btn.disabled=true;
   var fd=new FormData();
@@ -1371,12 +1367,13 @@ window.vcPreencherFormulario=function(){
   fetch(B+'/extrair-dados-audio',{method:'POST',body:fd})
     .then(function(r){return r.json();})
     .then(function(dados){
+      var preenchidos=0;
       Object.keys(dados).forEach(function(k){
         var el=document.getElementById('f_'+k);
-        if(el&&dados[k])el.value=dados[k];
+        if(el&&dados[k]){el.value=dados[k];preenchidos++;}
       });
-      btn.textContent='✅ Preenchido!';
-      setTimeout(function(){btn.textContent='✅ Preencher';btn.disabled=false;},2000);
+      btn.textContent='✅ Preenchido! ('+preenchidos+' campos)';
+      setTimeout(function(){btn.textContent='✅ Preencher';btn.disabled=false;},3000);
     })
     .catch(function(e){
       alert('Erro ao processar áudio: '+e.message);
@@ -1384,7 +1381,6 @@ window.vcPreencherFormulario=function(){
     });
 };
 
-// ── Override de startAnalysis com suporte a arquivos ──────────────
 window.startAnalysis=async function(){
   var nb=document.getElementById('nb-analise');if(nb)nb.click();
   var lA=document.getElementById('loadingA'),lM=document.getElementById('loadingMsg'),
@@ -1392,48 +1388,37 @@ window.startAnalysis=async function(){
       rS=document.getElementById('resultSecs'),pB=document.getElementById('patientBar'),
       aS=document.getElementById('aSubtitle');
   if(eA)eA.style.display='none';if(rA)rA.style.display='none';
-  if(lA)lA.style.display='flex';if(lM)lM.textContent='Analisando...';
-  var g=function(id){var e=document.getElementById(id);return e?e.value||'':''};
-  var d={nome:g('f_nome'),idade:g('f_idade'),sexo:g('f_sexo'),profissao:g('f_profissao'),
-    ecivil:g('f_ecivil'),estresse:g('f_estresse'),queixa:g('f_queixa'),evolucao:g('f_evolucao'),
-    evento:g('f_evento'),dpadrao:g('f_dpadrao'),dpiora:g('f_dpiora'),sonoq:g('f_sonoq'),
-    sonoh:g('f_sonoh'),insonia:g('f_insonia'),posicao:g('f_posicao'),sonoobs:g('f_sonoobs'),
-    brux:g('f_brux'),placa:g('f_placa'),abertura:g('f_abertura'),diagdtm:g('f_diagdtm'),
-    sistemicas:g('f_sistemicas'),tratant:g('f_tratant'),meds:g('f_meds'),sups:g('f_sups'),
-    labs:g('f_labs'),img:g('f_img'),poli:g('f_poli'),hist:g('f_hist'),ctx:g('f_ctx'),obs:g('f_obs')};
+  if(lA)lA.style.display='flex';if(lM)lM.textContent='Analisando com IA...';
+  var g=function(id){var el=document.getElementById(id);return el?el.value||el.options&&el.options[el.selectedIndex]&&el.options[el.selectedIndex].value||'':'';}
+  var d={nome:g('f_nome'),idade:g('f_idade'),sexo:g('f_sexo'),profissao:g('f_profissao'),ecivil:g('f_ecivil'),estresse:g('f_estresse'),queixa:g('f_queixa'),evolucao:g('f_evolucao'),evento:g('f_evento'),dor_local:g('f_dor_local'),eva:g('f_eva'),dpadrao:g('f_dpadrao'),dpiora:g('f_dpiora'),sintomas:g('f_sintomas'),sonoq:g('f_sonoq'),sonoh:g('f_sonoh'),insonia:g('f_insonia'),posicao:g('f_posicao'),sonoobs:g('f_sonoobs'),brux:g('f_brux'),placa:g('f_placa'),parafuncoes:g('f_parafuncoes'),dtm_sinais:g('f_dtm_sinais'),abertura:g('f_abertura'),diagdtm:g('f_diagdtm'),sistemicas:g('f_sistemicas'),tratant:g('f_tratant'),meds:g('f_meds'),sups:g('f_sups'),labs:g('f_labs'),img:g('f_img'),poli:g('f_poli'),hist:g('f_hist'),ctx:g('f_ctx'),obs:g('f_obs')};
+  if(!d.queixa){alert('Preencha a queixa principal.');if(lA)lA.style.display='none';if(eA)eA.style.display='flex';return;}
   try{
-    var r,data;
+    var resp;
     if(_arquivos.length>0){
-      if(lM)lM.textContent='Analisando com '+_arquivos.length+' exame(s)...';
-      var fd=new FormData();
-      fd.append('dados',JSON.stringify(d));
+      var fd=new FormData();fd.append('dados',JSON.stringify(d));
       _arquivos.forEach(function(f){fd.append('arquivos',f);});
-      r=await fetch(B+'/analisar-com-arquivos',{method:'POST',body:fd});
-    } else {
-      r=await fetch(B+'/analisar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+      resp=await fetch(B+'/analisar-com-arquivos',{method:'POST',body:fd});
+    }else{
+      resp=await fetch(B+'/analisar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
     }
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    data=await r.json();
+    var data=await resp.json();
+    if(!resp.ok)throw new Error(data.detail||'Erro no servidor');
     if(lA)lA.style.display='none';if(rA)rA.style.display='block';
-    if(pB)pB.textContent=d.nome||'Paciente';
-    if(aS)aS.textContent='DTM - Sono - Bruxismo';
-    if(rS){
-      rS.innerHTML='';
-      [['resumo_paciente','Resumo do Paciente'],['hipoteses','Hipóteses Diagnósticas'],
-       ['correlacoes','Correlações Clínicas'],['exames','Exames Recomendados'],
-       ['plano','Plano de Tratamento']].forEach(function(s){
-        if(!data[s[0]])return;
-        var div=document.createElement('div');
-        div.style.cssText='margin-bottom:1.5rem;padding:1.2rem;background:rgba(79,142,247,0.08);border-radius:10px;border-left:3px solid #4f8ef7;';
-        div.innerHTML='<h3 style="color:#4f8ef7;margin:0 0 0.75rem;">'+s[1]+'</h3><div style="white-space:pre-wrap;line-height:1.7;">'+data[s[0]]+'</div>';
-        rS.appendChild(div);
-      });
-      if(data.areas_detectadas&&data.areas_detectadas.length>0){
-        var div=document.createElement('div');
-        div.style.cssText='margin-bottom:1rem;padding:0.8rem;background:rgba(46,204,113,0.1);border-radius:8px;border-left:3px solid #2ecc71;font-size:0.85rem;color:#2ecc71;';
-        div.textContent='Exames analisados: '+data.areas_detectadas.join(', ');
-        rS.prepend(div);
-      }
+    if(pB&&d.nome)pB.textContent=d.nome;
+    if(aS)aS.textContent='Análise Integrativa Completa';
+    if(rS)rS.innerHTML='';
+    [['resumo_paciente','Resumo do Paciente'],['hipoteses','Hipóteses Diagnósticas'],['correlacoes','Correlações Clínicas'],['exames','Exames Recomendados'],['plano','Plano de Tratamento']].forEach(function(s){
+      if(!data[s[0]])return;
+      var div=document.createElement('div');
+      div.style.cssText='margin-bottom:1.5rem;padding:1rem;background:rgba(79,142,247,0.08);border-radius:10px;border-left:3px solid #4f8ef7;';
+      div.innerHTML='<h3 style="color:#4f8ef7;margin:0 0 0.75rem;">'+s[1]+'</h3><div style="white-space:pre-wrap;line-height:1.7;">'+data[s[0]]+'</div>';
+      rS.appendChild(div);
+    });
+    if(data.areas_detectadas&&data.areas_detectadas.length>0){
+      var div=document.createElement('div');
+      div.style.cssText='margin-bottom:1rem;padding:0.8rem;background:rgba(46,204,113,0.1);border-radius:8px;border-left:3px solid #2ecc71;font-size:0.85rem;color:#2ecc71;';
+      div.textContent='Exames analisados: '+data.areas_detectadas.join(', ');
+      rS.prepend(div);
     }
   }catch(e){
     if(lA)lA.style.display='none';if(rA)rA.style.display='block';
