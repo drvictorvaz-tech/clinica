@@ -813,7 +813,7 @@ const STEPS = 5;
 let evaVal = null;
 let sessions = [];
 let cfg = {
-  key:   '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',
+  key:   localStorage.getItem('dv_key')   || '',
   model: localStorage.getItem('dv_model') || 'claude-sonnet-4-6'
 };
 
@@ -852,14 +852,12 @@ function setEva(btn,v) {
   btn.className='eva-btn '+(v<=3?'s-low':v<=6?'s-mid':'s-high');
 }
 
-// ── Checkboxes — event delegation (funciona em todos os steps)
-document.addEventListener('click', function(e){
-  const el = e.target.closest('.chk');
-  if(!el) return;
-  e.preventDefault();
-  el.classList.toggle('on');
-  const inp = el.querySelector('input');
-  if(inp) inp.checked = el.classList.contains('on');
+// ── Checkboxes ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.chk').forEach(el=>{
+  el.addEventListener('click',()=>{
+    el.classList.toggle('on');
+    el.querySelector('input').checked=el.classList.contains('on');
+  });
 });
 
 // ── Coletar dados ──────────────────────────────────────────────────────────
@@ -998,13 +996,12 @@ async function startAnalysis() {
       system: SYSTEM,
       messages:[{role:'user',content:prompt}]
     };
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+    const resp = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
         'x-api-key': cfg.key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-tool-use':'true'
+        'anthropic-version':'2023-06-01'
       },
       body: JSON.stringify(payload)
     });
@@ -1196,9 +1193,9 @@ async function saveConfig() {
   if(!cfg.key){ el.innerHTML='<span class="api-status err">❌ Chave vazia</span>'; return; }
 
   try {
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
+    const r = await fetch('https://corsproxy.io/?url=https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-tool-use':'true'}},
+      headers:{'Content-Type':'application/json','x-api-key':cfg.key,'anthropic-version':'2023-06-01'},
       body:JSON.stringify({model:cfg.model,max_tokens:10,messages:[{role:'user',content:'ok'}]})
     });
     if(r.ok||r.status===400) {
