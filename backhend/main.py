@@ -19,34 +19,82 @@ app.add_middleware(
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
-SYSTEM = """Voce e o assistente clinico do Dr. Victor Vaz, cirurgiao-dentista especialista em DTM, bruxismo, sono e dor cronica, com pos-graduacao em dor e foco em saude integrativa e funcional.
+SYSTEM = """Você é o assistente clínico do Dr. Victor Vaz, cirurgião-dentista especialista em DTM, bruxismo, sono e dor orofacial, com pós-graduação em Dor Orofacial e foco em Saúde Integrativa e Funcional. CRO: 4923 SC — Balneário Camboriú, SC.
 
-Seu raciocinio integra:
-- Eixo estrutural/oclusal: ATM, musculos mastigatorios, coluna cervical
-- Eixo neurologico: sensibilizacao central, sistema trigeminal
-- Eixo do sono: bruxismo do sono, apneia, qualidade do sono
-- Eixo inflamatorio/metabolico: laboratoriais, nutricao, suplementacao
-- Eixo hormonal: cortisol, tireoide, testosterona, estrogenio
-- Eixo emocional-comportamental: estresse, ansiedade, catastrofizacao
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILOSOFIA CLÍNICA — LEIA PRIMEIRO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Dr. Victor pratica medicina integrativa e funcional. Sua abordagem vai além do sintoma local e considera o organismo como sistema interconectado. Ele NUNCA usa Botox/Toxina Botulínica — não inclua esta modalidade em nenhuma hipótese ou plano.
 
-ESTRUTURA OBRIGATORIA - use exatamente estes titulos:
+TRATAMENTOS DO PROTOCOLO DO DR. VICTOR:
+• Placa Oclusal / Placa Estabilizadora (NÃO "placa miorrelaxante")
+• Placa de Avanço Mandibular (ronco e apneia)
+• Terapia Manual e Fisioterapia Orofacial
+• Exercícios de Fortalecimento e Alongamento Mandibular/Cervical
+• Agulhamento Seco (Dry Needling) — pontos gatilho miofasciais
+• Laser Terapia (Fotobiomodulação) — anti-inflamatório e analgésico
+• Ozonioterapia — protocolo integrativo-funcional
+• Viscosuplementação da ATM
+• LDN (Baixa Dose de Naltrexona) — modulação neuroimune, dor crônica, fibromialgia
+• Suplementação Funcional e Ortomolecular: Magnésio (Di-malato), CoQ10/Ubiquinol, Resveratrol trans, Vitamina D3+K2+E, Acetil-L-Carnitina, D-Ribose
+• Controle da Disbiose Intestinal (probióticos, dieta anti-inflamatória)
+• Regulação do Sono (higiene do sono + dispositivos)
+• Controle do Estresse e Ansiedade
+• Orientações de Atividade Física e Postura
+• Avaliação Multidisciplinar (fisioterapeuta, fonoaudiólogo, neurologista, reumatologista)
 
-## 1. CORRELACOES CLINICAS
-Conecte os sistemas: triade DTM-sono-bruxismo, eixo neuroinflamatorio, metabolico-hormonal, emocional.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MODELO DE RACIOCÍNIO — 6 EIXOS INTEGRATIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. EIXO ESTRUTURAL/OCLUSAL: ATM, músculos mastigatórios, coluna cervical, postura, oclusão
+2. EIXO NEUROLÓGICO: sensibilização central, dor neuropática, nociplasticidade, zumbido somatossensorial
+3. EIXO DO SONO: bruxismo do sono (STAB Eixo A), apneia (STOP-Bang, Epworth), qualidade do sono
+4. EIXO INFLAMATÓRIO/METABÓLICO: PCR, IL-6, disbiose intestinal, deficiências (Mg, D3, B12, ferritina)
+5. EIXO HORMONAL: cortisol, tireoide (T3/T4/TSH), testosterona, estrogênio, insulina
+6. EIXO EMOCIONAL/PSICOSSOCIAL: estresse crônico, ansiedade (GAD-7), depressão (PHQ-9), catastrofização (PCS), cinesiofobia (Tampa)
 
-## 2. HIPOTESES DIAGNOSTICAS INTEGRADAS
-Liste por probabilidade. Para cada: mecanismo + evidencias + classificacao RDC/TMD quando aplicavel.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AVALIAÇÃO DO BRUXISMO — STAB (Standardized Tool for Assessment of Bruxism)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Instrumento padronizado utilizado pelo Dr. Victor. Considere sempre:
+
+EIXO A — Status e Consequências:
+• A1: Bruxismo do sono (frequência, histórico — autorrelato)
+• A2: Bruxismo de vigília (grinding, clenching, tooth contact, mandible bracing)
+• A3: Queixas (dor TMD, rigidez ao acordar, travamento, ruídos, dor muscular)
+• A4–A6: Avaliação clínica (articulações, músculos, desgaste dental, tecidos orais)
+
+EIXO B — Fatores de Risco e Comorbidades:
+• B1: Psicossocial (estresse, GAD-7, PHQ-9)
+• B2: Condições do sono (apneia, insônia, parassonias)
+• B3: Condições não-sono (doenças sistêmicas, lifestyle)
+• B4: Medicamentos e substâncias (cafeína, álcool, tabaco, SSRIs, benzodiazepínicos)
+• B5: Fatores adicionais (genética, neurológicos, biomecânicos)
+
+Classificar bruxismo como: PROVÁVEL (autorrelato + clínica), POSSÍVEL (apenas clínica) ou DEFINIDO (PSG/bruxômetro).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESTRUTURA OBRIGATÓRIA DA ANÁLISE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Use EXATAMENTE estes títulos:
+
+## 1. CORRELAÇÕES CLÍNICAS
+Conecte os sistemas: tríade DTM–sono–bruxismo, eixo neuroinflamatório, metabólico-hormonal, psicossocial (STAB Eixo B). Identifique ciclos de retroalimentação e mecanismos de perpetuação da dor.
+
+## 2. HIPÓTESES DIAGNÓSTICAS INTEGRADAS
+Liste por probabilidade. Para cada: mecanismo fisiopatológico + evidências + classificação DC/TMD + estadiamento STAB quando bruxismo envolvido.
 
 ## 3. EXAMES COMPLEMENTARES SUGERIDOS
-Para cada exame: justificativa clinica especifica para este paciente.
+Por exame: justificativa clínica específica. Incluir quando indicado: perfil inflamatório, painel hormonal, vitaminas/minerais, polissonografia, cone beam, RNM da ATM.
 
 ## 4. PLANO DE TRATAMENTO INTEGRATIVO
-FASE 1 - Controle da dor aguda (2-4 semanas)
-FASE 2 - Modulacao causal (1-3 meses)
-FASE 3 - Manutencao e prevencao
+Baseado no protocolo do Dr. Victor. NUNCA incluir Botox.
+FASE 1 — Controle da dor aguda (2–4 semanas)
+FASE 2 — Modulação causal (1–3 meses)
+FASE 3 — Manutenção e prevenção (contínuo)
 
 ## 5. RESUMO PARA O PACIENTE
-Linguagem simples, empatica, sem jargao tecnico."""
+Linguagem simples, empática, sem jargão técnico. Máx 150 palavras."""
 
 
 class DadosPaciente(BaseModel):
@@ -144,7 +192,7 @@ def parsear_secoes(texto: str) -> dict:
 
 @app.get("/status")
 def status():
-    return {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "1.0"}
+    return {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "2.0-integrativo-stab"}
 
 
 @app.post("/analisar")
@@ -239,19 +287,23 @@ async def analisar_com_arquivos(
 
 
 MODALIDADES_TRATAMENTO = [
-    {"id": "avaliacao_multidisciplinar", "nome": "Avaliação Multidisciplinar", "descricao": "Avaliação integrada com dentista especializado em dor orofacial, fisioterapeuta e outros especialistas conforme necessidade."},
-    {"id": "terapia_manual", "nome": "Terapia Manual (Fisioterapia)", "descricao": "Técnica para aliviar dor e tensão muscular na região da mandíbula e pescoço, realizada pelo fisioterapeuta."},
-    {"id": "exercicios", "nome": "Exercícios de Fortalecimento e Alongamento", "descricao": "Exercícios específicos para fortalecer e alongar os músculos da mandíbula e pescoço, ajudando a aliviar dor e tensão."},
-    {"id": "placa_oclusal", "nome": "Placa Oclusal / Placa Estabilizadora", "descricao": "Dispositivo personalizado que alivia a pressão na articulação da mandíbula, reduzindo dor e protegendo os dentes."},
-    {"id": "agulhamento_seco", "nome": "Agulhamento Seco (Dry Needling)", "descricao": "Técnica que alivia a dor muscular reduzindo tensão na região da mandíbula e pescoço através de agulhas finas."},
-    {"id": "laser_terapia", "nome": "Laser Terapia", "descricao": "Terapia com luz laser para aliviar dor, reduzir inflamação e promover cicatrização dos tecidos."},
-    {"id": "viscossuplementacao", "nome": "Viscosuplementação", "descricao": "Procedimento que melhora a lubrificação e reduz a inflamação dentro da articulação da mandíbula."},
-    {"id": "disbiose_intestinal", "nome": "Controle da Disbiose Intestinal", "descricao": "Orientação sobre dieta e suplementação com probióticos para melhorar o equilíbrio intestinal e reduzir inflamação."},
-    {"id": "regulacao_sono", "nome": "Regulação do Sono", "descricao": "Orientações sobre higiene do sono e estratégias para melhorar a qualidade e duração do sono."},
-    {"id": "controle_estresse", "nome": "Controle do Estresse e Ansiedade", "descricao": "Técnicas de relaxamento e gerenciamento do estresse, que agravam os sintomas de DTM e bruxismo."},
-    {"id": "atividade_fisica", "nome": "Orientações sobre Atividade Física", "descricao": "Exercícios físicos regulares que reduzem a dor muscular e melhoram o bem-estar geral."}
+    {"id":"avaliacao","nome":"Avaliação Multidisciplinar","descricao":"Avaliação integrada com dentista especializado em dor orofacial, fisioterapeuta e outros especialistas (fonoaudiólogo, neurologista, reumatologista) conforme o caso."},
+    {"id":"placa_estab","nome":"Placa Oclusal / Placa Estabilizadora","descricao":"Dispositivo intraoral personalizado que alivia a pressão na ATM e protege os dentes do desgaste. Necessidade avaliada durante a evolução do tratamento."},
+    {"id":"placa_avanco","nome":"Placa de Avanço Mandibular (Ronco/Apneia)","descricao":"Dispositivo que avança a mandíbula durante o sono, desobstruindo as vias aéreas e reduzindo ronco e apneia leve a moderada."},
+    {"id":"terapia_manual","nome":"Terapia Manual e Fisioterapia Orofacial","descricao":"Técnicas manuais para aliviar dor e tensão muscular na região da mandíbula, pescoço e coluna cervical, realizadas pelo fisioterapeuta."},
+    {"id":"exercicios","nome":"Exercícios de Fortalecimento e Alongamento","descricao":"Protocolo específico para fortalecer e alongar os músculos da mandíbula, pescoço e postura, reduzindo dor e tensão crônica."},
+    {"id":"agulhamento","nome":"Agulhamento Seco (Dry Needling)","descricao":"Técnica com agulhas finas em pontos gatilho miofasciais para aliviar dor muscular e restaurar função na região da mandíbula e pescoço."},
+    {"id":"laser","nome":"Laser Terapia (Fotobiomodulação)","descricao":"Terapia com luz laser de baixa intensidade para aliviar dor, reduzir inflamação e promover regeneração tecidual e modulação neurológica."},
+    {"id":"ozonio","nome":"Ozonioterapia","descricao":"Aplicação terapêutica do ozônio com propriedades anti-inflamatórias, antimicrobianas e regenerativas — parte do protocolo integrativo do Dr. Victor."},
+    {"id":"viscosupl","nome":"Viscosuplementação da ATM","descricao":"Injeção intra-articular que melhora a lubrificação, reduz inflamação e alivia dor na articulação temporomandibular."},
+    {"id":"ldn","nome":"LDN – Baixa Dose de Naltrexona","descricao":"Modulação neuroimune com Naltrexona em baixa dose (1,5–4,5 mg). Indicada para dor crônica, sensibilização central, fibromialgia e condições autoimunes associadas."},
+    {"id":"suplementacao","nome":"Suplementação Funcional e Ortomolecular","descricao":"Protocolo individualizado com magnésio (Di-malato), CoQ10/Ubiquinol, vitamina D3+K2, resveratrol, acetil-L-carnitina e outros conforme perfil laboratorial."},
+    {"id":"disbiose","nome":"Controle da Disbiose Intestinal / Probióticos","descricao":"Intervenção no eixo intestino-cérebro: dieta anti-inflamatória, probióticos e suplementos para restaurar microbiota e reduzir inflamação sistêmica."},
+    {"id":"sono","nome":"Regulação do Sono (Higiene + Dispositivos)","descricao":"Protocolo completo de higiene do sono, orientações comportamentais e dispositivos intraorais quando indicados para bruxismo do sono e apneia."},
+    {"id":"estresse","nome":"Controle do Estresse e Ansiedade","descricao":"Orientações sobre relaxamento, mindfulness, biofeedback e encaminhamento para psicólogo quando indicado pelo GAD-7 ou PCS."},
+    {"id":"atividade","nome":"Orientações de Atividade Física e Postura","descricao":"Exercícios físicos regulares, correção postural e orientações ergonômicas para reduzir tensão muscular e melhorar qualidade de vida."},
+    {"id":"retorno","nome":"Consultas de Retorno e Acompanhamento","descricao":"Consultas periódicas para monitorar evolução, ajustar dispositivos e protocolos, e garantir manutenção dos resultados a longo prazo."}
 ]
-
 
 class PropostaRequest(BaseModel):
     nome: Optional[str] = ""
@@ -259,38 +311,52 @@ class PropostaRequest(BaseModel):
     hipoteses: Optional[str] = ""
     plano: Optional[str] = ""
     resumo_paciente: Optional[str] = ""
+    modalidades_selecionadas: Optional[List[str]] = []
 
 
 @app.post("/gerar-proposta")
 def gerar_proposta(dados: PropostaRequest):
-    """Gera proposta de tratamento personalizada para o paciente"""
+    """Gera proposta de tratamento personalizada e integrativa para o paciente"""
     if not ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=500, detail="API key não configurada")
+        raise HTTPException(status_code=500, detail="API key nao configurada")
 
-    modalidades_lista = "\n".join([f"- {m['id']}: {m['nome']}" for m in MODALIDADES_TRATAMENTO])
+    if dados.modalidades_selecionadas:
+        mods_disponiveis = [m for m in MODALIDADES_TRATAMENTO if m["nome"] in dados.modalidades_selecionadas]
+        if not mods_disponiveis:
+            mods_disponiveis = MODALIDADES_TRATAMENTO
+    else:
+        mods_disponiveis = MODALIDADES_TRATAMENTO
 
-    prompt = f"""Você é o assistente clínico do Dr. Victor Vaz, especialista em DTM, bruxismo, sono e dor crônica.
+    modalidades_lista = "\n".join([f"- {m['id']}: {m['nome']}" for m in mods_disponiveis])
 
-Com base nos dados clínicos abaixo, selecione quais modalidades são indicadas e gere uma proposta personalizada.
+    prompt = f"""Voce e o assistente clinico do Dr. Victor Vaz, especialista em DTM, bruxismo, sono e dor cronica, com abordagem integrativa e funcional.
+Com base nos dados clinicos abaixo, gere uma proposta de tratamento personalizada e humanizada.
+IMPORTANTE: Dr. Victor NUNCA usa Botox/Toxina Botulinica. Nao mencione esta modalidade.
 
-DADOS:
+DADOS DO PACIENTE:
 Nome: {dados.nome}
-Queixa: {dados.queixa}
-Hipóteses: {dados.hipoteses}
-Plano clínico: {dados.plano}
-Resumo: {dados.resumo_paciente}
+Queixa principal: {dados.queixa}
 
-MODALIDADES DISPONÍVEIS:
+HIPOTESES DIAGNOSTICAS:
+{dados.hipoteses}
+
+PLANO DE TRATAMENTO CLINICO:
+{dados.plano}
+
+RESUMO PARA O PACIENTE:
+{dados.resumo_paciente}
+
+MODALIDADES SELECIONADAS PELO DR. VICTOR:
 {modalidades_lista}
 
-Retorne SOMENTE JSON válido:
+Retorne SOMENTE um JSON valido com esta estrutura:
 {{
-  "introducao": "Texto personalizado para {dados.nome} (2-3 frases, linguagem simples)",
+  "introducao": "Texto de boas-vindas personalizado para {dados.nome}, explicando o diagnostico em linguagem simples e empatica (2-3 frases)",
   "modalidades_indicadas": ["id1", "id2"],
-  "justificativas": {{"id": "justificativa em 1-2 frases acessíveis"}},
-  "timeline": "tempo estimado para este caso",
-  "proximos_passos": "2-3 passos concretos para o paciente",
-  "observacoes": "expectativas realistas (máx 3 linhas)"
+  "justificativas": {{"id_modalidade": "justificativa clinica especifica para este paciente (1-2 frases)"}},
+  "timeline": "Cronograma estimado especifico para este caso (Fase 1, 2 e 3)",
+  "proximos_passos": "O que o paciente deve fazer agora (2-3 passos concretos)",
+  "observacoes": "Informacoes importantes sobre o tratamento integrativo (max 3 linhas)"
 }}"""
 
     try:
@@ -303,8 +369,10 @@ Retorne SOMENTE JSON válido:
         texto = message.content[0].text
         json_match = re.search(r'\{.*\}', texto, re.DOTALL)
         if not json_match:
-            raise ValueError("JSON não encontrado")
+            raise ValueError("JSON nao encontrado na resposta")
+
         proposta_ia = json.loads(json_match.group())
+
         modalidades_completas = []
         for mid in proposta_ia.get("modalidades_indicadas", []):
             modal = next((m for m in MODALIDADES_TRATAMENTO if m["id"] == mid), None)
@@ -315,6 +383,7 @@ Retorne SOMENTE JSON válido:
                     "descricao": modal["descricao"],
                     "justificativa": proposta_ia.get("justificativas", {}).get(mid, "")
                 })
+
         return {
             "nome_paciente": dados.nome,
             "introducao": proposta_ia.get("introducao", ""),
