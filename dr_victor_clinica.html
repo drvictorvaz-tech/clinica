@@ -1405,7 +1405,7 @@ window.startAnalysis=async function(){
     if(!resp.ok)throw new Error(data.detail||'Erro no servidor');
     if(lA)lA.style.display='none';if(rA)rA.style.display='block';
     if(pB&&d.nome)pB.textContent=d.nome;
-    vcMostrarBotaoProposta(d,data);
+            vcMostrarBotaoProposta(d,data);
     if(aS)aS.textContent='Análise Integrativa Completa';
     if(rS)rS.innerHTML='';
     [['resumo_paciente','Resumo do Paciente'],['hipoteses','Hipóteses Diagnósticas'],['correlacoes','Correlações Clínicas'],['exames','Exames Recomendados'],['plano','Plano de Tratamento']].forEach(function(s){
@@ -1427,169 +1427,159 @@ window.startAnalysis=async function(){
   }
 };
 
-
-// ── Proposta de Tratamento ─────────────────────────────
+// ============================================================
+// MÓDULO PROPOSTA DE TRATAMENTO - Dr. Victor Vaz
+// ============================================================
 var MODALIDADES=[
-  {id:"avaliacao_multidisciplinar",nome:"Avaliação Multidisciplinar"},
-  {id:"terapia_manual",nome:"Terapia Manual / Fisioterapia"},
-  {id:"exercicios",nome:"Exercícios de Fortalecimento e Alongamento"},
-  {id:"placa_oclusal",nome:"Placa Oclusal / Estabilizadora"},
-  {id:"agulhamento_seco",nome:"Agulhamento Seco (Dry Needling)"},
-  {id:"laser_terapia",nome:"Laser Terapia"},
-  {id:"viscossuplementacao",nome:"Viscosuplementação"},
-  {id:"disbiose_intestinal",nome:"Controle da Disbiose Intestinal"},
-  {id:"regulacao_sono",nome:"Regulação do Sono"},
-  {id:"controle_estresse",nome:"Controle do Estresse e Ansiedade"},
-  {id:"atividade_fisica",nome:"Orientações sobre Atividade Física"}
+  {id:'placa_miorelax', nome:'Placa Miorrelaxante (DTM/Bruxismo)'},
+  {id:'placa_avanco',   nome:'Placa de Avanço Mandibular (Ronco/Apneia)'},
+  {id:'fisioterapia',   nome:'Fisioterapia Orofacial'},
+  {id:'botox',          nome:'Toxina Botulínica (Botox Terapêutico)'},
+  {id:'acupuntura',     nome:'Acupuntura'},
+  {id:'laser',          nome:'Fotobiomodulação (Laser Terapêutico)'},
+  {id:'biofeedback',    nome:'Biofeedback / Reeducação Postural'},
+  {id:'medicacao',      nome:'Medicação / Suplementação'},
+  {id:'sono',           nome:'Orientações de Higiene do Sono'},
+  {id:'psicologia',     nome:'Acompanhamento Psicológico'},
+  {id:'retorno',        nome:'Consultas de Retorno e Acompanhamento'}
 ];
-var _dadosPacienteAtual={};
-var _analiseAtual={};
 
-// Criar modal de preços
-var modalPrecos=document.createElement('div');
-modalPrecos.id='vc-modal-precos';
-modalPrecos.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;overflow-y:auto;padding:20px;';
-modalPrecos.innerHTML='<div style="max-width:600px;margin:0 auto;background:#1a2332;border-radius:16px;padding:24px;border:1px solid #2d4a6e;">'
-  +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">'
-  +'<h2 style="color:#4f8ef7;margin:0;font-size:18px;">💰 Proposta de Tratamento</h2>'
-  +'<button onclick="document.getElementById('vc-modal-precos').style.display='none'" style="background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;">×</button>'
-  +'</div>'
-  +'<p style="color:#9ba;font-size:13px;margin-bottom:16px;">Informe os valores para cada modalidade (opcional). Os preços são salvos para uso futuro.</p>'
-  +'<div id="vc-lista-precos" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;"></div>'
-  +'<div style="display:flex;gap:12px;justify-content:flex-end;">'
-  +'<button onclick="document.getElementById('vc-modal-precos').style.display='none'" style="padding:10px 20px;border-radius:8px;border:1px solid #2d4a6e;background:transparent;color:#aaa;cursor:pointer;">Cancelar</button>'
-  +'<button onclick="window.vcGerarPropostaFinal()" style="padding:10px 24px;border-radius:8px;border:none;background:#2ecc71;color:#fff;font-weight:600;cursor:pointer;font-size:14px;">📋 Gerar Proposta</button>'
-  +'</div></div>';
-document.body.appendChild(modalPrecos);
+window.vcMostrarBotaoProposta=function(d,data){
+  var old=document.getElementById('vc-btn-proposta');
+  if(old)old.remove();
+  var areas=document.querySelectorAll('[id*="resultado"],[id*="analise"],[class*="resultado"],[class*="analise"]');
+  var btnArea=areas.length?areas[areas.length-1]:null;
+  if(!btnArea){
+    var ps=document.querySelectorAll('p,div');
+    for(var i=ps.length-1;i>=0;i--){if(ps[i].textContent.length>50&&ps[i].textContent.length<2000){btnArea=ps[i].parentElement;break;}}
+  }
+  if(!btnArea)btnArea=document.body;
+  var btn=document.createElement('button');
+  btn.id='vc-btn-proposta';
+  btn.innerHTML='💰 Gerar Proposta de Tratamento';
+  btn.style.cssText='display:block;margin:20px auto 0;padding:14px 32px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:bold;box-shadow:0 3px 12px rgba(39,174,96,0.4);';
+  btn.onclick=function(){vcAbrirProposta(d,data);};
+  btnArea.appendChild(btn);
+};
 
-// Criar modal de resultado da proposta
-var modalProposta=document.createElement('div');
-modalProposta.id='vc-modal-proposta';
-modalProposta.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10001;overflow-y:auto;padding:20px;';
-modalProposta.innerHTML='<div id="vc-proposta-content" style="max-width:700px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;color:#1a1a1a;">'
-  +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-  +'<div></div>'
-  +'<div style="display:flex;gap:8px;">'
-  +'<button onclick="window.print()" style="padding:8px 16px;border-radius:8px;border:none;background:#4f8ef7;color:#fff;cursor:pointer;font-size:13px;">🖨 Imprimir</button>'
-  +'<button onclick="document.getElementById('vc-modal-proposta').style.display='none'" style="padding:8px 16px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#333;cursor:pointer;font-size:13px;">Fechar</button>'
-  +'</div></div>'
-  +'<div id="vc-proposta-body"></div>'
-  +'</div>';
-document.body.appendChild(modalProposta);
-
-function vcRenderizarListaPrecos(){
-  var saved=JSON.parse(localStorage.getItem('vc_precos')||'{}');
-  var lista=document.getElementById('vc-lista-precos');
-  lista.innerHTML=MODALIDADES.map(function(m){
-    var val=saved[m.id]||'';
-    return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;gap:12px;">'
-      +'<span style="color:#e0e0e0;font-size:13px;flex:1;">'+m.nome+'</span>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="color:#9ba;font-size:12px;">R$</span>'
-      +'<input type="number" id="preco_'+m.id+'" value="'+val+'" placeholder="0,00" '
-      +'style="width:90px;padding:6px 8px;border-radius:6px;border:1px solid #2d4a6e;background:#0d0f0e;color:#e0e0e0;font-size:13px;text-align:right;">'
-      +'</div></div>';
-  }).join('');
-}
-
-window.vcAbrirProposta=function(dadosPaciente,analise){
-  _dadosPacienteAtual=dadosPaciente||{};
-  _analiseAtual=analise||{};
-  vcRenderizarListaPrecos();
+window.vcAbrirProposta=function(d,data){
+  window._vcPropostaAtual={d:d,data:data};
+  var plano=(data&&data.plano_tratamento)?data.plano_tratamento.toLowerCase():'';
+  var html='<div style="display:grid;gap:10px;">';
+  MODALIDADES.forEach(function(m){
+    var saved=localStorage.getItem('vc_preco_'+m.id)||'';
+    var termos=m.nome.toLowerCase().replace(/[()]/g,' ').split(' ').filter(function(t){return t.length>3;});
+    var indicada=plano.length===0||termos.some(function(t){return plano.indexOf(t)>=0;});
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:'+(indicada?'#f0faf4':'#f8f8f8')+';border-radius:6px;border:1px solid '+(indicada?'#a9dfbf':'#ddd')+';">';
+    html+='<input type="checkbox" id="vc_chk_'+m.id+'" '+(indicada?'checked':'')+' style="width:16px;height:16px;cursor:pointer;">';
+    html+='<label for="vc_chk_'+m.id+'" style="flex:1;font-size:13px;cursor:pointer;">'+m.nome+'</label>';
+    html+='<span style="color:#888;font-size:12px;">R$</span>';
+    html+='<input type="number" id="vc_preco_'+m.id+'" value="'+saved+'" placeholder="0,00" min="0" step="0.01" style="width:90px;padding:5px 8px;border:1px solid #ccc;border-radius:4px;text-align:right;font-size:13px;">';
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('vc-precos-form').innerHTML=html;
   document.getElementById('vc-modal-precos').style.display='block';
 };
 
 window.vcGerarPropostaFinal=function(){
-  // Salvar preços no localStorage
-  var precos={};
+  var vc=window._vcPropostaAtual;
+  if(!vc)return;
+  var selecionadas=[];
+  var total=0;
   MODALIDADES.forEach(function(m){
-    var el=document.getElementById('preco_'+m.id);
-    if(el&&el.value)precos[m.id]=el.value;
+    var chk=document.getElementById('vc_chk_'+m.id);
+    var inp=document.getElementById('vc_preco_'+m.id);
+    if(chk&&chk.checked){
+      var val=parseFloat((inp&&inp.value)||0)||0;
+      if(inp)localStorage.setItem('vc_preco_'+m.id,inp.value);
+      total+=val;
+      selecionadas.push({id:m.id,nome:m.nome,preco:val});
+    }
   });
-  localStorage.setItem('vc_precos',JSON.stringify(precos));
-
-  // Fechar modal de preços, mostrar loading
   document.getElementById('vc-modal-precos').style.display='none';
-  var body=document.getElementById('vc-proposta-body');
-  body.innerHTML='<div style="text-align:center;padding:40px;color:#666;">⏳ Gerando proposta personalizada...</div>';
+  document.getElementById('vc-proposta-conteudo').innerHTML='<div style="text-align:center;padding:50px;"><div style="font-size:32px;margin-bottom:12px;">⏳</div><p style="color:#666;">Gerando proposta personalizada...</p></div>';
   document.getElementById('vc-modal-proposta').style.display='block';
-
-  fetch(B+'/gerar-proposta',{
+  var d=vc.d;var data=vc.data;
+  var nomes=selecionadas.map(function(m){return m.nome;});
+  fetch('https://clinica-production-22e0.up.railway.app/gerar-proposta',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-      nome:_dadosPacienteAtual.nome||'',
-      queixa:_dadosPacienteAtual.queixa||'',
-      hipoteses:_analiseAtual.hipoteses||'',
-      plano:_analiseAtual.plano||'',
-      resumo_paciente:_analiseAtual.resumo_paciente||''
+      nome:d.nome||'Paciente',
+      queixa:d.queixa_principal||d.motivo_consulta||'',
+      hipoteses:data.hipoteses_diagnosticas||data.diagnostico||'',
+      plano:data.plano_tratamento||'',
+      resumo_paciente:data.resumo_executivo||data.resumo||'',
+      modalidades_selecionadas:nomes
     })
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var total=0;
-    var linhasModal=data.modalidades.map(function(m){
-      var preco=precos[m.id]?parseFloat(precos[m.id]):0;
-      if(preco)total+=preco;
-      return '<div style="border:1px solid #e8ecf0;border-radius:10px;padding:14px 16px;margin-bottom:10px;">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
-        +'<div style="font-weight:600;color:#1a3a5c;font-size:14px;">✓ '+m.nome+'</div>'
-        +(preco?'<div style="font-weight:600;color:#2ecc71;white-space:nowrap;margin-left:12px;">R$ '+preco.toFixed(2).replace('.',',')+'</div>':'')
-        +'</div>'
-        +(m.justificativa?'<div style="color:#666;font-size:13px;margin-top:4px;">'+m.justificativa+'</div>':'')
-        +'<div style="color:#888;font-size:12px;margin-top:4px;font-style:italic;">'+m.descricao+'</div>'
-        +'</div>';
-    }).join('');
-
-    var hoje=new Date().toLocaleDateString('pt-BR');
-    body.innerHTML='<div style="font-family:Georgia,serif;">'
-      +'<div style="text-align:center;border-bottom:2px solid #1a3a5c;padding-bottom:16px;margin-bottom:20px;">'
-      +'<h1 style="color:#1a3a5c;margin:0 0 4px;font-size:22px;">Dr. Victor Vaz</h1>'
-      +'<p style="color:#666;margin:0;font-size:13px;">Cirurgião-Dentista · Especialista em DTM, Bruxismo e Dor Orofacial</p>'
-      +'<p style="color:#999;margin:4px 0 0;font-size:12px;">Data: '+hoje+'</p>'
-      +'</div>'
-      +'<h2 style="color:#1a3a5c;font-size:17px;margin-bottom:8px;">Proposta de Tratamento</h2>'
-      +'<p style="color:#444;font-size:14px;line-height:1.6;margin-bottom:20px;padding:12px;background:#f8f9ff;border-left:3px solid #4f8ef7;border-radius:4px;">'+data.introducao+'</p>'
-      +'<h3 style="color:#1a3a5c;font-size:15px;margin-bottom:12px;">Modalidades Indicadas para o Seu Caso</h3>'
-      +linhasModal
-      +(total>0?'<div style="background:#f0faf4;border:1px solid #2ecc71;border-radius:10px;padding:14px 16px;margin:16px 0;display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:600;color:#1a3a5c;">Investimento Total Estimado</span><span style="font-size:20px;font-weight:700;color:#2ecc71;">R$ '+total.toFixed(2).replace('.',',')+'</span></div>':'')
-      +'<div style="border:1px solid #e8ecf0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
-      +'<div style="font-weight:600;color:#1a3a5c;margin-bottom:6px;">⏱ Tempo de Tratamento</div>'
-      +'<div style="color:#555;font-size:13px;">'+data.timeline+'</div>'
-      +'</div>'
-      +'<div style="border:1px solid #e8ecf0;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
-      +'<div style="font-weight:600;color:#1a3a5c;margin-bottom:6px;">▶ Próximos Passos</div>'
-      +'<div style="color:#555;font-size:13px;white-space:pre-wrap;">'+data.proximos_passos+'</div>'
-      +'</div>'
-      +(data.observacoes?'<div style="background:#fff8e1;border-radius:10px;padding:14px 16px;margin-bottom:12px;">'
-      +'<div style="font-weight:600;color:#856404;margin-bottom:6px;">📌 Observações Importantes</div>'
-      +'<div style="color:#666;font-size:13px;">'+data.observacoes+'</div>'
-      +'</div>':'')
-      +'<div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #eee;color:#999;font-size:11px;">'
-      +'Este documento é uma proposta personalizada com base na sua avaliação clínica. '
-      +'Os valores e modalidades podem ser ajustados conforme a evolução do tratamento.'
-      +'</div></div>';
-  })
-  .catch(function(e){
-    body.innerHTML='<div style="color:#c0392b;padding:20px;">Erro ao gerar proposta: '+e.message+'</div>';
+  }).then(function(r){return r.json();}).then(function(resp){
+    vcRenderizarProposta(resp,selecionadas,total,d);
+  }).catch(function(){
+    vcRenderizarProposta(null,selecionadas,total,d);
   });
 };
 
-window.vcMostrarBotaoProposta=function(dadosPaciente,analise){
-  var existing=document.getElementById('vc-btn-proposta-container');
-  if(existing)existing.remove();
-  var rA=document.getElementById('resultA');
-  if(!rA)return;
-  var container=document.createElement('div');
-  container.id='vc-btn-proposta-container';
-  container.style.cssText='text-align:center;margin:20px 0;padding:16px;background:rgba(46,204,113,0.08);border-radius:12px;border:1px solid rgba(46,204,113,0.3);';
-  container.innerHTML='<p style="color:#aaa;font-size:13px;margin:0 0 12px;">O paciente gostaria de uma proposta de tratamento?</p>'
-    +'<button onclick="window.vcAbrirProposta('+JSON.stringify(dadosPaciente).replace(/"/g,"'")+','+JSON.stringify({hipoteses:analise.hipoteses||'',plano:analise.plano||'',resumo_paciente:analise.resumo_paciente||''}).replace(/"/g,"'")+')" '
-    +'style="padding:12px 28px;border-radius:10px;border:none;background:#2ecc71;color:#fff;font-weight:600;cursor:pointer;font-size:14px;">💰 Gerar Proposta de Tratamento</button>';
-  rA.insertBefore(container, rA.firstChild);
+window.vcRenderizarProposta=function(resp,mods,total,d){
+  var nome=(d&&d.nome)?d.nome:'Paciente';
+  var hoje=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  var s='<div style="font-family:Georgia,serif;color:#1a1a1a;line-height:1.6;">';
+  s+='<div style="text-align:center;border-bottom:3px solid #1a5276;padding-bottom:18px;margin-bottom:22px;">';
+  s+='<h1 style="color:#1a5276;margin:0;font-size:22px;letter-spacing:1px;">Dr. Victor Vaz</h1>';
+  s+='<p style="margin:5px 0 2px;color:#555;font-size:13px;">Especialista em DTM • Sono • Bruxismo • Dor Orofacial</p>';
+  s+='<p style="margin:0;color:#888;font-size:12px;">Saúde Integrativa | drvictorvaz@gmail.com</p>';
+  s+='</div>';
+  s+='<h2 style="text-align:center;color:#1a5276;font-size:18px;margin-bottom:4px;">Proposta de Tratamento Personalizado</h2>';
+  s+='<p style="text-align:center;color:#aaa;font-size:12px;margin-bottom:24px;">'+hoje+'</p>';
+  s+='<p>Prezado(a) <strong>'+nome+'</strong>,</p>';
+  var intro=(resp&&resp.introducao)?resp.introducao:'Com base em sua avaliação clínica, elaboramos um plano de tratamento personalizado e integrado, contemplando todas as condições identificadas durante a consulta. O objetivo é proporcionar alívio dos sintomas, restaurar a qualidade de vida e tratar as causas subjacentes de forma sustentável.';
+  s+='<p style="margin-bottom:22px;color:#333;">'+intro+'</p>';
+  s+='<h3 style="color:#1a5276;border-bottom:2px solid #eee;padding-bottom:8px;margin-bottom:12px;">📋 Modalidades de Tratamento</h3>';
+  s+='<table style="width:100%;border-collapse:collapse;margin-bottom:22px;">';
+  s+='<thead><tr style="background:#1a5276;color:#fff;"><th style="padding:10px 14px;text-align:left;">Modalidade</th><th style="padding:10px 14px;text-align:right;width:130px;">Valor</th></tr></thead><tbody>';
+  mods.forEach(function(m,i){
+    s+='<tr style="background:'+(i%2?'#f8f9fa':'#fff')+';"><td style="padding:10px 14px;border-bottom:1px solid #eee;">'+m.nome+'</td>';
+    s+='<td style="padding:10px 14px;border-bottom:1px solid #eee;text-align:right;">'+(m.preco>0?'R$ '+m.preco.toLocaleString('pt-BR',{minimumFractionDigits:2}):'<em style="color:#aaa">A consultar</em>')+'</td></tr>';
+  });
+  if(total>0)s+='<tr style="background:#1a5276;color:#fff;font-weight:bold;"><td style="padding:12px 14px;">TOTAL DO INVESTIMENTO</td><td style="padding:12px 14px;text-align:right;font-size:16px;">R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</td></tr>';
+  s+='</tbody></table>';
+  if(resp&&resp.timeline){s+='<h3 style="color:#1a5276;border-bottom:2px solid #eee;padding-bottom:8px;">📅 Cronograma Estimado</h3><p style="color:#333;margin-bottom:20px;">'+resp.timeline+'</p>';}
+  if(resp&&resp.proximos_passos){s+='<h3 style="color:#1a5276;border-bottom:2px solid #eee;padding-bottom:8px;">🎯 Próximos Passos</h3><p style="color:#333;margin-bottom:20px;">'+resp.proximos_passos+'</p>';}
+  if(resp&&resp.observacoes){s+='<div style="background:#fef9e7;border-left:4px solid #f39c12;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:20px;"><strong>📌 Observações Importantes:</strong><br><span style="color:#333;">'+resp.observacoes+'</span></div>';}
+  s+='<div style="margin-top:30px;padding-top:18px;border-top:2px solid #eee;text-align:center;color:#aaa;font-size:12px;">';
+  s+='<p style="margin:0 0 4px;">Esta proposta tem validade de 30 dias a partir desta data.</p>';
+  s+='<p style="margin:0;"><strong style="color:#1a5276;">Dr. Victor Vaz</strong> — CRO: _____ | Especialista em DTM, Sono e Bruxismo</p>';
+  s+='</div></div>';
+  if(!document.getElementById('vc-print-style')){var ps=document.createElement('style');ps.id='vc-print-style';ps.textContent='@media print{body>*:not(#vc-modal-proposta){display:none!important;}#vc-modal-proposta{display:block!important;position:static!important;background:white!important;overflow:visible!important;}#vc-modal-proposta>div{box-shadow:none!important;border-radius:0!important;max-width:100%!important;margin:0!important;padding:20px!important;}button{display:none!important;}}';document.head.appendChild(ps);}
+  document.getElementById('vc-proposta-conteudo').innerHTML=s;
 };
-
+// ============================================================
 })();
 </script>
+
+<div id="vc-modal-precos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;overflow:auto;padding:20px 0;">
+  <div style="background:#fff;max-width:600px;margin:0 auto;padding:32px;border-radius:12px;font-family:Arial,sans-serif;box-shadow:0 8px 40px rgba(0,0,0,0.3);">
+    <h2 style="color:#1a5276;margin-top:0;border-bottom:2px solid #eee;padding-bottom:12px;">💰 Configurar Valores do Tratamento</h2>
+    <p style="color:#666;font-size:14px;margin-bottom:20px;">Selecione as modalidades indicadas e informe os valores. Os valores são salvos automaticamente.</p>
+    <div id="vc-precos-form"></div>
+    <div style="margin-top:24px;display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('vc-modal-precos').style.display='none'" style="padding:10px 24px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">Cancelar</button>
+      <button onclick="vcGerarPropostaFinal()" style="padding:10px 24px;background:#27ae60;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;">✅ Gerar Proposta</button>
+    </div>
+  </div>
+</div>
+
+<div id="vc-modal-proposta" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;overflow:auto;padding:20px 0;">
+  <div style="background:#fff;max-width:760px;margin:0 auto;padding:40px;border-radius:12px;font-family:Arial,sans-serif;box-shadow:0 8px 40px rgba(0,0,0,0.4);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #eee;">
+      <h2 style="color:#1a5276;margin:0;font-size:20px;">📋 Proposta de Tratamento</h2>
+      <div style="display:flex;gap:10px;">
+        <button onclick="window.print()" style="padding:8px 18px;background:#2980b9;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">🖨️ Imprimir / PDF</button>
+        <button onclick="document.getElementById('vc-modal-proposta').style.display='none'" style="padding:8px 16px;background:#95a5a6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">✕ Fechar</button>
+      </div>
+    </div>
+    <div id="vc-proposta-conteudo"></div>
+  </div>
+</div>
 </body>
 </html>
