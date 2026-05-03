@@ -6,7 +6,7 @@ import anthropic
 import os
 import base64
 import json
-import re
+import reh
 import datetime
 try:
     from supabase import create_client, Client as SupabaseClient
@@ -110,7 +110,7 @@ FASE 2 — Modulação causal (1–3 meses)
 FASE 3 — Manutenção e prevenção (contínuo)
 
 ## 5. RESUMO PARA O PACIENTE
-Linguagem simples, empática, sem jargão técnico. Máx 150 palavras."""
+Linguagem simples, empática, sem jargão técnico. Explique de forma clara e acolhedora: o que o paciente tem e por que está acontecendo, como o tratamento proposto vai ajudar, o que ele pode fazer em casa (hábitos, postura, qualidade do sono, manejo do estresse), o que deve evitar, e o que esperar ao longo do processo. Seja explicativo, motivador e tranquilizador. Máx 350 palavras."""
 
 
 class DadosPaciente(BaseModel):
