@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico de Pacientes — Dr. Victor Vaz</title>
+  <style>
+    :root {
+      --azul: #1a3a5c;
+      --azul-medio: #2563a8;
+      --azul-claro: #e8f0fb;
+      --verde: #16a34a;
+      --vermelho: #dc2626;
+      --laranja: #d97706;
+      --cinza: #6b7280;
+      --cinza-claro: #f3f4f6;
+      --borda: #d1d5db;
+      --branco: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #1f2937; min-height: 100vh; }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 100%);
+      color: white; padding: 16px 24px;
+      display: flex; align-items: center; gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .btn-voltar {
+      background: rgba(255,255,255,0.15); color: white;
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 8px;
+      padding: 8px 14px; cursor: pointer; font-size: 14px;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.25); }
+    header h1 { font-size: 20px; font-weight: 600; }
+    header p { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .header-info { flex: 1; }
+
+    /* MAIN CONTAINER */
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+    /* SEARCH BAR */
+    .search-card {
+      background: white; border-radius: 12px; padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 20px;
+    }
+    .search-row { display: flex; gap: 10px; }
+    .search-input {
+      flex: 1; padding: 12px 16px; border: 2px solid var(--borda);
+      border-radius: 8px; font-size: 15px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--azul-medio); }
+    .btn-buscar {
+      background: var(--azul-medio); color: white;
+      border: none; border-radius: 8px; padding: 12px 24px;
+      font-size: 15px; cursor: pointer; font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-buscar:hover { background: var(--azul); }
+    .btn-limpar {
+      background: var(--cinza-claro); color: var(--cinza);
+      border: 1px solid var(--borda); border-radius: 8px;
+      padding: 12px 16px; font-size: 15px; cursor: pointer;
+    }
+    .search-hint { font-size: 12px; color: var(--cinza); margin-top: 8px; }
+
+    /* STATS BAR */
+    .stats-bar {
+      display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .stat-pill {
+      background: white; border-radius: 20px; padding: 6px 14px;
+      font-size: 13px; color: var(--cinza);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stat-pill strong { color: var(--azul); }
+
+    /* LISTA */
+    #lista { display: flex; flex-direction: column; gap: 10px; }
+    .card-analise {
+      background: white; border-radius: 12px; padding: 16px 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-left: 4px solid var(--azul-medio);
+      cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .card-analise:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-1px); }
+    .card-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--azul-claro); color: var(--azul-medio);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px; flex-shrink: 0;
+    }
+    .card-info { flex: 1; }
+    .card-nome { font-weight: 600; font-size: 16px; color: #1f2937; }
+    .card-data { font-size: 13px; color: var(--cinza); margin-top: 2px; }
+    .card-nota { font-size: 13px; color: var(--laranja); margin-top: 4px; font-style: italic; }
+    .card-queixa { font-size: 13px; color: var(--cinza); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px; }
+    .card-acoes { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 6px 12px; border-radius: 6px; font-size: 13px;
+      cursor: pointer; border: 1px solid var(--borda); font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-ver { background: var(--azul-claro); color: var(--azul-medio); border-color: var(--azul-claro); }
+    .btn-ver:hover { background: #d1e0f5; }
+    .btn-del { background: #fef2f2; color: var(--vermelho); border-color: #fecaca; }
+    .btn-del:hover { background: #fee2e2; }
+    .btn-comp { background: #f0fdf4; color: var(--verde); border-color: #bbf7d0; }
+    .btn-comp:hover { background: #dcfce7; }
+
+    /* PAGINACAO */
+    .paginacao {
+      display: flex; justify-content: center; gap: 8px;
+      margin-top: 20px; flex-wrap: wrap;
+    }
+    .btn-pag {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid var(--borda);
+      background: white; cursor: pointer; font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn-pag:hover, .btn-pag.ativo { background: var(--azul-medio); color: white; border-color: var(--azul-medio); }
+
+    /* VAZIO / LOADING / ERRO */
+    .msg-centro {
+      text-align: center; padding: 60px 20px; color: var(--cinza);
+    }
+    .msg-centro .icone { font-size: 48px; margin-bottom: 12px; }
+    .msg-centro h3 { font-size: 18px; color: #374151; margin-bottom: 6px; }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid var(--azul-claro);
+      border-top-color: var(--azul-medio); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* BANCO NAO CONFIGURADO */
+    .aviso-banco {
+      background: #fffbeb; border: 2px solid #fbbf24;
+      border-radius: 12px; padding: 20px; margin-bottom: 20px;
+    }
+    .aviso-banco h3 { color: #92400e; margin-bottom: 8px; font-size: 16px; }
+    .aviso-banco p { color: #78350f; font-size: 14px; line-height: 1.6; }
+    .aviso-banco code {
+      background: #fef3c7; padding: 2px 6px; border-radius: 4px;
+      font-family: monospace; font-size: 13px;
+    }
+    .aviso-banco ol { padding-left: 20px; margin-top: 8px; }
+    .aviso-banco li { margin: 4px 0; }
+
+    /* MODAIS */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 100;
+      justify-content: center; align-items: flex-start;
+      overflow-y: auto; padding: 20px;
+    }
+    .modal-overlay.aberto { display: flex; }
+    .modal {
+      background: white; border-radius: 16px;
+      width: 100%; max-width: 900px; margin: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+    .modal-header {
+      background: linear-gradient(135deg, var(--azul), var(--azul-medio));
+      color: white; padding: 20px 24px; border-radius: 16px 16px 0 0;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .modal-header h2 { font-size: 18px; }
+    .modal-header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+    .btn-fechar {
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--borda); display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* SECOES DO RESULTADO */
+    .secao-resultado {
+      border: 1px solid var(--borda); border-radius: 10px; margin-bottom: 12px; overflow: hidden;
+    }
+    .secao-header {
+      background: var(--azul-claro); padding: 12px 16px;
+      font-weight: 600; color: var(--azul); font-size: 14px;
+      cursor: pointer; display: flex; justify-content: space-between;
+      align-items: center;
+    }
+    .secao-body {
+      padding: 16px; font-size: 14px; line-height: 1.7;
+      color: #374151; white-space: pre-wrap;
+    }
+
+    /* COMPARACAO */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .compare-col { border: 1px solid var(--borda); border-radius: 10px; overflow: hidden; }
+    .compare-col-header {
+      background: var(--azul-claro); padding: 10px 14px;
+      font-weight: 600; color: var(--azul); font-size: 13px;
+    }
+    .compare-col-body { padding: 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+    .compare-tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
+    .compare-tab {
+      flex: 1; padding: 10px; text-align: center; cursor: pointer;
+      font-size: 13px; font-weight: 500; background: var(--cinza-claro);
+      border: none; transition: all 0.2s;
+    }
+    .compare-tab.ativo { background: var(--azul-medio); color: white; }
+
+    /* NOTAS */
+    .notas-area {
+      width: 100%; padding: 12px; border: 2px solid var(--borda);
+      border-radius: 8px; font-size: 14px; font-family: inherit;
+      resize: vertical; min-height: 100px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .notas-area:focus { border-color: var(--azul-medio); }
+
+    /* BOTOES GERAIS */
+    .btn-primario {
+      background: var(--azul-medio); color: white;
+      border: none; border-radius: 8px; padding: 10px 20px;
+      font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+    .btn-primario:hover { background: var(--azul); }
+    .btn-secundario {
+      background: var(--cinza-claro); color: #374151;
+      border: 1px solid var(--borda); border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; cursor: pointer;
+    }
+    .btn-secundario:hover { background: #e5e7eb; }
+    .btn-danger {
+      background: #fef2f2; color: var(--vermelho);
+      border: 1px solid #fecaca; border-radius: 8px;
+      padding: 10px 20px; font-size: 14px; cursor: pointer;
+    }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* TAG DE DADOS DO PACIENTE */
+    .dados-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px; margin-bottom: 16px;
+    }
+    .dado-item {
+      background: var(--cinza-claro); border-radius: 8px; padding: 8px 12px;
+    }
+    .dado-label { font-size: 11px; color: var(--cinza); text-transform: uppercase; letter-spacing: 0.5px; }
+    .dado-valor { font-size: 14px; font-weight: 500; color: #1f2937; margin-top: 2px; }
+
+    /* SELECAO PARA COMPARAR */
+    .card-analise.selecionado { border-left-color: var(--verde); background: #f0fdf4; }
+    .badge-sel {
+      background: var(--verde); color: white;
+      border-radius: 12px; padding: 2px 8px; font-size: 11px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .card-acoes { flex-wrap: wrap; }
+      .compare-grid { grid-template-columns: 1fr; }
+      .dados-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="dr_victor_clinica.html" class="btn-voltar">← Voltar</a>
+  <div class="header-info">
+    <h1>📋 Histórico de Pacientes</h1>
+    <p>Dr. Victor Vaz — DTM, Bruxismo e Sono</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Aviso banco não configurado -->
+  <div id="avisoConfig" class="aviso-banco" style="display:none">
+    <h3>⚠️ Banco de dados não configurado</h3>
+    <p>Para ativar o histórico, siga estes passos (5 minutos):</p>
+    <ol>
+      <li>Acesse <strong>supabase.com</strong> e crie uma conta gratuita</li>
+      <li>Crie um novo projeto (escolha uma senha forte)</li>
+      <li>No menu lateral, vá em <strong>SQL Editor</strong> e execute o SQL abaixo:</li>
+    </ol>
+    <pre style="background:#fef3c7;padding:12px;border-radius:8px;margin:10px 0;font-size:12px;overflow-x:auto"><code>CREATE TABLE analises (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  criado_em TIMESTAMPTZ DEFAULT now(),
+  atualizado_em TIMESTAMPTZ DEFAULT now(),
+  nome_paciente TEXT NOT NULL,
+  dados_paciente JSONB DEFAULT '{}',
+  resultado JSONB DEFAULT '{}',
+  analise_bruta TEXT DEFAULT '',
+  notas TEXT DEFAULT ''
+);</code></pre>
+    <ol start="4">
+      <li>Em <strong>Project Settings → API</strong>, copie a <strong>Project URL</strong> e a <strong>anon public key</strong></li>
+      <li>No Railway, em <strong>Variables</strong> do seu serviço, adicione:<br>
+        <code>SUPABASE_URL</code> = sua Project URL<br>
+        <code>SUPABASE_KEY</code> = sua anon public key
+      </li>
+    </ol>
+  </div>
+
+  <!-- Busca -->
+  <div class="search-card">
+    <div class="search-row">
+      <input type="text" id="searchInput" class="search-input"
+        placeholder="🔍  Buscar por nome do paciente..."
+        onkeydown="if(event.key==='Enter') buscar()" />
+      <button class="btn-buscar" onclick="buscar()">Buscar</button>
+      <button class="btn-limpar" onclick="limparBusca()">✕</button>
+    </div>
+    <div class="search-hint">Digite o nome e pressione Enter ou clique em Buscar. Deixe em branco para ver todos.</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Modo comparação -->
+  <div id="modoComparar" style="display:none;background:#f0fdf4;border:2px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <span style="font-size:14px;color:#166534">
+      <strong>Modo Comparação:</strong> Selecione 2 análises do mesmo paciente para comparar.
+      <span id="selCount" style="margin-left:6px">0 selecionadas</span>
+    </span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-comp" onclick="abrirComparacao()" id="btnComparar" disabled>Comparar</button>
+      <button class="btn-sm" onclick="cancelarComparacao()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div id="lista">
+    <div class="msg-centro">
+      <div class="spinner"></div>
+      <p>Carregando histórico...</p>
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  <div class="paginacao" id="paginacao"></div>
+
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="modal-overlay" id="modalDetalhe">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="detalheNome">—</h2>
+        <p id="detalheData">—</p>
+      </div>
+      <button class="btn-fechar" onclick="fecharModal('modalDetalhe')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Dados do paciente -->
+      <div style="margin-bottom:20px">
+        <h3 style="font-size:14px;color:var(--cinza);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Dados da Consulta</h3>
+        <div class="dados-grid" id="detalhesDados"></div>
+      </div>
+      <!-- Resultado -->
+      <div id="detalheResultado"></div>
+      <!-- Notas -->
+      <div style="margin-top:20px">
+        <h3 style="font-size:14px;color:var(--cinza);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">📝 Notas do Dr. Victor</h3>
+        <textarea class="notas-area" id="detalheNotas" placeholder="Adicione observações clínicas sobre esta consulta..."></textarea>
+        <button class="btn-sm btn-ver" style="margin-top:8px" onclick="salvarNotas()">💾 Salvar notas</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" onclick="confirmarDeletar()">🗑 Excluir</button>
+      <button class="btn-sm btn-comp" onclick="iniciarComparacao()" style="padding:10px 20px;font-size:14px">⚖️ Comparar com outra consulta</button>
+      <button class="btn-secundario" onclick="fecharModal('modalDetalhe')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPARAÇÃO -->
+<div class="modal-overlay" id="modalComparacao">
+  <div class="modal" style="max-width:1100px">
+    <div class="modal-header">
+      <div>
+        <h2>⚖️ Comparação de Consultas</h2>
+        <p id="compareNome">—</p>
+      </div>
+      <button class="btn-fechar" onclick="fecharModal('modalComparacao')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="compare-tabs" id="compareTabs"></div>
+      <div class="compare-grid" id="compareGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secundario" onclick="fecharModal('modalComparacao')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO DELETE -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+      <div><h2>Confirmar exclusão</h2></div>
+      <button class="btn-fechar" onclick="fecharModal('modalDelete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:15px;line-height:1.6">Tem certeza que deseja excluir a análise de <strong id="deleteNome"></strong>? Esta ação não pode ser desfeita.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secundario" onclick="fecharModal('modalDelete')">Cancelar</button>
+      <button class="btn-danger" onclick="executarDeletar()">🗑 Excluir definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://clinica-production-22e0.up.railway.app';
+let paginaAtual = 1;
+let totalAnalises = 0;
+let buscaAtual = '';
+let analiseAtual = null;
+let selecionadas = [];
+let modoComparacaoAtivo = false;
+
+const SECOES = [
+  { key: 'correlacoes', label: '🔗 Correlações Clínicas' },
+  { key: 'hipoteses', label: '🔬 Hipóteses Diagnósticas' },
+  { key: 'exames', label: '🧪 Exames Sugeridos' },
+  { key: 'plano', label: '📋 Plano de Tratamento' },
+  { key: 'resumo_paciente', label: '💬 Resumo para o Paciente' }
+];
+
+async function carregarHistorico(pagina = 1) {
+  paginaAtual = pagina;
+  mostrarLoading();
+  try {
+    const url = buscaAtual
+      ? `${API}/buscar-paciente?nome=${encodeURIComponent(buscaAtual)}`
+      : `${API}/historico?pagina=${pagina}&limite=15`;
+    const r = await fetch(url);
+    if (!r.ok) {
+      const err = await r.json();
+      if (r.status === 503) { mostrarAvisoBanco(); return; }
+      throw new Error(err.detail || 'Erro ao carregar');
+    }
+    const data = await r.json();
+    totalAnalises = data.total || data.analises.length;
+    renderLista(data.analises);
+    renderPaginacao(totalAnalises, pagina);
+    renderStats(data.analises, totalAnalises);
+  } catch (e) {
+    if (e.message.includes('fetch') || e.message.includes('Failed')) {
+      mostrarErro('API offline. Verifique se o Railway está rodando.');
+    } else {
+      mostrarErro(e.message);
+    }
+  }
+}
+
+async function verificarBanco() {
+  try {
+    const r = await fetch(`${API}/status-banco`);
+    const d = await r.json();
+    if (!d.configurado) mostrarAvisoBanco();
+  } catch(e) {}
+}
+
+function renderLista(analises) {
+  const lista = document.getElementById('lista');
+  if (!analises || analises.length === 0) {
+    lista.innerHTML = `<div class="msg-centro">
+      <div class="icone">🔍</div>
+      <h3>Nenhuma análise encontrada</h3>
+      <p>${buscaAtual ? `Nenhum resultado para "${buscaAtual}"` : 'Ainda não há análises salvas. Gere uma análise na tela principal.'}</p>
+    </div>`;
+    return;
+  }
+  lista.innerHTML = analises.map(a => {
+    const iniciais = (a.nome_paciente || '?').split(' ').slice(0,2).map(n => n[0]).join('').toUpperCase();
+    const data = formatarData(a.criado_em);
+    const atualizado = a.atualizado_em !== a.criado_em ? ' · Editado: ' + formatarData(a.atualizado_em) : '';
+    const selecionada = selecionadas.includes(a.id);
+    return `<div class="card-analise ${selecionada ? 'selecionado' : ''}" id="card-${a.id}" onclick="handleCardClick('${a.id}')">
+      <div class="card-avatar">${iniciais}</div>
+      <div class="card-info" style="min-width:0">
+        <div class="card-nome">${a.nome_paciente || 'Paciente sem nome'}
+          ${selecionada ? '<span class="badge-sel">✓ Selecionada</span>' : ''}
+        </div>
+        <div class="card-data">📅 ${data}${atualizado}</div>
+        ${a.notas ? `<div class="card-nota">📝 ${a.notas.slice(0,80)}${a.notas.length > 80 ? '...' : ''}</div>` : ''}
+      </div>
+      <div class="card-acoes" onclick="event.stopPropagation()">
+        <button class="btn-sm btn-ver" onclick="abrirDetalhe('${a.id}')">👁 Ver</button>
+        <button class="btn-sm btn-del" onclick="confirmarDeletarDireto('${a.id}','${a.nome_paciente}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderStats(analises, total) {
+  const bar = document.getElementById('statsBar');
+  const hoje = analises.filter(a => {
+    const d = new Date(a.criado_em);
+    const n = new Date();
+    return d.toDateString() === n.toDateString();
+  }).length;
+  bar.innerHTML = `
+    <div class="stat-pill">Total: <strong>${total}</strong> análises</div>
+    ${buscaAtual ? `<div class="stat-pill">Encontradas: <strong>${analises.length}</strong></div>` : ''}
+    <div class="stat-pill">Hoje: <strong>${hoje}</strong></div>
+  `;
+}
+
+function renderPaginacao(total, pagina) {
+  if (buscaAtual) { document.getElementById('paginacao').innerHTML = ''; return; }
+  const totalPags = Math.ceil(total / 15);
+  if (totalPags <= 1) { document.getElementById('paginacao').innerHTML = ''; return; }
+  let html = '';
+  if (pagina > 1) html += `<button class="btn-pag" onclick="carregarHistorico(${pagina-1})">← Anterior</button>`;
+  for (let p = Math.max(1,pagina-2); p <= Math.min(totalPags, pagina+2); p++) {
+    html += `<button class="btn-pag ${p===pagina?'ativo':''}" onclick="carregarHistorico(${p})">${p}</button>`;
+  }
+  if (pagina < totalPags) html += `<button class="btn-pag" onclick="carregarHistorico(${pagina+1})">Próxima →</button>`;
+  document.getElementById('paginacao').innerHTML = html;
+}
+
+function buscar() {
+  buscaAtual = document.getElementById('searchInput').value.trim();
+  carregarHistorico(1);
+}
+function limparBusca() {
+  buscaAtual = '';
+  document.getElementById('searchInput').value = '';
+  carregarHistorico(1);
+}
+
+async function abrirDetalhe(id) {
+  if (modoComparacaoAtivo) { toggleSelecao(id); return; }
+  try {
+    const r = await fetch(`${API}/analise/${id}`);
+    if (!r.ok) throw new Error('Erro ao carregar análise');
+    const a = await r.json();
+    analiseAtual = a;
+
+    document.getElementById('detalheNome').textContent = a.nome_paciente || 'Paciente';
+    document.getElementById('detalheData').textContent = '📅 ' + formatarData(a.criado_em) + (a.atualizado_em !== a.criado_em ? '  ·  Editado: ' + formatarData(a.atualizado_em) : '');
+    document.getElementById('detalheNotas').value = a.notas || '';
+
+    const dadosCampos = [
+      ['Idade', a.dados_paciente?.idade ? a.dados_paciente.idade + ' anos' : null],
+      ['Sexo', a.dados_paciente?.sexo],
+      ['Profissão', a.dados_paciente?.profissao],
+      ['Estresse', a.dados_paciente?.estresse ? a.dados_paciente.estresse + '/10' : null],
+      ['EVA', a.dados_paciente?.eva ? a.dados_paciente.eva + '/10' : null],
+      ['Queixa', a.dados_paciente?.queixa],
+      ['Evolução', a.dados_paciente?.evolucao],
+      ['Sono', a.dados_paciente?.sonoq],
+      ['Bruxismo', a.dados_paciente?.brux],
+    ].filter(([,v]) => v);
+
+    document.getElementById('detalhesDados').innerHTML = dadosCampos.map(([l,v]) =>
+      `<div class="dado-item"><div class="dado-label">${l}</div><div class="dado-valor">${v}</div></div>`
+    ).join('');
+
+    const resultado = a.resultado || {};
+    document.getElementById('detalheResultado').innerHTML = SECOES.map(s => {
+      const conteudo = resultado[s.key] || '';
+      if (!conteudo) return '';
+      return `<div class="secao-resultado">
+        <div class="secao-header" onclick="toggleSecao(this)">${s.label} <span>▼</span></div>
+        <div class="secao-body">${conteudo}</div>
+      </div>`;
+    }).join('');
+
+    abrirModal('modalDetalhe');
+  } catch(e) {
+    alert('Erro ao carregar análise: ' + e.message);
+  }
+}
+
+function toggleSecao(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('span');
+  const aberto = body.style.display !== 'none';
+  body.style.display = aberto ? 'none' : 'block';
+  arrow.textContent = aberto ? '▶' : '▼';
+}
+
+async function salvarNotas() {
+  if (!analiseAtual) return;
+  const notas = document.getElementById('detalheNotas').value;
+  try {
+    const r = await fetch(`${API}/analise/${analiseAtual.id}`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ notas })
+    });
+    if (!r.ok) throw new Error('Erro ao salvar');
+    alert('✅ Notas salvas com sucesso!');
+    analiseAtual.notas = notas;
+    carregarHistorico(paginaAtual);
+  } catch(e) {
+    alert('Erro ao salvar notas: ' + e.message);
+  }
+}
+
+let idParaDeletar = null;
+function confirmarDeletar() {
+  if (!analiseAtual) return;
+  idParaDeletar = analiseAtual.id;
+  document.getElementById('deleteNome').textContent = analiseAtual.nome_paciente;
+  abrirModal('modalDelete');
+}
+function confirmarDeletarDireto(id, nome) {
+  idParaDeletar = id;
+  document.getElementById('deleteNome').textContent = nome;
+  abrirModal('modalDelete');
+}
+async function executarDeletar() {
+  if (!idParaDeletar) return;
+  try {
+    await fetch(`${API}/analise/${idParaDeletar}`, { method: 'DELETE' });
+    fecharModal('modalDelete');
+    fecharModal('modalDetalhe');
+    carregarHistorico(paginaAtual);
+    idParaDeletar = null;
+  } catch(e) {
+    alert('Erro ao excluir: ' + e.message);
+  }
+}
+
+function iniciarComparacao() {
+  fecharModal('modalDetalhe');
+  modoComparacaoAtivo = true;
+  selecionadas = analiseAtual ? [analiseAtual.id] : [];
+  document.getElementById('modoComparar').style.display = 'flex';
+  atualizarContadorSel();
+  carregarHistorico(paginaAtual);
+}
+function cancelarComparacao() {
+  modoComparacaoAtivo = false;
+  selecionadas = [];
+  document.getElementById('modoComparar').style.display = 'none';
+  carregarHistorico(paginaAtual);
+}
+function handleCardClick(id) {
+  if (modoComparacaoAtivo) { toggleSelecao(id); }
+  else { abrirDetalhe(id); }
+}
+function toggleSelecao(id) {
+  if (selecionadas.includes(id)) {
+    selecionadas = selecionadas.filter(i => i !== id);
+  } else if (selecionadas.length < 2) {
+    selecionadas.push(id);
+  } else {
+    alert('Você já selecionou 2 análises. Desmarque uma antes de selecionar outra.');
+    return;
+  }
+  atualizarContadorSel();
+  carregarHistorico(paginaAtual);
+}
+function atualizarContadorSel() {
+  document.getElementById('selCount').textContent = `${selecionadas.length} de 2 selecionadas`;
+  document.getElementById('btnComparar').disabled = selecionadas.length !== 2;
+}
+
+async function abrirComparacao() {
+  if (selecionadas.length !== 2) return;
+  try {
+    const [a1, a2] = await Promise.all(
+      selecionadas.map(id => fetch(`${API}/analise/${id}`).then(r => r.json()))
+    );
+    renderComparacao(a1, a2);
+    cancelarComparacao();
+    abrirModal('modalComparacao');
+  } catch(e) {
+    alert('Erro ao carregar análises: ' + e.message);
+  }
+}
+
+let compareSecaoAtiva = 0;
+function renderComparacao(a1, a2) {
+  document.getElementById('compareNome').textContent =
+    `${a1.nome_paciente} — ${formatarData(a1.criado_em)} vs ${formatarData(a2.criado_em)}`;
+  document.getElementById('compareTabs').innerHTML = SECOES.map((s, i) =>
+    `<button class="compare-tab ${i===0?'ativo':''}" onclick="mudarCompareTab(${i}, this)">${s.label.split(' ').slice(1).join(' ')}</button>`
+  ).join('');
+  renderCompareGrid(a1, a2, 0);
+}
+
+function mudarCompareTab(idx, btn) {
+  document.querySelectorAll('.compare-tab').forEach(t => t.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  const analises = window._compareAnalises;
+  if (analises) renderCompareGrid(analises[0], analises[1], idx);
+}
+
+function renderCompareGrid(a1, a2, secaoIdx) {
+  window._compareAnalises = [a1, a2];
+  const s = SECOES[secaoIdx];
+  const c1 = a1.resultado?.[s.key] || '(sem dados)';
+  const c2 = a2.resultado?.[s.key] || '(sem dados)';
+  document.getElementById('compareGrid').innerHTML = `
+    <div class="compare-col">
+      <div class="compare-col-header">📅 ${formatarData(a1.criado_em)}</div>
+      <div class="compare-col-body">${c1}</div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-col-header">📅 ${formatarData(a2.criado_em)}</div>
+      <div class="compare-col-body">${c2}</div>
+    </div>`;
+}
+
+function formatarData(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function abrirModal(id) { document.getElementById(id).classList.add('aberto'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('aberto'); }
+function mostrarLoading() {
+  document.getElementById('lista').innerHTML = `<div class="msg-centro"><div class="spinner"></div><p>Carregando...</p></div>`;
+  document.getElementById('statsBar').innerHTML = '';
+}
+function mostrarErro(msg) {
+  document.getElementById('lista').innerHTML = `<div class="msg-centro">
+    <div class="icone">⚠️</div>
+    <h3>Erro ao carregar</h3>
+    <p>${msg}</p>
+    <button class="btn-primario" style="margin-top:16px" onclick="carregarHistorico()">Tentar novamente</button>
+  </div>`;
+}
+function mostrarAvisoBanco() {
+  document.getElementById('avisoConfig').style.display = 'block';
+  document.getElementById('lista').innerHTML = `<div class="msg-centro">
+    <div class="icone">🖴️</div>
+    <h3>Banco de dados não configurado</h3>
+    <p>Siga as instruções acima para ativar o histórico.</p>
+  </div>`;
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('aberto');
+  });
+});
+
+verificarBanco();
+carregarHistorico();
+</script>
+</body>
+</html>
