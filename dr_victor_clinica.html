@@ -118,14 +118,24 @@ textarea { resize: vertical; min-height: 70px; }
 /* RESULTS */
 .results-area { display: none; }
 .results-area.show { display: block; }
-.section-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--primary); color: white; border-radius: 10px 10px 0 0; margin-top: 0; }
-.section-header .num { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
+.section-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--primary); color: white; border-radius: 10px 10px 0 0; margin-top: 0; cursor: pointer; user-select: none; transition: background 0.2s; }
+.section-header:hover { background: #1e5a82; }
+.section-header .num { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink:0; }
+.section-header .chevron { margin-left: auto; font-size: 1rem; transition: transform 0.25s; }
+.section-header.collapsed .chevron { transform: rotate(-90deg); }
 .section-body { background: white; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 18px; margin-bottom: 16px; line-height: 1.7; font-size: 0.9rem; }
+.section-body.hidden { display: none; }
 .section-body h3 { color: var(--primary); margin: 14px 0 6px; font-size: 0.95rem; }
 .section-body ul, .section-body ol { padding-left: 20px; margin: 8px 0; }
 .section-body li { margin-bottom: 4px; }
 .section-body strong { color: var(--primary); }
 .section-body em { color: var(--warning); }
+/* Score buttons */
+.score-btns { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.score-btn { width: 36px; height: 36px; border: 2px solid var(--border); border-radius: 8px; background: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; color: var(--text); }
+.score-btn:hover { border-color: var(--primary); color: var(--primary); }
+.score-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.score-btn.active.high { background: var(--danger); border-color: var(--danger); }
 
 /* STAB BADGE */
 .stab-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
@@ -222,6 +232,22 @@ textarea { resize: vertical; min-height: 70px; }
     </div>
     <div class="modal-body">
       <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px;">Selecione as modalidades indicadas e informe os valores para este paciente:</p>
+      
+      <div style="display:flex;gap:16px;margin-bottom:14px;padding:10px;background:#f0f4f8;border-radius:8px;font-size:0.85rem;align-items:center;flex-wrap:wrap;">
+        <strong style="color:var(--primary)">Exibir valores na proposta:</strong>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="separado" id="optSeparado" checked onchange="window._exibicaoValor=this.value">
+          Cada modalidade com seu valor
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="total" id="optTotal" onchange="window._exibicaoValor=this.value">
+          Só o valor total
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="nenhum" id="optNenhum" onchange="window._exibicaoValor=this.value">
+          Sem valores (só modalidades)
+        </label>
+      </div>
       <div id="modalidades-lista"></div>
     </div>
     <div class="modal-footer">
@@ -262,9 +288,21 @@ textarea { resize: vertical; min-height: 70px; }
           <select id="ecivil"><option value="">Selecione</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option><option>União estável</option></select>
         </div>
       </div>
-      <div class="field"><label for="estresse">Nível de estresse percebido (0–10)</label>
-        <input type="range" id="estresse" min="0" max="10" value="5" oninput="document.getElementById('estresseVal').textContent=this.value" style="padding:4px 0">
-        <div style="font-size:0.8rem;color:var(--text-muted)">Valor: <strong id="estresseVal">5</strong>/10</div>
+      <div class="field"><label>Nível de estresse percebido (0–10)</label>
+        <input type="hidden" id="estresse" value="5">
+        <div class="score-btns" id="estresseBtns">
+          <button type="button" class="score-btn" onclick="setScore('estresse',0)">0</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',1)">1</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',2)">2</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',3)">3</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',4)">4</button>
+          <button type="button" class="score-btn active" onclick="setScore('estresse',5)">5</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',6)">6</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',7)">7</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',8)">8</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',9)">9</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',10)">10</button>
+        </div>
       </div>
     </div>
 
@@ -469,23 +507,23 @@ textarea { resize: vertical; min-height: 70px; }
       <div class="patient-bar" id="patientBar"></div>
 
       <div id="section-correlacoes">
-        <div class="section-header"><div class="num">1</div><strong>CORRELAÇÕES CLÍNICAS</strong></div>
+        <div class="section-header" onclick="toggleSection('text-correlacoes',this)"><div class="num">1</div><strong>CORRELAÇÕES CLÍNICAS</strong><span class="chevron">▼</span></div>
         <div class="section-body" id="text-correlacoes"></div>
       </div>
       <div id="section-hipoteses">
-        <div class="section-header"><div class="num">2</div><strong>HIPÓTESES DIAGNÓSTICAS INTEGRADAS</strong></div>
+        <div class="section-header" onclick="toggleSection('text-hipoteses',this)"><div class="num">2</div><strong>HIPÓTESES DIAGNÓSTICAS INTEGRADAS</strong><span class="chevron">▼</span></div>
         <div class="section-body" id="text-hipoteses"></div>
       </div>
       <div id="section-exames">
-        <div class="section-header"><div class="num">3</div><strong>EXAMES COMPLEMENTARES SUGERIDOS</strong></div>
+        <div class="section-header" onclick="toggleSection('text-exames',this)"><div class="num">3</div><strong>EXAMES COMPLEMENTARES SUGERIDOS</strong><span class="chevron">▼</span></div>
         <div class="section-body" id="text-exames"></div>
       </div>
       <div id="section-plano">
-        <div class="section-header"><div class="num">4</div><strong>PLANO DE TRATAMENTO INTEGRATIVO</strong></div>
+        <div class="section-header" onclick="toggleSection('text-plano',this)"><div class="num">4</div><strong>PLANO DE TRATAMENTO INTEGRATIVO</strong><span class="chevron">▼</span></div>
         <div class="section-body" id="text-plano"></div>
       </div>
       <div id="section-resumo">
-        <div class="section-header"><div class="num">5</div><strong>RESUMO PARA O PACIENTE</strong></div>
+        <div class="section-header" onclick="toggleSection('text-resumo',this)"><div class="num">5</div><strong>RESUMO PARA O PACIENTE</strong><span class="chevron">▼</span></div>
         <div class="section-body" id="text-resumo"></div>
       </div>
 
@@ -616,16 +654,46 @@ function mostrarResultados(data, dados) {
   if(dados.queixa) pb += `<span>🩺 <strong>${dados.queixa.substring(0,50)}${dados.queixa.length>50?'...':''}</strong></span>`;
   document.getElementById('patientBar').innerHTML = pb;
 
-  // Sections
-  renderMd('text-correlacoes', data.correlacoes||'');
-  renderMd('text-hipoteses', data.hipoteses||'');
-  renderMd('text-exames', data.exames||'');
-  renderMd('text-plano', data.plano||'');
-  renderMd('text-resumo', data.resumo_paciente||'');
+  // Sections — if only correlacoes has content (parsing fallback), redistribute
+  let corr = data.correlacoes||'', hip = data.hipoteses||'', exa = data.exames||'', pla = data.plano||'', res = data.resumo_paciente||'';
+  const semConteudo = !hip && !exa && !pla && !res && corr;
+  if (semConteudo) {
+    // Try to split by numbered sections in the raw text
+    const partes = corr.split(/\n(?=\d+[\.\)]\s)/);
+    if (partes.length >= 3) {
+      corr = partes[0]; hip = partes[1]||''; exa = partes[2]||''; pla = partes[3]||''; res = partes[4]||'';
+    }
+  }
+  renderMd('text-correlacoes', corr);
+  renderMd('text-hipoteses', hip);
+  renderMd('text-exames', exa);
+  renderMd('text-plano', pla);
+  renderMd('text-resumo', res);
+  // Show sections that have content, hide empty ones
+  ['correlacoes','hipoteses','exames','plano','resumo'].forEach(s => {
+    const body = document.getElementById('text-'+(s==='resumo'?'resumo':s));
+    const sec = document.getElementById('section-'+(s==='resumo'?'resumo':s));
+    if(sec) sec.style.display = body && body.innerHTML.trim() ? 'block' : 'none';
+  });
+}
+
+function toggleSection(bodyId, header) {
+  const body = document.getElementById(bodyId);
+  body.classList.toggle('hidden');
+  header.classList.toggle('collapsed');
+}
+
+function setScore(fieldId, val) {
+  document.getElementById(fieldId).value = val;
+  const btns = document.querySelectorAll('#' + fieldId + 'Btns .score-btn');
+  btns.forEach((b, i) => {
+    b.classList.remove('active');
+    if (i === val) b.classList.add('active');
+  });
 }
 
 function renderMd(id, txt) {
-  // Basic markdown rendering
+  if (!txt || !txt.trim()) return;
   let html = txt
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
@@ -786,7 +854,7 @@ const MODALIDADES = [
   {id:'agulhamento',nome:'Agulhamento Seco (Dry Needling)'},
   {id:'laser',nome:'Laser Terapia (Fotobiomodulação)'},
   {id:'ozonio',nome:'Ozonioterapia'},
-  {id:'viscosupl',nome:'Viscosuplementação da ATM'},
+  {id:'viscosupl',nome:'Viscossuplementação da ATM'},
   {id:'ldn',nome:'LDN – Baixa Dose de Naltrexona'},
   {id:'suplementacao',nome:'Suplementação Funcional e Ortomolecular'},
   {id:'disbiose',nome:'Controle da Disbiose Intestinal / Probióticos'},
@@ -840,16 +908,29 @@ async function gerarProposta() {
 
 function renderProposta(prop, precos) {
   const agora = new Date().toLocaleDateString('pt-BR');
+  const modoExibicao = window._exibicaoValor || 'separado';
   let total = 0;
-  const linhas = (prop.modalidades||[]).map(m=>{
+
+  (prop.modalidades||[]).forEach(m=>{
     const idKey = MODALIDADES.find(x=>x.nome===m.nome)?.id||'';
-    const preco = precos[idKey]||'A consultar';
     if(precos[idKey]){
       const num = parseFloat(precos[idKey].replace(/[^0-9,]/g,'').replace(',','.'));
       if(!isNaN(num)) total+=num;
     }
-    return `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee">${m.nome}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;font-size:0.85rem">${m.justificativa||''}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#1a4a6b;white-space:nowrap">${preco}</td></tr>`;
+  });
+
+  const showValorColuna = modoExibicao === 'separado';
+  const linhas = (prop.modalidades||[]).map(m=>{
+    const idKey = MODALIDADES.find(x=>x.nome===m.nome)?.id||'';
+    const preco = precos[idKey]||'A consultar';
+    const valorCell = showValorColuna ? `<td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#1a4a6b;white-space:nowrap">${preco}</td>` : '';
+    return `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee">${m.nome}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;font-size:0.85rem">${m.justificativa||''}</td>${valorCell}</tr>`;
   }).join('');
+
+  const thInvestimento = showValorColuna ? `<th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Investimento</th>` : '';
+  const tfoot = total > 0 && modoExibicao !== 'nenhum'
+    ? `<tfoot><tr><td colspan="2" style="padding:10px 12px;font-weight:700;color:#1a4a6b;">Total estimado:</td><td style="padding:10px 12px;font-weight:700;color:#1a4a6b;">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr></tfoot>`
+    : '';
 
   const html = `
     <div style="max-width:700px;margin:0 auto;font-family:'Segoe UI',sans-serif;">
@@ -868,10 +949,10 @@ function renderProposta(prop, precos) {
           <thead><tr style="background:#f0f4f8;">
             <th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Tratamento</th>
             <th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Indicação</th>
-            <th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Investimento</th>
+            ${thInvestimento}
           </tr></thead>
           <tbody>${linhas}</tbody>
-          ${total>0?`<tfoot><tr><td colspan="2" style="padding:10px 12px;font-weight:700;color:#1a4a6b;">Total estimado:</td><td style="padding:10px 12px;font-weight:700;color:#1a4a6b;">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr></tfoot>`:''}
+          ${tfoot}
         </table>
         ${prop.timeline?`<div style="margin-top:20px;background:#eafaf1;border:1px solid #a9dfbf;padding:14px;border-radius:8px;"><strong style="color:#1e8449;">⏱️ Cronograma:</strong><br><span style="font-size:0.88rem">${prop.timeline}</span></div>`:''}
         ${prop.proximos_passos?`<div style="margin-top:12px;background:#fef9e7;border:1px solid #f9e79f;padding:14px;border-radius:8px;"><strong style="color:#9a7d0a;">📋 Próximos passos:</strong><br><span style="font-size:0.88rem">${prop.proximos_passos}</span></div>`:''}
@@ -885,7 +966,6 @@ function renderProposta(prop, precos) {
 
   document.getElementById('printProposta').innerHTML = html;
 
-  // Mostra em popup e botão para imprimir
   const win = window.open('','_blank','width=760,height=700');
   win.document.write(`<html><head><title>Proposta — ${prop.nome_paciente||'Paciente'}</title>
     <style>body{font-family:'Segoe UI',sans-serif;padding:20px;background:#f0f4f8;}button{padding:10px 24px;background:#1a4a6b;color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;margin-bottom:16px;}</style></head>
