@@ -6,7 +6,7 @@ import anthropic
 import os
 import base64
 import json
-import re
+import reh
 
 app = FastAPI(title="Dr. Victor API")
 
@@ -175,7 +175,7 @@ def parsear_secoes(texto: str) -> dict:
         "plano": ["4.", "PLANO"],
         "resumo_paciente": ["5.", "RESUMO"],
     }
-    partes = re.split(r'\n(?=##)', texto)
+    partes = re.split(r'\n(?=## )', texto)
     for parte in partes:
         if not parte.strip():
             continue
