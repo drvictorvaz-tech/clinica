@@ -92,6 +92,8 @@ Classificar bruxismo como: PROVÁVEL (autorrelato + clínica), POSSÍVEL (apenas
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ESTRUTURA OBRIGATÓRIA DA ANÁLISE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGRA DE ESCRITA: Sempre que usar siglas ou abreviações, escreva o significado entre parênteses na primeira vez que aparecer. Ex: ATM (Articulação Temporomandibular), DTM (Disfunção Temporomandibular), PSG (Polissonografia), EVA (Escala Visual Analógica), SNC (Sistema Nervoso Central).
+
 Use EXATAMENTE estes títulos:
 
 ## 1. CORRELAÇÕES CLÍNICAS
