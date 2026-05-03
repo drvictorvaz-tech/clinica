@@ -93,6 +93,7 @@ Classificar bruxismo como: PROVÁVEL (autorrelato + clínica), POSSÍVEL (apenas
 ESTRUTURA OBRIGATÓRIA DA ANÁLISE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 REGRA DE ESCRITA: Sempre que usar siglas ou abreviações, escreva o significado entre parênteses na primeira vez que aparecer. Ex: ATM (Articulação Temporomandibular), DTM (Disfunção Temporomandibular), PSG (Polissonografia), EVA (Escala Visual Analógica), SNC (Sistema Nervoso Central).
+REGRA DE FORMATAÇÃO: Sempre que apresentar dados comparativos, múltiplas variáveis, escalas, rankings ou parâmetros lado a lado, use tabelas em formato Markdown (| Coluna | Coluna |\n|---|---|\n| dado | dado |). Nunca liste em texto corrido quando uma tabela deixaria mais claro.
 
 Use EXATAMENTE estes títulos:
 
@@ -509,6 +510,38 @@ def deletar_analise(analise_id: str):
         raise HTTPException(503, "Banco nao configurado.")
     db.table("analises").delete().eq("id", analise_id).execute()
     return {"ok": True, "id": analise_id}
+
+class ChatPayload(BaseModel):
+    mensagem: str
+    contexto_analise: Optional[str] = ""
+    historico: Optional[list] = []
+
+@app.post("/chat")
+async def chat_ia(payload: ChatPayload):
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    system_prompt = """Você é o assistente clínico do Dr. Victor Vaz, cirurgião-dentista especialista em DTM (Disfunção Temporomandibular), bruxismo, sono e dor orofacial. 
+Auxilie o doutor a raciocinar clinicamente sobre o caso em questão.
+Seja objetivo, técnico mas acessível. Use tabelas Markdown quando comparar dados.
+Sempre que usar siglas, coloque o significado entre parênteses na primeira ocorrência."""
+
+    messages = []
+    for h in payload.historico:
+        messages.append({"role": h["role"], "content": h["content"]})
+
+    contexto = ""
+    if payload.contexto_analise:
+        contexto = f"\n\nCONTEXTO DA ANÁLISE ATUAL:\n{payload.contexto_analise}"
+
+    messages.append({"role": "user", "content": payload.mensagem + contexto})
+
+    resp = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=1024,
+        system=system_prompt,
+        messages=messages
+    )
+    return {"resposta": resp.content[0].text}
+
 
 if __name__ == "__main__":
     import uvicorn
