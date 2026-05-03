@@ -206,7 +206,7 @@ def analisar(dados: DadosPaciente):
         prompt = montar_prompt(dados.dict())
         message = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=4000,
+            max_tokens=8000,
             system=SYSTEM,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -277,7 +277,7 @@ async def analisar_com_arquivos(
         content.append({"type": "text", "text": f"\nArquivos: {', '.join(arquivos_adicionados)}. Analise e incorpore os achados."})
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        message = client.messages.create(model="claude-sonnet-4-6", max_tokens=4000, system=SYSTEM, messages=[{"role": "user", "content": content}])
+        message = client.messages.create(model="claude-sonnet-4-6", max_tokens=8000, system=SYSTEM, messages=[{"role": "user", "content": content}])
         texto = message.content[0].text
         secoes = parsear_secoes(texto)
         return {"correlacoes": secoes.get("correlacoes", ""), "hipoteses": secoes.get("hipoteses", ""), "exames": secoes.get("exames", ""), "plano": secoes.get("plano", ""), "resumo_paciente": secoes.get("resumo_paciente", ""), "areas_detectadas": arquivos_adicionados, "fontes": [], "analise_bruta": texto}
