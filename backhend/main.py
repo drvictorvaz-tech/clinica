@@ -7,6 +7,12 @@ import os
 import base64
 import json
 import re
+import datetime
+try:
+    from supabase import create_client, Client as SupabaseClient
+    SUPABASE_DISPONIVEL = True
+except ImportError:
+    SUPABASE_DISPONIVEL = False
 
 app = FastAPI(title="Dr. Victor API")
 
@@ -18,6 +24,16 @@ app.add_middleware(
 )
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+_db_client = None
+
+def get_db():
+    global _db_client
+    if _db_client is None and SUPABASE_DISPONIVEL and SUPABASE_URL and SUPABASE_KEY:
+        _db_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    return _db_client
+
 
 SYSTEM = """Você é o assistente clínico do Dr. Victor Vaz, cirurgião-dentista especialista em DTM, bruxismo, sono e dor orofacial, com pós-graduação em Dor Orofacial e foco em Saúde Integrativa e Funcional. CRO: 4923 SC — Balneário Camboriú, SC.
 
@@ -395,6 +411,102 @@ Retorne SOMENTE um JSON valido com esta estrutura:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+class SalvarRequest(BaseModel):
+    dados_paciente: dict = {}
+    resultado: dict = {}
+    analise_bruta: str = ""
+    notas: str = ""
+
+class AtualizarRequest(BaseModel):
+    resultado: Optional[dict] = None
+    notas: Optional[str] = None
+    dados_paciente: Optional[dict] = None
+
+@app.get("/status-banco")
+def status_banco():
+    db = get_db()
+    if not db:
+        return {"configurado": False, "msg": "Adicione SUPABASE_URL e SUPABASE_KEY no Railway"}
+    try:
+        db.table("analises").select("id").limit(1).execute()
+        return {"configurado": True, "msg": "Banco operacional"}
+    except Exception as e:
+        return {"configurado": False, "msg": str(e)}
+
+@app.post("/salvar-analise")
+def salvar_analise(req: SalvarRequest):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado. Adicione SUPABASE_URL e SUPABASE_KEY no Railway.")
+    row = {
+        "nome_paciente": req.dados_paciente.get("nome", "Paciente sem nome"),
+        "dados_paciente": req.dados_paciente,
+        "resultado": req.resultado,
+        "analise_bruta": req.analise_bruta,
+        "notas": req.notas
+    }
+    resp = db.table("analises").insert(row).execute()
+    if not resp.data:
+        raise HTTPException(500, "Erro ao salvar analise")
+    return {"id": resp.data[0]["id"], "criado_em": resp.data[0]["criado_em"]}
+
+@app.get("/historico")
+def historico(pagina: int = 1, limite: int = 20):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    offset = (pagina - 1) * limite
+    resp = db.table("analises").select("id,nome_paciente,criado_em,atualizado_em,notas").order("criado_em", desc=True).range(offset, offset + limite - 1).execute()
+    count_resp = db.table("analises").select("id", count="exact").execute()
+    return {"analises": resp.data, "total": count_resp.count or 0, "pagina": pagina, "limite": limite}
+
+@app.get("/buscar-paciente")
+def buscar_paciente_hist(nome: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    resp = db.table("analises").select("id,nome_paciente,criado_em,atualizado_em,notas").ilike("nome_paciente", f"%{nome}%").order("criado_em", desc=True).execute()
+    return {"analises": resp.data, "total": len(resp.data)}
+
+@app.get("/analise/{analise_id}")
+def obter_analise(analise_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    resp = db.table("analises").select("*").eq("id", analise_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Analise nao encontrada")
+    return resp.data[0]
+
+@app.put("/analise/{analise_id}")
+def atualizar_analise(analise_id: str, req: AtualizarRequest):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    update_data: dict = {}
+    if req.resultado is not None:
+        update_data["resultado"] = req.resultado
+    if req.notas is not None:
+        update_data["notas"] = req.notas
+    if req.dados_paciente is not None:
+        update_data["dados_paciente"] = req.dados_paciente
+    if not update_data:
+        raise HTTPException(400, "Nenhum dado para atualizar")
+    update_data["atualizado_em"] = datetime.datetime.utcnow().isoformat()
+    resp = db.table("analises").update(update_data).eq("id", analise_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Analise nao encontrada")
+    return resp.data[0]
+
+@app.delete("/analise/{analise_id}")
+def deletar_analise(analise_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    db.table("analises").delete().eq("id", analise_id).execute()
+    return {"ok": True, "id": analise_id}
 
 if __name__ == "__main__":
     import uvicorn
