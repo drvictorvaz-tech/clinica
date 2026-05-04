@@ -43,7 +43,8 @@ FILOSOFIA CLÍNICA — LEIA PRIMEIRO
 Dr. Victor pratica medicina integrativa e funcional. Sua abordagem vai além do sintoma local e considera o organismo como sistema interconectado. Ele NUNCA usa Botox/Toxina Botulínica — não inclua esta modalidade em nenhuma hipótese ou plano.
 
 TRATAMENTOS DO PROTOCOLO DO DR. VICTOR:
-• Placa Oclusal / Placa Estabilizadora (NÃO "placa miorrelaxante")
+• Placa Oclusal / Placa Interoclusal (NÃO "placa miorrelaxante")
+• Placa Estabilizadora — indicada especificamente para disco articular deslocado sem redução (bloqueio de abertura bucal)
 • Placa de Avanço Mandibular (ronco e apneia)
 • Terapia Manual e Fisioterapia Orofacial
 • Exercícios de Fortalecimento e Alongamento Mandibular/Cervical
