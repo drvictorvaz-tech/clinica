@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistente IA – DTM & Sono · Versão Teste</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --verde: #16a34a;
+    --verde-escuro: #14532d;
+    --verde-claro: #dcfce7;
+    --cinza: #f3f4f6;
+    --cinza-borda: #e5e7eb;
+    --texto: #111827;
+    --texto-sec: #6b7280;
+    --branco: #ffffff;
+    --shadow: 0 2px 12px rgba(0,0,0,0.10);
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #dcfce7 0%, #f0fff4 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--texto);
+  }
+
+  .banner-teste {
+    background: #fef08a;
+    border-bottom: 1px solid #eab308;
+    color: #713f12;
+    text-align: center;
+    padding: 9px 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--verde-escuro) 0%, var(--verde) 100%);
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .header-info h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
+  .header-info p { font-size: 0.78rem; opacity: 0.75; margin-top: 2px; }
+  .header-badge { margin-left: auto; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; padding: 5px 14px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .chat-wrapper { flex: 1; display: flex; flex-direction: column; max-width: 860px; width: 100%; margin: 0 auto; padding: 20px 16px 0; min-height: 0; }
+  .welcome-card { background: var(--branco); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 18px; box-shadow: var(--shadow); border-left: 4px solid var(--verde); }
+  .welcome-card h2 { font-size: 1rem; color: var(--verde-escuro); margin-bottom: 6px; }
+  .welcome-card p { font-size: 0.85rem; color: var(--texto-sec); line-height: 1.6; }
+  .sugestoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .sugestao-btn { background: var(--verde-claro); color: var(--verde-escuro); border: 1px solid #86efac; border-radius: 20px; padding: 6px 14px; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+  .sugestao-btn:hover { background: var(--verde); color: white; border-color: var(--verde); }
+  #mensagens { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 12px; min-height: 200px; max-height: calc(100vh - 360px); }
+  .msg { display: flex; gap: 10px; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.usuario { flex-direction: row-reverse; }
+  .msg-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .msg.ia .msg-avatar { background: var(--verde-claro); }
+  .msg.usuario .msg-avatar { background: #e0f2fe; }
+  .msg-bubble { max-width: 78%; padding: 12px 16px; border-radius: var(--radius); font-size: 0.88rem; line-height: 1.65; box-shadow: var(--shadow); }
+  .msg.ia .msg-bubble { background: var(--branco); border-top-left-radius: 4px; color: var(--texto); }
+  .msg.usuario .msg-bubble { background: var(--verde); color: white; border-top-right-radius: 4px; }
+  .msg-bubble table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.82rem; }
+  .msg-bubble th, .msg-bubble td { border: 1px solid var(--cinza-borda); padding: 7px 10px; text-align: left; }
+  .msg-bubble th { background: var(--verde-claro); color: var(--verde-escuro); font-weight: 600; }
+  .msg-bubble tr:nth-child(even) td { background: #f9fafb; }
+  .msg-bubble strong { font-weight: 700; }
+  .msg-bubble em { font-style: italic; }
+  .msg-bubble code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 0.82em; font-family: monospace; }
+  .msg-bubble ul, .msg-bubble ol { margin: 8px 0 8px 20px; line-height: 1.8; }
+  .msg-bubble h3, .msg-bubble h4 { margin: 12px 0 6px; color: var(--verde-escuro); }
+  .msg-bubble p { margin: 6px 0; }
+  .arquivo-preview { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); border-radius: 8px; padding: 7px 10px; margin-bottom: 8px; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.25); }
+  .msg.ia .arquivo-preview { background: var(--verde-claro); border-color: #86efac; color: var(--verde-escuro); }
+  .typing { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
+  .typing span { width: 7px; height: 7px; background: var(--texto-sec); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+  .input-area { background: var(--branco); border-top: 1px solid var(--cinza-borda); padding: 14px 16px 16px; position: sticky; bottom: 0; max-width: 860px; width: 100%; margin: 0 auto; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); }
+  #arquivo-info { display: none; align-items: center; gap: 8px; background: var(--verde-claro); border: 1px solid #86efac; border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 0.82rem; color: var(--verde-escuro); }
+  #arquivo-info.visivel { display: flex; }
+  #arquivo-info button { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--texto-sec); font-size: 1rem; padding: 0 2px; line-height: 1; }
+  .drop-zone { display: none; position: fixed; inset: 0; background: rgba(22,163,74,0.18); z-index: 999; align-items: center; justify-content: center; }
+  .drop-zone.ativo { display: flex; }
+  .drop-box { background: white; border: 3px dashed var(--verde); border-radius: 20px; padding: 40px 60px; text-align: center; font-size: 1.1rem; color: var(--verde-escuro); font-weight: 600; }
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
+  .btn-anexar { width: 44px; height: 44px; border: 1.5px solid var(--cinza-borda); background: var(--cinza); border-radius: 12px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+  .btn-anexar:hover { background: var(--verde-claro); border-color: var(--verde); }
+  #input-msg { flex: 1; border: 1.5px solid var(--cinza-borda); border-radius: 12px; padding: 11px 14px; font-size: 0.9rem; font-family: inherit; resize: none; min-height: 44px; max-height: 160px; outline: none; transition: border 0.2s; line-height: 1.5; }
+  #input-msg:focus { border-color: var(--verde); }
+  .btn-enviar { width: 44px; height: 44px; background: var(--verde); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+  .btn-enviar:hover { background: var(--verde-escuro); }
+  .btn-enviar:disabled { background: var(--cinza-borda); cursor: default; }
+  .input-hint { font-size: 0.72rem; color: var(--texto-sec); margin-top: 8px; text-align: center; }
+  .img-preview-bubble { max-width: 220px; border-radius: 10px; margin-bottom: 8px; display: block; }
+  @media (max-width: 600px) { header { padding: 14px 16px; } .header-info h1 { font-size: 1rem; } .header-badge { display: none; } .chat-wrapper { padding: 12px 10px 0; } .welcome-card { padding: 16px; } .msg-bubble { max-width: 88%; font-size: 0.85rem; } #mensagens { max-height: calc(100vh - 330px); } }
+</style>
+</head>
+<body>
+<div class="banner-teste">⚠️ Versão de teste — suas perguntas ajudam a melhorar o sistema. Não insira dados reais de pacientes.</div>
+<header>
+  <div class="header-icon">🧪</div>
+  <div class="header-info"><h1>Assistente IA – DTM & Sono</h1><p>Versão de teste · Dr. Victor Vaz</p></div>
+  <div class="header-badge"><div class="status-dot"></div>Online</div>
+</header>
+<div class="drop-zone" id="dropZone"><div class="drop-box">📎 Solte o arquivo aqui</div></div>
+<div class="chat-wrapper">
+  <div class="welcome-card">
+    <h2>👋 Bem-vindo ao teste!</h2>
+    <p>Este é um assistente especializado em DTM, bruxismo, sono e dor orofacial. Faça perguntas clínicas, envie casos, imagens ou documentos. Seu feedback ajuda a aperfeiçoar o sistema.</p>
+    <div class="sugestoes">
+      <button class="sugestao-btn" onclick="usarSugestao(this)">O que é DTM?</button>
+      <button class="sugestao-btn" onclick="usarSugestao(this)">Diferença bruxismo sono e vigília</button>
+      <button class="sugestao-btn" onclick="usarSugestao(this)">Quando indicar placa oclusal?</button>
+      <button class="sugestao-btn" onclick="usarSugestao(this)">DTM e dor de cabeça</button>
+      <button class="sugestao-btn" onclick="usarSugestao(this)">Relação DTM e apneia do sono</button>
+    </div>
+  </div>
+  <div id="mensagens"></div>
+</div>
+<div class="input-area">
+  <div id="arquivo-info"><span id="arquivo-icone">📎</span><span id="arquivo-nome-display"></span><button onclick="removerArquivo()" title="Remover">✕</button></div>
+  <div class="input-row">
+    <button class="btn-anexar" onclick="document.getElementById('file-input').click()" title="Anexar arquivo">📎</button>
+    <input type="file" id="file-input" accept="image/*,.pdf,.txt,.csv,.md,.docx" style="display:none" onchange="processarArquivo(this.files[0])">
+    <textarea id="input-msg" placeholder="Digite sua pergunta… (Enter = enviar, Shift+Enter = nova linha)" rows="1" oninput="autoResize(this)" onkeydown="teclaEnter(event)"></textarea>
+    <button class="btn-enviar" id="btn-enviar" onclick="enviar()" title="Enviar">➤</button>
+  </div>
+  <div class="input-hint">Suporta imagens, PDFs e arquivos de texto · Arraste arquivos para a janela</div>
+</div>
+<script>
+  const BACKEND = 'https://clinica-production-22e0.up.railway.app';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let historico = [];
+  let arquivoAtual = null;
+  function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
+  function teclaEnter(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } }
+  function usarSugestao(btn) { document.getElementById('input-msg').value = btn.textContent; enviar(); }
+  async function processarArquivo(file) {
+    if (!file) return;
+    if (file.size > 10*1024*1024) { alert('Arquivo muito grande. Maximo 10MB.'); return; }
+    arquivoAtual = { nome: file.name, tipo: file.type, tamanho: file.size };
+    if (file.type.startsWith('image/')) {
+      const b64 = await lerBase64(file);
+      arquivoAtual.imagem_base64 = b64.split(',')[1];
+      arquivoAtual.imagem_tipo = file.type;
+      document.getElementById('arquivo-icone').textContent = '🖼️';
+    } else if (file.type === 'application/pdf') {
+      try {
+        const ab = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+        let txt = '';
+        for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+          const pg = await pdf.getPage(i);
+          const ct = await pg.getTextContent();
+          txt += ct.items.map(x => x.str).join(' ') + '\n';
+        }
+        arquivoAtual.conteudo_texto = txt.trim().slice(0, 12000);
+        document.getElementById('arquivo-icone').textContent = '📄';
+      } catch(e) { alert('Erro ao ler PDF.'); arquivoAtual = null; return; }
+    } else {
+      arquivoAtual.conteudo_texto = await lerTexto(file);
+      if (arquivoAtual.conteudo_texto.length > 12000) arquivoAtual.conteudo_texto = arquivoAtual.conteudo_texto.slice(0,12000) + '\n[...truncado]';
+      document.getElementById('arquivo-icone').textContent = '📝';
+    }
+    document.getElementById('arquivo-nome-display').textContent = file.name;
+    document.getElementById('arquivo-info').classList.add('visivel');
+    document.getElementById('file-input').value = '';
+  }
+  function lerBase64(f) { return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(f); }); }
+  function lerTexto(f) { return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsText(f,'UTF-8'); }); }
+  function removerArquivo() { arquivoAtual=null; document.getElementById('arquivo-info').classList.remove('visivel'); }
+  document.addEventListener('dragover', e=>{ e.preventDefault(); document.getElementById('dropZone').classList.add('ativo'); });
+  document.addEventListener('dragleave', e=>{ if(!e.relatedTarget) document.getElementById('dropZone').classList.remove('ativo'); });
+  document.addEventListener('drop', e=>{ e.preventDefault(); document.getElementById('dropZone').classList.remove('ativo'); const f=e.dataTransfer.files[0]; if(f) processarArquivo(f); });
+  function renderMd(t) {
+    t = t.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (m,h,rows)=>{
+      const ths=h.split('|').filter(c=>c.trim()).map(c=>`<th>${c.trim()}</th>`).join('');
+      const trs=rows.trim().split('\n').map(r=>{ const tds=r.split('|').filter(c=>c.trim()).map(c=>`<td>${c.trim()}</td>`).join(''); return `<tr>${tds}</tr>`; }).join('');
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+    });
+    t=t.replace(/^### (.+)$/gm,'<h4>$1</h4>').replace(/^## (.+)$/gm,'<h3>$1</h3>');
+    t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+    t=t.replace(/`(.+?)`/g,'<code>$1</code>');
+    t=t.replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,m=>`<ul>${m}</ul>`);
+    t=t.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
+    return `<p>${t}</p>`;
+  }
+  function addMsg(role,texto,arq) {
+    const div=document.createElement('div'); div.className=`msg ${role}`;
+    const av=document.createElement('div'); av.className='msg-avatar'; av.textContent=role==='ia'?'🤖':'👤';
+    const bubble=document.createElement('div'); bubble.className='msg-bubble';
+    if(arq){ const prev=document.createElement('div'); prev.className='arquivo-preview';
+      if(arq.imagem_base64){ const img=document.createElement('img'); img.src=`data:${arq.imagem_tipo};base64,${arq.imagem_base64}`; img.className='img-preview-bubble'; bubble.appendChild(img); }
+      else { prev.textContent=`📎 ${arq.nome}`; bubble.appendChild(prev); } }
+    if(role==='ia') bubble.innerHTML+=renderMd(texto); else { const p=document.createElement('p'); p.textContent=texto; bubble.appendChild(p); }
+    div.appendChild(av); div.appendChild(bubble);
+    const msgs=document.getElementById('mensagens'); msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+  }
+  function addTyping() {
+    const div=document.createElement('div'); div.className='msg ia'; div.id='typing-msg';
+    const av=document.createElement('div'); av.className='msg-avatar'; av.textContent='🤖';
+    const b=document.createElement('div'); b.className='msg-bubble typing'; b.innerHTML='<span></span><span></span><span></span>';
+    div.appendChild(av); div.appendChild(b); document.getElementById('mensagens').appendChild(div); document.getElementById('mensagens').scrollTop=999999; return div;
+  }
+  async function enviar() {
+    const input=document.getElementById('input-msg');
+    const texto=input.value.trim();
+    if(!texto && !arquivoAtual) return;
+    const btn=document.getElementById('btn-enviar'); btn.disabled=true;
+    const msgTexto=texto||'(arquivo enviado)';
+    addMsg('usuario',msgTexto,arquivoAtual);
+    historico.push({role:'user',content:msgTexto});
+    if(historico.length>30) historico=historico.slice(-30);
+    input.value=''; input.style.height='auto';
+    const arqEnviado=arquivoAtual?{...arquivoAtual}:null; removerArquivo();
+    const typing=addTyping();
+    try {
+      const payload={mensagem:texto,historico:historico.slice(0,-1),arquivo_texto:arqEnviado?.conteudo_texto||'',arquivo_nome:arqEnviado?.nome||'',imagem_base64:arqEnviado?.imagem_base64||'',imagem_tipo:arqEnviado?.imagem_tipo||''};
+      const res=await fetch(`${BACKEND}/chat-professor`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!res.ok) throw new Error(`Erro ${res.status}`);
+      const data=await res.json(); const resposta=data.resposta;
+      typing.remove(); addMsg('ia',resposta);
+      historico.push({role:'assistant',content:resposta});
+      if(historico.length>30) historico=historico.slice(-30);
+    } catch(err) { typing.remove(); addMsg('ia',`Erro ao contatar o servidor: ${err.message}.`); }
+    btn.disabled=false; input.focus();
+  }
+</script>
+</body>
+  </html>
