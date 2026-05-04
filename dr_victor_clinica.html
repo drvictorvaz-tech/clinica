@@ -798,7 +798,7 @@ function mostrarResultados(data, dados) {
   document.getElementById('patientBar').innerHTML = pb;
 
   // Sections — if only correlacoes has content (parsing fallback), redistribute
-  let corr = data.correlacoes||'', hip = data.hipoteses||'', exa = data.exames||'', pla = data.plano||'', res = data.resumo_paciente||'';
+  let corr = data.correlacoes||'', hip = data.hipoteses||'', exa = data.exames||'', pla = data.plano||'', res = data.resumo||'';
   const semConteudo = !hip && !exa && !pla && !res && corr;
   if (semConteudo) {
     // Try to split by numbered sections in the raw text
@@ -1036,7 +1036,7 @@ async function gerarProposta() {
       queixa: ultimaAnalise.dados.queixa,
       hipoteses: ultimaAnalise.data.hipoteses||'',
       plano: ultimaAnalise.data.plano||'',
-      resumo_paciente: ultimaAnalise.data.resumo_paciente||'',
+      resumo_paciente: ultimaAnalise.data.resumo||'',
       modalidades_selecionadas: selecionadas
     };
     const r = await fetch(API+'/gerar-proposta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1196,7 +1196,7 @@ function setChatContexto(analise, nomePaciente) {
   }
 }
 
-function renderMd(text) {
+function renderChatMd(text) {
   // Basic markdown: tables, bold, italic
   let html = text
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1281,7 +1281,7 @@ async function sendChat() {
 
     const iaDiv = document.createElement('div');
     iaDiv.className = 'chat-msg ia';
-    iaDiv.innerHTML = renderMd(resposta);
+    iaDiv.innerHTML = renderChatMd(resposta);
     msgsDiv.appendChild(iaDiv);
   } catch(e) {
     typingDiv.remove();
