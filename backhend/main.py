@@ -546,3 +546,46 @@ Sempre que usar siglas, coloque o significado entre parênteses na primeira ocor
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+
+
+class ChatProfessorPayload(BaseModel):
+    mensagem: str
+    historico: Optional[list] = []
+    arquivo_texto: Optional[str] = ""
+    arquivo_nome: Optional[str] = ""
+    imagem_base64: Optional[str] = ""
+    imagem_tipo: Optional[str] = ""
+
+@app.post("/chat-professor")
+async def chat_professor(payload: ChatProfessorPayload):
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    system_prompt = """Voce e um assistente clinico especializado em DTM (Disfuncao Temporomandibular), bruxismo, sono e dor orofacial.
+Auxiliando professores, pesquisadores e profissionais da area odontologica e medica.
+Seja tecnico, preciso e didatico. Use tabelas Markdown para comparacoes e dados estruturados.
+Sempre que usar siglas, coloque o significado entre parenteses na primeira ocorrencia.
+Responda sempre em portugues brasileiro."""
+    messages = []
+    for h in payload.historico:
+        messages.append({"role": h["role"], "content": h["content"]})
+    user_content = []
+    if payload.imagem_base64 and payload.imagem_tipo:
+        user_content.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": payload.imagem_tipo,
+                "data": payload.imagem_base64
+            }
+        })
+    texto_msg = payload.mensagem or ""
+    if payload.arquivo_texto:
+        texto_msg += f"\n\n[Arquivo: {payload.arquivo_nome}]\n{payload.arquivo_texto[:10000]}"
+    user_content.append({"type": "text", "text": texto_msg or "(arquivo enviado)"})
+    messages.append({"role": "user", "content": user_content})
+    resp = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=2048,
+        system=system_prompt,
+        messages=messages
+    )
+    return {"resposta": resp.content[0].text}
