@@ -192,7 +192,7 @@ def parsear_secoes(texto: str) -> dict:
         "hipoteses": ["2.", "HIPOTESES", "HIPÓTESES"],
         "exames": ["3.", "EXAMES"],
         "plano": ["4.", "PLANO"],
-        "resumo_paciente": ["5.", "RESUMO"],
+        "resumo": ["5.", "RESUMO"],
     }
     partes = re.split(r'\n(?=## )', texto)
     for parte in partes:
@@ -236,7 +236,7 @@ def analisar(dados: DadosPaciente):
             "hipoteses": secoes.get("hipoteses", ""),
             "exames": secoes.get("exames", ""),
             "plano": secoes.get("plano", ""),
-            "resumo_paciente": secoes.get("resumo_paciente", ""),
+            "resumo": secoes.get("resumo", ""),
             "areas_detectadas": [],
             "fontes": [],
             "analise_bruta": texto
@@ -299,7 +299,7 @@ async def analisar_com_arquivos(
         message = client.messages.create(model="claude-sonnet-4-6", max_tokens=8000, system=SYSTEM, messages=[{"role": "user", "content": content}])
         texto = message.content[0].text
         secoes = parsear_secoes(texto)
-        return {"correlacoes": secoes.get("correlacoes", ""), "hipoteses": secoes.get("hipoteses", ""), "exames": secoes.get("exames", ""), "plano": secoes.get("plano", ""), "resumo_paciente": secoes.get("resumo_paciente", ""), "areas_detectadas": arquivos_adicionados, "fontes": [], "analise_bruta": texto}
+        return {"correlacoes": secoes.get("correlacoes", ""), "hipoteses": secoes.get("hipoteses", ""), "exames": secoes.get("exames", ""), "plano": secoes.get("plano", ""), "resumo": secoes.get("resumo", ""), "areas_detectadas": arquivos_adicionados, "fontes": [], "analise_bruta": texto}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
