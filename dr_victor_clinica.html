@@ -180,10 +180,12 @@ textarea { resize: vertical; min-height: 70px; }
 /* PRINT */
 .print-proposta { display: none; }
 @media print {
-  body > *:not(.print-proposta) { display: none !important; }
+  body > *:not(.print-proposta):not(.print-analise) { display: none !important; }
   .print-proposta { display: block !important; }
   .print-proposta { padding: 30px; font-family: 'Segoe UI', sans-serif; }
+  .print-analise { display: block !important; padding: 30px; font-family: 'Segoe UI', sans-serif; }
 }
+.print-analise { display: none; }
 
 /* ALERTS */
 .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
@@ -398,6 +400,7 @@ textarea { resize: vertical; min-height: 70px; }
 
 <!-- PRINT PROPOSTA -->
 <div class="print-proposta" id="printProposta"></div>
+<div class="print-analise" id="printAnalise"></div>
 
 <!-- MAIN -->
 <div class="container">
@@ -668,6 +671,8 @@ textarea { resize: vertical; min-height: 70px; }
 
       <div class="btn-group" style="margin-top:20px;justify-content:center;">
         <button class="btn btn-success btn-lg" id="btnProposta" onclick="abrirModal()">💰 Gerar Proposta de Tratamento</button>
+        <button class="btn btn-outline" onclick="downloadAnalise()">⬇️ Download Análise</button>
+        <button class="btn btn-outline" onclick="imprimirAnalise()">🖨️ Imprimir</button>
         <button class="btn btn-outline" onclick="novaAnalise()">🔄 Nova Análise</button>
         <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimir</button>
       </div>
@@ -1148,7 +1153,66 @@ async function salvarAnaliseAutomatico(data, dados) {
     }
   } catch(e) {
     console.warn('Auto-save histórico falhou (não crítico):', e.message);
+    showToast('⚠️ Análise não salva no histórico: ' + (e.message || 'verifique conexão'), 'warn');
   }
+}
+
+function downloadAnalise() {
+  const nome = (document.getElementById('nome').value || 'Paciente').trim();
+  const data = new Date().toLocaleDateString('pt-BR');
+  const sections = [
+    { title: 'CORRELAÇÕES CLÍNICAS', id: 'text-correlacoes' },
+    { title: 'HIPÓTESES DIAGNÓSTICAS INTEGRADAS', id: 'text-hipoteses' },
+    { title: 'EXAMES COMPLEMENTARES SUGERIDOS', id: 'text-exames' },
+    { title: 'PLANO DE TRATAMENTO INTEGRATIVO', id: 'text-plano' },
+    { title: 'RESUMO EXECUTIVO', id: 'text-resumo' }
+  ];
+  let txt = 'ANÁLISE CLÍNICA IA - Dr. Victor Vaz\n';
+  txt += 'Paciente: ' + nome + '\n';
+  txt += 'Data: ' + data + '\n';
+  txt += '='.repeat(60) + '\n\n';
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.innerText.trim()) {
+      txt += s.title + '\n' + '-'.repeat(50) + '\n';
+      txt += el.innerText.trim() + '\n\n';
+    }
+  });
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'analise_' + nome.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('⬇️ Download iniciado!');
+}
+
+function imprimirAnalise() {
+  const nome = (document.getElementById('nome').value || 'Paciente').trim();
+  const data = new Date().toLocaleDateString('pt-BR');
+  const sections = [
+    { title: 'CORRELAÇÕES CLÍNICAS', id: 'text-correlacoes' },
+    { title: 'HIPÓTESES DIAGNÓSTICAS INTEGRADAS', id: 'text-hipoteses' },
+    { title: 'EXAMES COMPLEMENTARES SUGERIDOS', id: 'text-exames' },
+    { title: 'PLANO DE TRATAMENTO INTEGRATIVO', id: 'text-plano' },
+    { title: 'RESUMO EXECUTIVO', id: 'text-resumo' }
+  ];
+  let html = '<h2 style="color:#1a56a0">Análise Clínica IA — Dr. Victor Vaz</h2>';
+  html += '<p><strong>Paciente:</strong> ' + nome + ' &nbsp;|&nbsp; <strong>Data:</strong> ' + data + '</p><hr>';
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.innerHTML.trim()) {
+      html += '<h3 style="color:#0d3b72;margin-top:20px">' + s.title + '</h3>';
+      html += '<div>' + el.innerHTML + '</div>';
+    }
+  });
+  const div = document.getElementById('printAnalise');
+  div.innerHTML = html;
+  window.print();
+  setTimeout(() => { div.innerHTML = ''; }, 2000);
 }
 </script>
 
