@@ -481,44 +481,139 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- IMPORTAR SECTION -->
 <div id="s-importar" class="section pc">
-  <div class="tcard">
-    <div class="thead2"><h3>📥 Importar Planilha</h3></div>
-    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Importe arquivos Excel (.xlsx, .xls) ou CSV com lançamentos. O sistema detecta as colunas automaticamente e organiza por data e mês.</p>
-    <div id="importDropArea" style="border:2px dashed #cbd5e1;border-radius:12px;padding:40px;text-align:center;cursor:pointer;background:#f8fafc;transition:all .2s" onclick="document.getElementById('importFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor='#cbd5e1'" ondrop="handleImportDrop(event)">
-      <div style="font-size:40px;margin-bottom:12px">📊</div>
-      <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px">Clique ou arraste o arquivo aqui</div>
-      <div style="font-size:12px;color:#94a3b8">Aceita: .xlsx, .xls, .csv</div>
-      <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
-    </div>
-    <div id="importMapping" style="display:none;margin-top:20px">
-      <h4 style="margin-bottom:12px;color:#374151;font-size:14px">🗂️ Mapeamento de Colunas</h4>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
-        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📅 Data</label><select id="colData" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
-        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📝 Descrição</label><select id="colDesc" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
-        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">💰 Valor</label><select id="colValor" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
-        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📂 Tipo</label><select id="colTipo" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"><option value="_auto">Auto (pelo sinal do valor)</option></select></div>
-        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">🏥 Clínica</label><select id="importClinicSel" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"><option value="auto">Minha clínica</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
-      </div>
-      <button class="btn btn-primary" onclick="buildImportPreview()">👁️ Visualizar Importação</button>
-    </div>
-    <div id="importPreview" style="display:none;margin-top:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h4 style="color:#374151;font-size:14px" id="importPreviewTitle">📋 Prévia</h4>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="importStats" style="font-size:12px;color:#64748b;padding:4px 10px;background:#f1f5f9;border-radius:20px"></span>
-          <button class="btn btn-primary btn-sm" onclick="confirmImport()">✅ Importar Tudo</button>
-        </div>
-      </div>
-      <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border-radius:10px;border:1px solid #e2e8f0">
-        <table class="sec-tbl"><thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right">Valor</th><th>Tipo</th><th>Categoria</th></tr></thead><tbody id="importPreviewBody"></tbody></table>
-      </div>
-    </div>
-    <div id="importResult" style="display:none;margin-top:20px;padding:20px;background:#dcfce7;border-radius:10px;border:1px solid #bbf7d0;text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">🎉</div>
-      <div id="importResultText" style="font-weight:700;color:#166534;font-size:15px"></div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="resetImport()">📥 Importar outro arquivo</button>
+
+<!-- PASSO 1 — INSTRUÇÕES + DOWNLOAD MODELO -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+  <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #1d4ed8">
+    <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:10px">📋 Como usar</div>
+    <div style="font-size:12px;color:#374151;line-height:1.8">
+      <b>1.</b> Baixe o modelo de planilha abaixo<br>
+      <b>2.</b> Preencha com seus lançamentos<br>
+      <b>3.</b> Salve como .xlsx ou .csv<br>
+      <b>4.</b> Faça o upload na área ao lado<br>
+      <b>5.</b> Revise e confirme a importação
     </div>
   </div>
+  <div style="background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #059669">
+    <div style="font-size:13px;font-weight:700;color:#059669;margin-bottom:10px">📥 Baixar Modelo</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:14px">Planilha com colunas já no formato correto (data, descrição, valor, tipo, clínica)</div>
+    <button class="btn btn-success" onclick="downloadTemplate()" style="width:100%;justify-content:center">
+      ⬇️ Baixar Modelo Excel
+    </button>
+  </div>
+</div>
+
+<!-- PASSO 2 — UPLOAD -->
+<div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px">
+  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+    <span style="background:#1d4ed8;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">1</span>
+    Selecione o arquivo
+  </div>
+
+  <!-- Drop zone -->
+  <div id="importDropArea"
+    style="border:2px dashed #94a3b8;border-radius:12px;padding:36px 20px;text-align:center;background:#f8fafc;transition:all .2s;cursor:pointer"
+    ondragover="event.preventDefault();this.style.borderColor='#1d4ed8';this.style.background='#eff6ff'"
+    ondragleave="this.style.borderColor='#94a3b8';this.style.background='#f8fafc'"
+    ondrop="handleImportDrop(event)">
+    <div style="font-size:44px;margin-bottom:10px">📂</div>
+    <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:6px">Arraste o arquivo aqui</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:18px">Aceita: <b>.xlsx</b> &nbsp;·&nbsp; <b>.xls</b> &nbsp;·&nbsp; <b>.csv</b></div>
+    <button type="button" class="btn btn-primary"
+      onclick="event.stopPropagation();document.getElementById('importFileInput').click()"
+      style="font-size:13px;padding:9px 22px">
+      📁 Escolher Arquivo
+    </button>
+    <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+  </div>
+
+  <!-- Nome do arquivo selecionado -->
+  <div id="importFileName" style="display:none;margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:12px;color:#1d4ed8;font-weight:600;display:flex;align-items:center;gap:8px">
+    <span>📄</span><span id="importFileNameText"></span>
+    <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="resetImportFile()">✕ Remover</button>
+  </div>
+</div>
+
+<!-- PASSO 3 — MAPEAMENTO DE COLUNAS -->
+<div id="importMapping" style="display:none;background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px">
+  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+    <span style="background:#1d4ed8;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">2</span>
+    Confirme as colunas
+    <span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px">— detectadas automaticamente, ajuste se necessário</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📅 Coluna Data *</label>
+      <select id="colData" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📝 Coluna Descrição *</label>
+      <select id="colDesc" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">💰 Coluna Valor *</label>
+      <select id="colValor" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📂 Coluna Tipo</label>
+      <select id="colTipo" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px">
+        <option value="_auto">Auto (sinal do valor)</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">🏥 Clínica</label>
+      <select id="importClinicSel" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px">
+        <option value="auto">Minha clínica</option>
+        <option value="dtm">DTM &amp; Sono</option>
+        <option value="hernia">Dr. Hérnia SJC</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="buildImportPreview()" style="padding:10px 24px;font-size:13px">
+    👁️ Visualizar Importação →
+  </button>
+</div>
+
+<!-- PASSO 4 — PRÉVIA -->
+<div id="importPreview" style="display:none;background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div style="font-size:14px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px">
+      <span style="background:#1d4ed8;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">3</span>
+      <span id="importPreviewTitle">📋 Prévia</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span id="importStats" style="font-size:12px;padding:5px 12px;background:#f1f5f9;border-radius:20px;color:#374151;font-weight:600"></span>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importPreview').style.display='none';document.getElementById('importMapping').style.display='block'">← Voltar</button>
+      <button class="btn btn-success" onclick="confirmImport()" style="font-size:13px;padding:9px 20px">✅ Confirmar Importação</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border-radius:8px;border:1px solid #e2e8f0">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f8fafc">
+          <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Data</th>
+          <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Descrição</th>
+          <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Valor</th>
+          <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Tipo</th>
+          <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Categoria</th>
+          <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0">Clínica</th>
+        </tr>
+      </thead>
+      <tbody id="importPreviewBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- RESULTADO -->
+<div id="importResult" style="display:none;background:white;border-radius:12px;padding:36px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center">
+  <div style="font-size:56px;margin-bottom:12px">🎉</div>
+  <div id="importResultText" style="font-weight:700;color:#166534;font-size:16px;margin-bottom:16px"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="resetImport()">📥 Importar outro arquivo</button>
+    <button class="btn btn-ghost" onclick="nav('lancamentos')">📋 Ver Lançamentos</button>
+  </div>
+</div>
+
 </div>
 
 </main>
@@ -1926,8 +2021,38 @@ async function loadSecTable(){
 
 // ===== IMPORT PLANILHA =====
 let _importRows=[],_importHeaders=[];
-function handleImportDrop(e){e.preventDefault();document.getElementById('importDropArea').style.borderColor='#cbd5e1';const f=e.dataTransfer.files[0];if(f)processImportFile(f);}
+function downloadTemplate(){
+  if(typeof XLSX==='undefined'){toast('Aguarde, carregando biblioteca...','warn');return;}
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['data','descricao','valor','tipo','clinica'],
+    ['15/05/2026','Consulta paciente João Silva','350.00','receita','dtm'],
+    ['15/05/2026','Aluguel sala maio','1200.00','despesa','dtm'],
+    ['16/05/2026','Protocolo bruxismo','680.00','receita','dtm'],
+    ['16/05/2026','Material de consumo','85.50','despesa','hernia'],
+    ['17/05/2026','Consulta hérnia de disco','420.00','receita','hernia'],
+  ]);
+  ws['!cols']=[{wch:14},{wch:36},{wch:12},{wch:10},{wch:10}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,'Lançamentos',ws);
+  XLSX.writeFile(wb,'modelo_lancamentos_clinica.xlsx');
+  toast('✅ Modelo baixado!');
+}
+function handleImportDrop(e){
+  e.preventDefault();
+  const area=document.getElementById('importDropArea');
+  area.style.borderColor='#94a3b8';
+  area.style.background='#f8fafc';
+  const f=e.dataTransfer.files[0];
+  if(f)processImportFile(f);
+}
 function handleImportFile(inp){const f=inp.files[0];if(f)processImportFile(f);}
+function resetImportFile(){
+  document.getElementById('importFileInput').value='';
+  document.getElementById('importFileName').style.display='none';
+  document.getElementById('importMapping').style.display='none';
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importResult').style.display='none';
+}
 function processImportFile(file){
   const reader=new FileReader();
   reader.onload=function(e){
@@ -1936,6 +2061,7 @@ function processImportFile(file){
       if(/\.csv$/i.test(file.name)){
         const text=e.target.result;
         const lines=text.split(/\r?\n/).filter(l=>l.trim());
+        if(!lines.length){toast('Arquivo CSV vazio','err');return;}
         const sep=lines[0].includes(';')?';':',';
         rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
       } else {
@@ -1944,18 +2070,23 @@ function processImportFile(file){
         const ws=wb.Sheets[wb.SheetNames[0]];
         rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
       }
-      if(!rows.length){toast('Arquivo vazio ou inválido','err');return;}
-      _importHeaders=rows[0].map(String);
+      if(!rows||!rows.length){toast('Arquivo vazio ou inválido','err');return;}
+      _importHeaders=rows[0].map(h=>String(h||''));
       _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      if(!_importRows.length){toast('Nenhum dado encontrado na planilha','err');return;}
       const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
       ['colData','colDesc','colValor'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
-      document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (pelo sinal do valor)</option>'+opts;
+      document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
       autoDetectImportCols();
+      // Show filename badge
+      const fnEl=document.getElementById('importFileName');
+      document.getElementById('importFileNameText').textContent=`${file.name}  (${_importRows.length} linhas encontradas)`;
+      fnEl.style.display='flex';
       document.getElementById('importMapping').style.display='block';
       document.getElementById('importPreview').style.display='none';
       document.getElementById('importResult').style.display='none';
       toast(`📊 ${_importRows.length} linhas lidas de "${file.name}"`);
-    }catch(err){toast('Erro ao ler: '+err.message,'err');}
+    }catch(err){toast('Erro ao ler arquivo: '+err.message,'err');console.error(err);}
   };
   if(/\.csv$/i.test(file.name)) reader.readAsText(file,'UTF-8');
   else reader.readAsArrayBuffer(file);
@@ -2015,8 +2146,10 @@ function buildImportPreview(){
     const c=clinicSel==='auto'?userClinic():clinicSel;
     if(tipo==='receita')recT+=valor;else desT+=valor;
     preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,cat,clinic:c});
+    const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtD(dataISO)}</td><td title="${desc}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc.length>45?desc.substring(0,45)+'…':desc}</td><td style="text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td><td style="font-size:11px;color:#64748b">${cat}</td>`;
+    tr.style.borderBottom='1px solid #f1f5f9';
+    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc.length>50?desc.substring(0,50)+'…':desc}</td><td style="padding:8px 12px;font-size:12px;text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td style="padding:8px 12px"><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td><td style="padding:8px 12px;font-size:11px;color:#64748b">${cat}</td><td style="padding:8px 12px;font-size:11px;color:#64748b">${clinicLabel}</td>`;
     tbody.appendChild(tr);
   });
   window._importPreviewData=preview;
@@ -2030,108 +2163,4 @@ async function confirmImport(){
   loading(true);
   let ok=0,fail=0;
   for(let i=0;i<data.length;i+=50){
-    const batch=data.slice(i,i+50).map(r=>({clinic:r.clinic,tipo:r.tipo,categoria:r.cat,descricao:r.desc,valor:r.valor,data:r.dataISO,pagamento:'importado',observacao:'Importado via planilha'}));
-    const{error}=await sb.from('transactions').insert(batch);
-    if(error)fail+=batch.length;else ok+=batch.length;
-  }
-  loading(false);
-  document.getElementById('importPreview').style.display='none';
-  document.getElementById('importMapping').style.display='none';
-  document.getElementById('importResult').style.display='block';
-  document.getElementById('importResultText').innerHTML=`${ok} lançamentos importados!<br><small style="font-weight:400;color:#4b7a5e">${fail>0?fail+' com erro':'Todos OK ✓'}</small>`;
-  toast(`✅ ${ok} lançamentos importados!`);
-}
-function resetImport(){
-  document.getElementById('importResult').style.display='none';
-  document.getElementById('importMapping').style.display='none';
-  document.getElementById('importPreview').style.display='none';
-  document.getElementById('importFileInput').value='';
-}
-// Also add import tab to secretary screen
-
-function handleSecImportFile(inp){if(!inp.files||!inp.files[0])return;processSecImportFile(inp.files[0]);}
-function processSecImportFile(file){
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      let rows=[];
-      if(/\.csv$/i.test(file.name)){const text=e.target.result;const lines=text.split(/\r?\n/).filter(l=>l.trim());const sep=lines[0].includes(';')?';':',';rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));}
-      else{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});}
-      if(!rows.length){toast('Arquivo vazio','err');return;}
-      const headers=rows[0].map(String);
-      window._secImportRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
-      window._secImportHeaders=headers;
-      const opts=headers.map((h,i)=>`<option value="${i}">${h||'Col '+(i+1)}</option>`).join('');
-      ['sColData','sColDesc','sColValor'].forEach(id=>document.getElementById(id).innerHTML=opts);
-      document.getElementById('sColTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
-      const hh=headers.map(h=>h.toLowerCase());
-      const fi=re=>{const i=hh.findIndex(h=>re.test(h));return i>=0?i:null;};
-      const di=fi(/data|date|dt\b|dia/)||0,dsi=fi(/descri|histor|memo|nome|lanc/)||1,vi=fi(/valor|vl\b|total|amount/)||2,ti=fi(/tipo|type|naturez/);
-      document.getElementById('sColData').value=di;
-      document.getElementById('sColDesc').value=dsi;
-      document.getElementById('sColValor').value=vi;
-      if(ti!==null)document.getElementById('sColTipo').value=ti;
-      document.getElementById('secImportMapping').style.display='block';
-      document.getElementById('secImportPreview').style.display='none';
-      document.getElementById('secImportResult').style.display='none';
-      toast(`📊 ${window._secImportRows.length} linhas lidas`);
-    }catch(err){toast('Erro: '+err.message,'err');}
-  };
-  if(/\.csv$/i.test(file.name))reader.readAsText(file,'UTF-8');else reader.readAsArrayBuffer(file);
-}
-function buildSecImportPreview(){
-  const cd=parseInt(document.getElementById('sColData').value),cds=parseInt(document.getElementById('sColDesc').value),cv=parseInt(document.getElementById('sColValor').value),ct=document.getElementById('sColTipo').value;
-  const tbody=document.getElementById('secImportBody');tbody.innerHTML='';
-  const preview=[];let recT=0,desT=0;
-  (window._secImportRows||[]).forEach(row=>{
-    const rawDate=String(row[cd]||'').trim(),desc=String(row[cds]||'').trim(),rawVal=String(row[cv]||'').trim();
-    if(!rawVal&&!desc)return;
-    let valor=parseFloat(rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.'));
-    if(isNaN(valor)||valor===0)return;
-    let tipo='receita';
-    if(ct!=='_auto'){const rt=String(row[parseInt(ct)]||'').toLowerCase();tipo=/despes|saida|debito|deb|out/i.test(rt)?'despesa':valor<0?'despesa':'receita';}
-    else tipo=valor<0?'despesa':'receita';
-    valor=Math.abs(valor);
-    let dataISO=today();
-    if(/^\d{4}-\d{2}-\d{2}/.test(rawDate))dataISO=rawDate.substring(0,10);
-    else if(/^(\d{2})\/(\d{2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
-    else if(/^(\d{2})\/(\d{2})\/(\d{2})$/.test(rawDate)){const p=rawDate.split('/');dataISO=(parseInt(p[2])<50?'20':'19')+p[2]+'-'+p[1]+'-'+p[0];}
-    if(tipo==='receita')recT+=valor;else desT+=valor;
-    preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,clinic:userClinic()});
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtD(dataISO)}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc.length>35?desc.substring(0,35)+'…':desc}</td><td style="text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td>`;
-    tbody.appendChild(tr);
-  });
-  window._secImportData=preview;
-  document.getElementById('secImportPreview').style.display='block';
-  document.getElementById('secImportTitle').textContent=`${preview.length} lançamentos detectados`;
-  document.getElementById('secImportStats').textContent=`✅ ${fmt(recT)} | 🔴 ${fmt(desT)}`;
-}
-async function confirmSecImport(){
-  const data=window._secImportData;
-  if(!data||!data.length){toast('Nada para importar','err');return;}
-  loading(true);
-  let ok=0,fail=0;
-  for(let i=0;i<data.length;i+=50){
-    const batch=data.slice(i,i+50).map(r=>({clinic:r.clinic,tipo:r.tipo,categoria:r.tipo==='receita'?'Receita':'Outros',descricao:r.desc,valor:r.valor,data:r.dataISO,pagamento:'importado',observacao:'Importado via planilha'}));
-    const{error}=await sb.from('transactions').insert(batch);
-    if(error)fail+=batch.length;else ok+=batch.length;
-  }
-  loading(false);
-  document.getElementById('secImportPreview').style.display='none';
-  document.getElementById('secImportMapping').style.display='none';
-  document.getElementById('secImportResult').style.display='block';
-  document.getElementById('secImportResultText').innerHTML=`${ok} lançamentos importados!`;
-  toast(`✅ ${ok} importados!`);
-}
-function resetSecImport(){
-  document.getElementById('secImportResult').style.display='none';
-  document.getElementById('secImportMapping').style.display='none';
-  document.getElementById('secImportPreview').style.display='none';
-  document.getElementById('secImportFile').value='';
-}
-
-window.onload=function(){initApp();};
-</script>
-</body>
-</html>
+    const batch=data.slice(i,i+50).map(r=
