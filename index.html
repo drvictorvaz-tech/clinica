@@ -2475,4 +2475,12 @@ async function downloadDoc(path,filename){
 async function deleteDoc(id,path){
   if(!confirm('Remover este documento?'))return;
   try{
- 
+    if(path){await getSvc().storage.from('documentos').remove([path]);}
+    await getSvc().from('documentos').delete().eq('id',id);
+    loadDocs();
+    toast('🗑️ Documento removido.');
+  }catch(err){alert('Erro ao remover: '+err.message);}
+}
+</script>
+</body>
+</html>
