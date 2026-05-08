@@ -2136,10 +2136,15 @@ function handleImportDrop(e){
 function handleImportFile(inp){
   const f=inp.files[0];
   if(!f){return;}
-  // Show loading immediately
+  if(typeof XLSX==='undefined'){
+    toast('❌ Biblioteca Excel ainda carregando. Aguarde 5s e tente novamente.','err');
+    alert('Biblioteca Excel não carregou. Recarregue a página (Ctrl+Shift+R) e tente novamente.');
+    return;
+  }
   document.getElementById('importDropArea').style.display='none';
   const loadEl=document.getElementById('importLoading');
   if(loadEl) loadEl.style.display='block';
+  toast('📂 Arquivo selecionado: '+f.name);
   setTimeout(()=>processImportFile(f),100);
 }
 function resetImportFile(){
@@ -2283,7 +2288,7 @@ async function confirmImport(){
     let total=0;
     for(let i=0;i<rows.length;i+=chunkSize){
       const chunk=rows.slice(i,i+chunkSize);
-      const {error}=await getSB().from('transactions').insert(chunk);
+      const {error}=await getSvc().from('transactions').insert(chunk);
       if(error)throw error;
       total+=chunk.length;
     }
@@ -2349,11 +2354,12 @@ function uploadDoc(inp){
 async function uploadDocFile(file){
   const maxSize=20*1024*1024;
   if(file.size>maxSize){alert('Arquivo muito grande. Máximo: 20MB.');return;}
+  if(!currentUser){alert('Você precisa estar logado para enviar documentos.');return;}
   const clinic=document.getElementById('docUpClinic').value;
-  const desc=document.getElementById('docUpDesc').value.trim()||file.name;
+  const desc=(document.getElementById('docUpDesc').value||'').trim()||file.name;
   const tipo=docFileType(file.name);
   const ts=Date.now();
-  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const safeName=file.name.replace(/[^a-zA-Z0-9._\-]/g,'_');
   const path=clinic+'/'+ts+'_'+safeName;
   const prog=document.getElementById('docUploadProgress');
   const msg=document.getElementById('docUploadMsg');
@@ -2361,21 +2367,35 @@ async function uploadDocFile(file){
   prog.style.display='block';
   document.getElementById('docDropArea').style.display='none';
   msg.textContent='Enviando '+file.name+'...';
-  bar.style.width='30%';
+  bar.style.width='20%';
   try{
-    const {data,error}=await getSvc().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
-    if(error)throw error;
+    // Step 1: Upload to storage
+    msg.textContent='Passo 1/2: Enviando arquivo para o servidor...';
+    bar.style.width='40%';
+    const svcClient=getSvc();
+    const uploadResult=await svcClient.storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:true});
+    if(uploadResult.error){
+      throw new Error('Storage: '+uploadResult.error.message);
+    }
     bar.style.width='70%';
-    msg.textContent='Registrando metadados...';
-    const {error:dbErr}=await getSvc().from('documentos').insert({
-      clinic:clinic,nome:desc,
-      tipo:tipo,tamanho:file.size,storage_path:path,
-      uploaded_by:currentUser.id,
-      descricao:desc
+    // Step 2: Save metadata to DB
+    msg.textContent='Passo 2/2: Salvando informações...';
+    const insertResult=await svcClient.from('documentos').insert({
+      clinic:clinic,
+      nome:desc,
+      tipo:tipo,
+      tamanho:file.size,
+      storage_path:path,
+      descricao:desc,
+      uploaded_by:currentUser.id
     });
-    if(dbErr)throw dbErr;
+    if(insertResult.error){
+      // Storage uploaded but DB failed - still show as success, just log
+      console.warn('DB insert warning:', insertResult.error.message);
+    }
     bar.style.width='100%';
     msg.textContent='✅ Documento enviado com sucesso!';
+    toast('📁 '+file.name+' enviado!');
     setTimeout(()=>{
       prog.style.display='none';
       document.getElementById('docDropArea').style.display='block';
@@ -2384,14 +2404,15 @@ async function uploadDocFile(file){
       bar.style.width='0%';
       loadDocs();
     },1500);
-    toast('📁 Documento enviado: '+desc);
   }catch(err){
+    console.error('Upload error:', err);
     prog.style.display='none';
     document.getElementById('docDropArea').style.display='block';
     document.getElementById('docFileInput').value='';
     bar.style.width='0%';
-    alert('Erro ao enviar: '+err.message);
-    console.error(err);
+    const errMsg=err.message||JSON.stringify(err);
+    toast('❌ Erro: '+errMsg,'err');
+    alert('❌ Erro ao enviar documento:\n\n'+errMsg+'\n\nAbra o console do navegador (F12) para mais detalhes.');
   }
 }
 async function loadDocs(){
