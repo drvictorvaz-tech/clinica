@@ -846,6 +846,11 @@ function getSB(){
   if(!sb) sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
   return sb;
 }
+let _svc=null;
+function getSvc(){
+  if(!_svc) _svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false,autoRefreshToken:false}});
+  return _svc;
+}
 let _comAutoProc=null; // auto commission after transaction save
 // ===== UTILS =====
 const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
@@ -2358,11 +2363,11 @@ async function uploadDocFile(file){
   msg.textContent='Enviando '+file.name+'...';
   bar.style.width='30%';
   try{
-    const {data,error}=await getSB().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
+    const {data,error}=await getSvc().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
     if(error)throw error;
     bar.style.width='70%';
     msg.textContent='Registrando metadados...';
-    const {error:dbErr}=await getSB().from('documentos').insert({
+    const {error:dbErr}=await getSvc().from('documentos').insert({
       clinica:clinic,nome:desc,nome_arquivo:file.name,
       tipo:tipo,tamanho:file.size,caminho:path,
       user_id:currentUser.id
@@ -2395,7 +2400,7 @@ async function loadDocs(){
   const clinicF=document.getElementById('docFilterClinic')?.value||'';
   const tipoF=document.getElementById('docFilterTipo')?.value||'';
   try{
-    let q=getSB().from('documentos').select('*').order('created_at',{ascending:false});
+    let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
     if(clinicF)q=q.eq('clinica',clinicF);
     if(tipoF)q=q.eq('tipo',tipoF);
     const{data,error}=await q;
@@ -2432,7 +2437,7 @@ async function loadDocs(){
 }
 async function downloadDoc(path,filename){
   try{
-    const{data,error}=await getSB().storage.from('documentos').createSignedUrl(path,3600);
+    const{data,error}=await getSvc().storage.from('documentos').createSignedUrl(path,3600);
     if(error)throw error;
     const a=document.createElement('a');
     a.href=data.signedUrl;
@@ -2448,7 +2453,4 @@ async function downloadDoc(path,filename){
 async function deleteDoc(id,path){
   if(!confirm('Remover este documento?'))return;
   try{
-    if(path){await getSB().storage.from('documentos').remove([path]);}
-    await getSB().from('documentos').delete().eq('id',id);
-    loadDocs();
-    toast('🗑️ Do
+ 
