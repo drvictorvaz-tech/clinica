@@ -2171,41 +2171,50 @@ function processImportFile(file){
   reader.onload=function(e){
     try{
       let rows=[];
-      const isCSV=/\.(csv|txt)$/i.test(file.name);
-      if(isCSV){
-        const text=e.target.result;
-        const lines=text.split(/\r?\n/).filter(l=>l.trim());
-        if(!lines.length){alert('Arquivo CSV vazio.');resetImportFile();return;}
-        const sep=lines[0].includes(';')?';':',';
-        rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
-      } else {
-        const data=new Uint8Array(e.target.result);
+      const arrBuf=e.target.result;
+      // Detect file type by magic bytes (PK=ZIP/XLSX, D0CF=old XLS binary)
+      const hdr=new Uint8Array(arrBuf.slice(0,4));
+      const isExcelBytes=(hdr[0]===0x50&&hdr[1]===0x4B)||(hdr[0]===0xD0&&hdr[1]===0xCF);
+      const isExcelExt=/\.(xlsx|xls|ods)$/i.test(file.name);
+      if(isExcelBytes||isExcelExt){
+        const data=new Uint8Array(arrBuf);
         const wb=XLSX.read(data,{type:'array',cellDates:true});
         if(!wb||!wb.SheetNames||!wb.SheetNames.length){alert('Arquivo Excel inválido ou corrompido.');resetImportFile();return;}
         const ws=wb.Sheets[wb.SheetNames[0]];
         rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+      } else {
+        const text=new TextDecoder('utf-8').decode(arrBuf);
+        const lines=text.split(/\r?\n/).filter(l=>l.trim());
+        if(!lines.length){alert('Arquivo CSV vazio.');resetImportFile();return;}
+        const sep=lines[0].includes(';')?';':lines[0].includes('\t')?'\t':',';
+        rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
       }
       const loadEl=document.getElementById('importLoading');
-      if(loadEl) loadEl.style.display='none';
-      if(!rows||rows.length<2){alert('Planilha vazia ou só tem cabeçalho. Verifique o arquivo.');resetImportFile();return;}
+      if(loadEl)loadEl.style.display='none';
+      if(!rows||rows.length<2){alert('Planilha vazia ou sem dados. Verifique o arquivo.');resetImportFile();return;}
       _importHeaders=rows[0].map(h=>String(h||''));
       _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
-      if(!_importRows.length){alert('Nenhum dado encontrado. Verifique se a planilha tem dados abaixo do cabeçalho.');resetImportFile();return;}
+      if(!_importRows.length){alert('Nenhum dado encontrado abaixo do cabeçalho.');resetImportFile();return;}
       const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
       ['colData','colDesc','colValor'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
       document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
       autoDetectImportCols();
-      const fnEl=document.getElementById('importFileName');
       document.getElementById('importFileNameText').textContent=file.name+'  ('+_importRows.length+' linhas encontradas)';
-      fnEl.style.display='flex';
+      document.getElementById('importFileName').style.display='flex';
       document.getElementById('importMapping').style.display='block';
       document.getElementById('importPreview').style.display='none';
       document.getElementById('importResult').style.display='none';
-      toast(`📊 ${_importRows.length} linhas lidas de "${file.name}"`);
-    }catch(err){toast('Erro ao ler arquivo: '+err.message,'err');console.error(err);}
+      toast('📊 '+_importRows.length+' linhas lidas de "'+file.name+'"');
+    }catch(err){
+      const loadEl=document.getElementById('importLoading');
+      if(loadEl)loadEl.style.display='none';
+      document.getElementById('importDropArea').style.display='block';
+      toast('❌ Erro ao ler arquivo: '+err.message,'err');
+      alert('Erro ao ler o arquivo:\n\n'+err.message+'\n\nTente salvar como .xlsx e tente novamente.');
+      console.error(err);
+    }
   };
-  if(/\.csv$/i.test(file.name)) reader.readAsText(file,'UTF-8');
-  else reader.readAsArrayBuffer(file);
+  reader.readAsArrayBuffer(file);
 }
 function autoDetectImportCols(){
   const hh=_importHeaders.map(h=>h.toLowerCase());
