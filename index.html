@@ -590,7 +590,7 @@ tbody tr:last-child td{border-bottom:none}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <span id="importStats" style="font-size:12px;padding:5px 12px;background:#f1f5f9;border-radius:20px;color:#374151;font-weight:600"></span>
       <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importPreview').style.display='none';document.getElementById('importMapping').style.display='block'">← Voltar</button>
-      <button class="btn btn-success" onclick="confirmImport()" style="font-size:13px;padding:9px 20px">✅ Confirmar Importação</button>
+      <button id="confirmImportBtn" class="btn btn-success" onclick="confirmImport()" style="font-size:13px;padding:9px 20px">✅ Confirmar Importação</button>
     </div>
   </div>
   <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border-radius:8px;border:1px solid #e2e8f0">
@@ -616,7 +616,7 @@ tbody tr:last-child td{border-bottom:none}
   <div id="importResultText" style="font-weight:700;color:#166534;font-size:16px;margin-bottom:16px"></div>
   <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
     <button class="btn btn-primary" onclick="resetImport()">📥 Importar outro arquivo</button>
-    <button class="btn btn-ghost" onclick="nav('lancamentos')">📋 Ver Lançamentos</button>
+    <button class="btn btn-ghost" onclick="showSection('lancamentos')">📋 Ver Lançamentos</button>
   </div>
 </div>
 
@@ -2108,7 +2108,8 @@ async function loadSecTable(){
 }
 
 // ===== IMPORT PLANILHA =====
-let _importRows=[],_importHeaders=[];
+let _importRows=[],_importHeaders=[],_importPreview=[];
+const fmtN=v=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v||0);
 function downloadTemplate(){
   if(typeof XLSX==='undefined'){toast('Aguarde, carregando biblioteca...','warn');return;}
   const ws=XLSX.utils.aoa_to_sheet([
@@ -2279,7 +2280,7 @@ function buildImportPreview(){
   });
   if(!preview.length){alert('Nenhum dado válido encontrado. Verifique as colunas selecionadas.');return;}
   _importPreview=preview;
-  const sumEl=document.getElementById('importSummary');
+  const sumEl=document.getElementById('importStats');
   if(sumEl)sumEl.innerHTML=`<span style="color:#16a34a">✅ ${preview.length} lançamentos</span> &nbsp;|&nbsp; <span style="color:#16a34a">Receitas: ${fmtN(recT)}</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: ${fmtN(desT)}</span> &nbsp;|&nbsp; <b>Saldo: ${fmtN(recT-desT)}</b>`;
   document.getElementById('importPreview').style.display='block';
 }
