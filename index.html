@@ -589,7 +589,7 @@ tbody tr:last-child td{border-bottom:none}
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <span id="importStats" style="font-size:12px;padding:5px 12px;background:#f1f5f9;border-radius:20px;color:#374151;font-weight:600"></span>
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importPreview').style.display='none';document.getElementById('importMapping').style.display='block'">← Voltar</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importPreview').style.display='none';document.getElementById('importMapping').style.display='block';window.scrollTo({top:0})">← Voltar</button>
       <button id="confirmImportBtn" class="btn btn-success" onclick="confirmImport()" style="font-size:13px;padding:9px 20px">✅ Confirmar Importação</button>
     </div>
   </div>
@@ -2299,11 +2299,14 @@ function buildImportPreview(){
     _importPreview=preview;
     const sumEl=document.getElementById('importStats');
     if(sumEl) sumEl.textContent='✅ '+preview.length+' lançamentos | Receitas: R$ '+recT.toFixed(2)+' | Despesas: R$ '+desT.toFixed(2);
+    // Hide mapping, show preview in its place
+    document.getElementById('importMapping').style.display='none';
     const previewDiv=document.getElementById('importPreview');
-    if(previewDiv){
-      previewDiv.style.display='block';
-      previewDiv.scrollIntoView({behavior:'smooth',block:'start'});
-    }
+    if(previewDiv) previewDiv.style.display='block';
+    // Scroll to top of main content
+    window.scrollTo({top:0,behavior:'smooth'});
+    const mainEl=document.getElementById('main');
+    if(mainEl) mainEl.scrollTop=0;
     toast('✅ '+preview.length+' lançamentos prontos para importar!');
   }catch(err){
     console.error('buildImportPreview error:',err);
