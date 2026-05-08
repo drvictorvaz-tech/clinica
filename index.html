@@ -622,6 +622,80 @@ tbody tr:last-child td{border-bottom:none}
 
 </div>
 
+<!-- DOCUMENTOS SECTION -->
+<div id="s-documentos" class="section pc">
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  <h2 style="font-size:20px;font-weight:700;color:#0f172a;margin:0">📁 Documentos</h2>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <select id="docFilterClinic" onchange="loadDocs()" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px">
+      <option value="">Todas as Clínicas</option>
+      <option value="dtm">🦷 DTM &amp; Sono</option>
+      <option value="hernia">⚕️ Dr. Hérnia SJC</option>
+    </select>
+    <select id="docFilterTipo" onchange="loadDocs()" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13px">
+      <option value="">Todos os Tipos</option>
+      <option value="pdf">PDF</option>
+      <option value="word">Word</option>
+      <option value="excel">Excel/Planilha</option>
+      <option value="outro">Outro</option>
+    </select>
+  </div>
+</div>
+
+<!-- Upload Card -->
+<div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:20px">
+  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px">📤 Enviar Novo Documento</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Clínica *</label>
+      <select id="docUpClinic" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px">
+        <option value="dtm">🦷 DTM &amp; Sono</option>
+        <option value="hernia">⚕️ Dr. Hérnia SJC</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Descrição (opcional)</label>
+      <input id="docUpDesc" placeholder="Ex: Contrato Janeiro 2026" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;box-sizing:border-box">
+    </div>
+  </div>
+  <!-- Drop zone -->
+  <div id="docDropArea"
+    style="border:2px dashed #94a3b8;border-radius:12px;padding:32px 20px;text-align:center;background:#f8fafc;transition:all .2s;cursor:pointer"
+    ondragover="event.preventDefault();this.style.borderColor='#7c3aed';this.style.background='#f5f3ff'"
+    ondragleave="this.style.borderColor='#94a3b8';this.style.background='#f8fafc'"
+    ondrop="handleDocDrop(event)">
+    <div style="font-size:44px;margin-bottom:10px">📂</div>
+    <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:6px">Arraste o documento aqui</div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:18px">Aceita: <b>.pdf</b> · <b>.docx</b> · <b>.doc</b> · <b>.xlsx</b> · <b>.xls</b> · <b>.csv</b></div>
+    <button type="button" class="btn btn-primary" onclick="event.stopPropagation();document.getElementById('docFileInput').click()" style="font-size:13px;padding:9px 22px;background:#7c3aed;border-color:#7c3aed">
+      📁 Escolher Arquivo
+    </button>
+    <input type="file" id="docFileInput" accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.odt,.ods" style="display:none" onchange="uploadDoc(this)">
+  </div>
+  <div id="docUploadProgress" style="display:none;margin-top:16px;text-align:center;padding:20px;background:#f8fafc;border-radius:10px">
+    <div style="font-size:32px;margin-bottom:8px">⏳</div>
+    <div id="docUploadMsg" style="font-weight:600;color:#374151;font-size:13px">Enviando documento...</div>
+    <div style="margin-top:8px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+      <div id="docUploadBar" style="height:100%;background:#7c3aed;width:0%;transition:width .3s;border-radius:3px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Lista de Documentos -->
+<div style="background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07)">
+  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px">📋 Documentos Enviados</div>
+  <div id="docListArea">
+    <div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">
+      <div style="font-size:32px;margin-bottom:8px">📄</div>
+      Nenhum documento ainda
+    </div>
+  </div>
+</div>
+
+</div>
+
+
 </main>
 </div><!-- /appScreen -->
 
@@ -748,6 +822,7 @@ const ROLE_LABELS={admin:'Administrador',contabilidade:'Contabilidade',secretari
 const NAV_ITEMS=[
   {id:'dashboard',ic:'📊',lbl:'Dashboard',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'importar',ic:'📥',lbl:'Importar Planilha',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'documentos',ic:'📁',lbl:'Documentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'lancamentos',ic:'💰',lbl:'Lançamentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'notas',ic:'🧾',lbl:'Notas Fiscais',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'horas',ic:'⏱️',lbl:'Horas Extras',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
@@ -924,9 +999,10 @@ function showSection(id){
   const sec=document.getElementById('s-'+id);
   if(sec)sec.classList.add('active');
   document.querySelectorAll('.nb[data-s]').forEach(b=>b.classList.toggle('active',b.dataset.s===id));
-  const titles={dashboard:'Dashboard',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
+  const titles={dashboard:'Dashboard',importar:'Importar Planilha',documentos:'Documentos',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
   document.getElementById('pgTitle').textContent=titles[id]||id;
   if(id==='dashboard')renderDash();
+  else if(id==='documentos')loadDocs();
   else if(id==='lancamentos')renderLanc();
   else if(id==='notas')renderNotas();
   else if(id==='horas')renderHoras();
@@ -2171,7 +2247,7 @@ function buildImportPreview(){
     else if(/material|insumo/i.test(dl))cat='Material';
     else if(/imposto|taxa|tribut/i.test(dl))cat='Impostos';
     else if(/luz|energia|agua|internet|telefon/i.test(dl))cat='Utilidades';
-    else if(/market|publici|anuncio|tráfego/i.test(dl))cat='Marketing';
+    else if(/market|publici|anuncio/i.test(dl))cat='Marketing';
     else if(tipo==='receita')cat='Receita';
     const c=clinicSel==='auto'?userClinic():clinicSel;
     if(tipo==='receita')recT+=valor;else desT+=valor;
@@ -2179,4 +2255,200 @@ function buildImportPreview(){
     const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
     const tr=document.createElement('tr');
     tr.style.borderBottom='1px solid #f1f5f9';
-    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;f
+    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td><td style="padding:8px 12px;font-size:12px;font-weight:600;color:${tipo==='receita'?'#16a34a':'#dc2626'}">${tipo==='receita'?'+':'-'} ${fmtN(valor)}</td><td style="padding:8px 12px;font-size:11px;color:#64748b">${cat}</td><td style="padding:8px 12px;font-size:11px">${clinicLabel}</td>`;
+    tbody.appendChild(tr);
+  });
+  if(!preview.length){alert('Nenhum dado válido encontrado. Verifique as colunas selecionadas.');return;}
+  _importPreview=preview;
+  const sumEl=document.getElementById('importSummary');
+  if(sumEl)sumEl.innerHTML=`<span style="color:#16a34a">✅ ${preview.length} lançamentos</span> &nbsp;|&nbsp; <span style="color:#16a34a">Receitas: ${fmtN(recT)}</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: ${fmtN(desT)}</span> &nbsp;|&nbsp; <b>Saldo: ${fmtN(recT-desT)}</b>`;
+  document.getElementById('importPreview').style.display='block';
+}
+async function confirmImport(){
+  if(!_importPreview||!_importPreview.length){alert('Nenhum dado para importar.');return;}
+  const btn=document.getElementById('confirmImportBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
+  try{
+    const rows=_importPreview.map(r=>({
+      clinica:r.clinic||'dtm',tipo:r.tipo,categoria:r.cat,
+      descricao:r.desc,valor:r.valor,data:r.dataISO,
+      pagamento:'pix',user_id:currentUser.id,created_by:currentUser.id
+    }));
+    const chunkSize=50;
+    let total=0;
+    for(let i=0;i<rows.length;i+=chunkSize){
+      const chunk=rows.slice(i,i+chunkSize);
+      const {error}=await getSB().from('transacoes').insert(chunk);
+      if(error)throw error;
+      total+=chunk.length;
+    }
+    document.getElementById('importResult').style.display='block';
+    document.getElementById('importResultText').textContent=`✅ ${total} lançamentos importados com sucesso!`;
+    document.getElementById('importPreview').style.display='none';
+    document.getElementById('importMapping').style.display='none';
+    _importPreview=[];
+    toast(`✅ ${total} lançamentos importados!`);
+  }catch(err){
+    alert('Erro ao importar: '+err.message);
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
+  }
+}
+function resetImport(){
+  _importPreview=[];
+  _importRows=[];
+  _importHeaders=[];
+  document.getElementById('importFileInput').value='';
+  document.getElementById('importFileName').style.display='none';
+  document.getElementById('importMapping').style.display='none';
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importDropArea').style.display='block';
+  const loadEl=document.getElementById('importLoading');
+  if(loadEl)loadEl.style.display='none';
+}
+
+// ===== DOCUMENTOS =====
+function docFileType(name){
+  const ext=(name||'').split('.').pop().toLowerCase();
+  if(ext==='pdf')return'pdf';
+  if(['doc','docx','odt'].includes(ext))return'word';
+  if(['xls','xlsx','ods','csv'].includes(ext))return'excel';
+  return'outro';
+}
+function docFileIcon(tipo){
+  if(tipo==='pdf')return'📕';
+  if(tipo==='word')return'📘';
+  if(tipo==='excel')return'📗';
+  return'📄';
+}
+function docFileSizeStr(bytes){
+  if(bytes<1024)return bytes+'B';
+  if(bytes<1048576)return(bytes/1024).toFixed(1)+'KB';
+  return(bytes/1048576).toFixed(1)+'MB';
+}
+function handleDocDrop(e){
+  e.preventDefault();
+  const area=document.getElementById('docDropArea');
+  area.style.borderColor='#94a3b8';area.style.background='#f8fafc';
+  const f=e.dataTransfer.files[0];
+  if(f){
+    document.getElementById('docFileInput').files;
+    uploadDocFile(f);
+  }
+}
+function uploadDoc(inp){
+  const f=inp.files[0];
+  if(!f)return;
+  uploadDocFile(f);
+}
+async function uploadDocFile(file){
+  const maxSize=20*1024*1024;
+  if(file.size>maxSize){alert('Arquivo muito grande. Máximo: 20MB.');return;}
+  const clinic=document.getElementById('docUpClinic').value;
+  const desc=document.getElementById('docUpDesc').value.trim()||file.name;
+  const tipo=docFileType(file.name);
+  const ts=Date.now();
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  const path=clinic+'/'+ts+'_'+safeName;
+  const prog=document.getElementById('docUploadProgress');
+  const msg=document.getElementById('docUploadMsg');
+  const bar=document.getElementById('docUploadBar');
+  prog.style.display='block';
+  document.getElementById('docDropArea').style.display='none';
+  msg.textContent='Enviando '+file.name+'...';
+  bar.style.width='30%';
+  try{
+    const {data,error}=await getSB().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
+    if(error)throw error;
+    bar.style.width='70%';
+    msg.textContent='Registrando metadados...';
+    const {error:dbErr}=await getSB().from('documentos').insert({
+      clinica:clinic,nome:desc,nome_arquivo:file.name,
+      tipo:tipo,tamanho:file.size,caminho:path,
+      user_id:currentUser.id
+    });
+    if(dbErr)throw dbErr;
+    bar.style.width='100%';
+    msg.textContent='✅ Documento enviado com sucesso!';
+    setTimeout(()=>{
+      prog.style.display='none';
+      document.getElementById('docDropArea').style.display='block';
+      document.getElementById('docFileInput').value='';
+      document.getElementById('docUpDesc').value='';
+      bar.style.width='0%';
+      loadDocs();
+    },1500);
+    toast('📁 Documento enviado: '+desc);
+  }catch(err){
+    prog.style.display='none';
+    document.getElementById('docDropArea').style.display='block';
+    document.getElementById('docFileInput').value='';
+    bar.style.width='0%';
+    alert('Erro ao enviar: '+err.message);
+    console.error(err);
+  }
+}
+async function loadDocs(){
+  const area=document.getElementById('docListArea');
+  if(!area)return;
+  area.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">⏳ Carregando...</div>';
+  const clinicF=document.getElementById('docFilterClinic')?.value||'';
+  const tipoF=document.getElementById('docFilterTipo')?.value||'';
+  try{
+    let q=getSB().from('documentos').select('*').order('created_at',{ascending:false});
+    if(clinicF)q=q.eq('clinica',clinicF);
+    if(tipoF)q=q.eq('tipo',tipoF);
+    const{data,error}=await q;
+    if(error)throw error;
+    if(!data||!data.length){
+      area.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">📄</div>Nenhum documento encontrado</div>';
+      return;
+    }
+    const rows=data.map(d=>{
+      const clinicLbl=d.clinica==='dtm'?'🦷 DTM & Sono':'⚕️ Dr. Hérnia SJC';
+      const dt=d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):'';
+      const icon=docFileIcon(d.tipo);
+      const size=docFileSizeStr(d.tamanho||0);
+      return `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:10px 12px;font-size:22px;width:40px">${icon}</td>
+        <td style="padding:10px 12px">
+          <div style="font-size:13px;font-weight:600;color:#0f172a">${d.nome||d.nome_arquivo}</div>
+          <div style="font-size:11px;color:#94a3b8">${d.nome_arquivo||''}</div>
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#64748b">${clinicLbl}</td>
+        <td style="padding:10px 12px;font-size:12px;color:#64748b">${dt}</td>
+        <td style="padding:10px 12px;font-size:11px;color:#94a3b8">${size}</td>
+        <td style="padding:10px 12px">
+          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.caminho}','${(d.nome_arquivo||'arquivo').replace(/'/g,'')}')">⬇️ Baixar</button>
+          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.caminho||'').replace(/'/g,'')}')">🗑️</button>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Clínica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }catch(err){
+    area.innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px">Erro ao carregar: '+err.message+'</div>';
+    console.error(err);
+  }
+}
+async function downloadDoc(path,filename){
+  try{
+    const{data,error}=await getSB().storage.from('documentos').createSignedUrl(path,3600);
+    if(error)throw error;
+    const a=document.createElement('a');
+    a.href=data.signedUrl;
+    a.download=filename;
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(err){
+    alert('Erro ao baixar: '+err.message);
+  }
+}
+async function deleteDoc(id,path){
+  if(!confirm('Remover este documento?'))return;
+  try{
+    if(path){await getSB().storage.from('documentos').remove([path]);}
+    await getSB().from('documentos').delete().eq('id',id);
+    loadDocs();
+    toast('🗑️ Do
