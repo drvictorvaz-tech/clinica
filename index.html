@@ -2,11 +2,2136 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=dr_victor_clinica.html">
-<title>Dr. Victor Vaz — IA Clínica</title>
-<script>window.location.replace('dr_victor_clinica.html');</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA Financeira Online — Dr. Victor Vaz</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
+/* ---- TELAS ---- */
+.screen{display:none;min-height:100vh;align-items:center;justify-content:center}
+.screen.active{display:flex}
+/* Setup e Login */
+.card-center{background:white;border-radius:16px;padding:36px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.card-center h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.card-center .sub{font-size:13px;color:#64748b;margin-bottom:24px}
+.logo-area{text-align:center;margin-bottom:24px}
+.logo-area .logo{font-size:40px}
+.logo-area h2{font-size:18px;font-weight:700;margin-top:8px}
+.logo-area p{font-size:12px;color:#64748b}
+.setup-steps{background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:20px;font-size:13px;line-height:1.9;color:#374151}
+.setup-steps strong{color:#1d4ed8}
+/* App layout */
+#appScreen{display:none;min-height:100vh}
+#appScreen.active{display:flex}
+#sidebar{width:230px;min-width:230px;background:#0f172a;display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;overflow-y:auto}
+.sb-logo{padding:20px 16px;border-bottom:1px solid #1e293b}
+.sb-logo .n{font-size:14px;font-weight:700;color:#f8fafc}
+.sb-logo .s{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.07em}
+.sb-user{padding:12px 16px;border-bottom:1px solid #1e293b;background:#1e293b}
+.sb-user .un{font-size:12px;color:#e2e8f0;font-weight:600}
+.sb-user .ur{font-size:10px;color:#64748b}
+.sb-sect{padding:12px 8px 4px}
+.sb-t{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.08em;padding:0 8px;margin-bottom:2px}
+.nb{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:none;background:transparent;color:#94a3b8;cursor:pointer;font-size:12px;font-weight:500;text-align:left;transition:all .15s}
+.nb:hover{background:#1e293b;color:#e2e8f0}
+.nb.active{background:#1d4ed8;color:white}
+.nb .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.sb-foot{padding:12px 16px;border-top:1px solid #1e293b;margin-top:auto}
+.sb-foot .dt{font-size:10px;color:#475569}
+/* Main */
+#main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:white;padding:12px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:17px;font-weight:700;color:#0f172a}
+.pc{padding:22px;flex:1}
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:white;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kpi .lbl{font-size:11px;color:#64748b;margin-bottom:4px}
+.kpi .val{font-size:22px;font-weight:700}
+.kpi .meta{font-size:10px;color:#94a3b8;margin-top:2px}
+.kpi.g .val{color:#059669}.kpi.r .val{color:#dc2626}.kpi.b .val{color:#0ea5e9}.kpi.p .val{color:#7c3aed}
+.clin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.clin-box{background:white;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-top:3px solid}
+.clin-box.dtm{border-top-color:#7c3aed}.clin-box.hernia{border-top-color:#f59e0b}
+.clin-box h4{font-size:12px;font-weight:600;margin-bottom:10px}
+.clin-inner{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cmin .lbl{font-size:10px;color:#64748b}.cmin .val{font-size:16px;font-weight:700}
+.cmin.g .val{color:#059669}.cmin.r .val{color:#dc2626}.cmin.b .val{color:#1d4ed8}
+/* Charts */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:18px}
+.chart-card{background:white;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chart-card h3{font-size:12px;font-weight:600;margin-bottom:12px}
+/* Filter bar */
+.fbar{background:white;border-radius:10px;padding:12px 16px;display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+.fbar .fg{flex:1;min-width:100px}
+/* Table */
+.tcard{background:white;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;margin-bottom:16px}
+.thead2{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center}
+.thead2 h3{font-size:13px;font-weight:600}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:#f8fafc;padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;border-bottom:1px solid #e2e8f0}
+tbody td{padding:8px 12px;font-size:12px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+tbody tr:hover td{background:#fafafa}
+tbody tr:last-child td{border-bottom:none}
+/* Badges */
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-receita{background:#dcfce7;color:#166534}.badge-despesa{background:#fee2e2;color:#991b1b}
+.badge-dtm{background:#f3e8ff;color:#6d28d9}.badge-hernia{background:#fef3c7;color:#92400e}
+.badge-emitida{background:#dbeafe;color:#1e40af}.badge-cancelada{background:#fee2e2;color:#991b1b}
+.badge-pendente{background:#fef3c7;color:#92400e}.badge-pago{background:#dcfce7;color:#166534}
+/* Buttons */
+.btn{padding:7px 13px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#1d4ed8;color:white}.btn-primary:hover{background:#1e40af}
+.btn-success{background:#059669;color:white}.btn-success:hover{background:#047857}
+.btn-warning{background:#d97706;color:white}
+.btn-danger{background:#dc2626;color:white}
+.btn-ghost{background:transparent;color:#64748b;border:1px solid #e2e8f0}.btn-ghost:hover{background:#f8fafc}
+.btn-sm{padding:4px 8px;font-size:11px}
+/* Forms */
+.fsect{background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+.fsect h3{font-size:13px;font-weight:600;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #f1f5f9}
+.frow{display:grid;gap:12px;margin-bottom:12px}
+.frow.c2{grid-template-columns:1fr 1fr}.frow.c3{grid-template-columns:1fr 1fr 1fr}.frow.c4{grid-template-columns:1fr 1fr 1fr 1fr}.frow.c1{grid-template-columns:1fr}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;font-weight:600;color:#374151}
+.fg input,.fg select,.fg textarea{padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px;color:#1f2937;background:white}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.1)}
+.factions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:1px solid #f1f5f9;padding-top:16px}
+/* Section */
+.section{display:none}.section.active{display:block}
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:white;border-radius:14px;padding:24px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:20px}
+.mclose{float:right;cursor:pointer;font-size:18px;color:#94a3b8;border:none;background:none}
+.mclose:hover{color:#1f2937}
+/* Toast */
+#toast{position:fixed;bottom:20px;right:20px;background:#0f172a;color:white;padding:10px 16px;border-radius:8px;font-size:12px;z-index:9999;display:none}
+#toast.ok{background:#059669}#toast.err{background:#dc2626}#toast.info{background:#1d4ed8}
+/* Loading */
+#loadingOverlay{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:500;display:none;align-items:center;justify-content:center}
+#loadingOverlay.show{display:flex}
+.spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Empty */
+.empty{text-align:center;padding:40px;color:#94a3b8}
+.empty .ic{font-size:32px;margin-bottom:8px}
+.empty h4{font-size:13px;font-weight:600;color:#64748b;margin-bottom:4px}
+/* Alert */
+.alert{border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:12px;display:flex;gap:8px}
+.alert-warn{background:#fef3c7;color:#92400e}.alert-info{background:#dbeafe;color:#1e40af}
+/* Chat */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);background:white;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:78%}
+.chat-msg.user{align-self:flex-end}
+.chat-msg.ai{align-self:flex-start}
+.msg-b{padding:9px 13px;border-radius:10px;font-size:12px;line-height:1.6}
+.chat-msg.user .msg-b{background:#1d4ed8;color:white;border-bottom-right-radius:3px}
+.chat-msg.ai .msg-b{background:#f1f5f9;color:#1e293b;border-bottom-left-radius:3px}
+.msg-t{font-size:10px;color:#94a3b8;margin-top:2px;text-align:right}
+.chat-msg.ai .msg-t{text-align:left}
+.chat-in-wrap{border-top:1px solid #e2e8f0;padding:12px 16px;display:flex;gap:8px;align-items:flex-end}
+.chat-in{flex:1;padding:8px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:12px;resize:none;max-height:80px}
+.chat-in:focus{outline:none;border-color:#3b82f6}
+/* Proc table */
+.proc-val{font-weight:600;color:#059669;cursor:pointer}
+.proc-val:hover{text-decoration:underline}
+/* mselector */
+.msel{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.msel label{font-size:12px;font-weight:600}
+.msel select{padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px}
+/* print */
+@media print{#sidebar,.topbar,.no-print{display:none!important}#main{margin-left:0}.pc{padding:0}body.pnf .section{display:none!important}body.pnf #nfPrint{display:block!important}}
+#nfPrint{display:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+/* ---- MODO SECRETÁRIA ---- */
+#secScreen{display:none;min-height:100vh;flex-direction:column;background:#f0f4f8}
+#secScreen.active{display:flex}
+.sec-header{background:#0f172a;color:white;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sec-header .h-clinic{font-size:15px;font-weight:700}
+.sec-header .h-user{font-size:11px;color:#94a3b8;margin-top:2px}
+.sec-body{flex:1;overflow-y:auto;padding:16px 16px 0}
+.sec-inner{max-width:680px;width:100%;margin:0 auto;display:flex;flex-direction:column;min-height:100%}
+.sec-chatbox{flex:1;display:flex;flex-direction:column;padding-bottom:8px}
+.sec-quick-bar{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0 4px}
+.sec-quick{padding:6px 13px;border-radius:20px;border:1.5px solid #1d4ed8;background:white;color:#1d4ed8;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.sec-quick:hover{background:#1d4ed8;color:white}
+.sec-input-area{background:white;border-top:1px solid #e2e8f0;padding:12px 16px;flex-shrink:0}
+.sec-input-row{max-width:680px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+.sec-textarea{flex:1;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:22px;font-size:13px;resize:none;min-height:44px;max-height:120px;font-family:inherit;line-height:1.5}
+.sec-textarea:focus{outline:none;border-color:#1d4ed8}
+.sec-send-btn{width:44px;height:44px;border-radius:50%;background:#1d4ed8;color:white;border:none;cursor:pointer;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sec-send-btn:active{transform:scale(.95)}
+.sec-file-btn{width:44px;height:44px;border-radius:50%;background:#f1f5f9;border:1px solid #e2e8f0;cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#64748b}
+.sec-msg-ia{display:flex;justify-content:flex-start;margin-bottom:10px}
+.sec-msg-user{display:flex;justify-content:flex-end;margin-bottom:10px}
+.sec-bubble-ia{max-width:85%;padding:11px 15px;border-radius:18px 18px 18px 4px;background:white;color:#1e293b;font-size:13px;line-height:1.6;box-shadow:0 1px 4px rgba(0,0,0,.09)}
+.sec-bubble-user{max-width:85%;padding:11px 15px;border-radius:18px 18px 4px 18px;background:#1d4ed8;color:white;font-size:13px;line-height:1.6}
+.confirm-card{max-width:92%;padding:16px;border-radius:4px 18px 18px 18px;background:white;box-shadow:0 3px 12px rgba(0,0,0,.12)}
+.confirm-card .cv{font-size:17px;font-weight:700;margin-bottom:6px}
+.confirm-card .cd{font-size:12px;color:#374151;margin-bottom:2px}
+.confirm-btns{display:flex;gap:8px;margin-top:12px}
+.btn-confirmar{flex:1;padding:9px;background:#059669;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-cancelar{flex:1;padding:9px;background:#f8fafc;color:#374151;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;cursor:pointer}
+.sec-tab-bar{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:0;flex-shrink:0}
+.sec-tab{padding:10px 18px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.sec-tab.active{color:#1d4ed8;border-bottom-color:#1d4ed8}
+.sec-table-wrap{flex:1;overflow-y:auto;padding:12px 0}
+.sec-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.sec-tbl th{background:#f8fafc;color:#374151;font-weight:600;padding:8px 10px;text-align:left;border-bottom:1px solid #e2e8f0;position:sticky;top:0}
+.sec-tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#1e293b}
+.sec-tbl tr:hover td{background:#f8fafc}
+.tag-rec{background:#dcfce7;color:#166534;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.tag-des{background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+</style>
 </head>
 <body>
-<p style="font-family:sans-serif;text-align:center;margin-top:40px;">Redirecionando...</p>
+<!-- LOADING -->
+<div id="loadingOverlay"><div class="spinner"></div></div>
+<div id="toast"></div>
+<div id="nfPrint"></div>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen" class="screen" style="background:#f0f4f8;display:none!important">
+  <div class="card-center">
+    <div class="logo-area"><div class="logo">💊</div><h2>IA Financeira — Dr. Victor Vaz</h2><p>Configure o banco de dados para começar</p></div>
+    <div class="setup-steps">
+      <strong>Passos para configurar:</strong><br>
+      1. Acesse <strong>supabase.com</strong> e crie uma conta gratuita<br>
+      2. Crie um novo projeto<br>
+      3. Vá em <strong>SQL Editor</strong> e execute o arquivo <strong>supabase_setup.sql</strong><br>
+      4. Vá em <strong>Project Settings → API</strong><br>
+      5. Copie a <strong>Project URL</strong> e a <strong>anon public key</strong><br>
+      6. Cole abaixo e clique em Conectar
+    </div>
+    <div class="fg" style="margin-bottom:12px"><label>URL do Projeto Supabase</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div class="fg" style="margin-bottom:16px"><label>Chave Anon (pública)</label><input id="sbKey" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></div>
+    <div id="setupErr" style="color:#dc2626;font-size:12px;margin-bottom:10px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="setupConnect()">🔗 Conectar ao Banco</button>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active" style="background:#f0f4f8">
+  <div class="card-center">
+    <div class="logo-area"><div class="logo">🔐</div><h2>IA Financeira Online</h2><p>Dr. Victor Vaz — Gestão Clínica</p></div>
+    <div class="fg" style="margin-bottom:12px"><label>E-mail</label><input id="loginEmail" type="email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="fg" style="margin-bottom:16px"><label>Senha</label><input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+    <div id="loginErr" style="color:#dc2626;font-size:12px;margin-bottom:10px;display:none"></div>
+    <button id="loginBtn" class="btn btn-primary" style="width:100%;justify-content:center" onclick="login()">Entrar →</button>
+  </div>
+</div>
+
+<!-- SECRETARY SCREEN -->
+<div id="secScreen">
+  <div class="sec-header">
+    <div>
+      <div class="h-clinic" id="secClinic">💊 Clínica DTM &amp; Sono</div>
+      <div class="h-user" id="secUserName">Secretária</div>
+    </div>
+    <button onclick="logout()" style="background:transparent;border:1px solid #334155;color:#94a3b8;padding:6px 14px;border-radius:7px;font-size:11px;cursor:pointer">🚪 Sair</button>
+  </div>
+  <!-- ABAS: Chat | Lançamentos -->
+  <div class="sec-tab-bar">
+    <button class="sec-tab active" id="tabChat" onclick="switchSecTab('chat')">💬 Chat</button>
+    <button class="sec-tab" id="tabTable" onclick="switchSecTab('table')">📊 Lançamentos</button>
+    <button class="sec-tab" id="tabImport" onclick="switchSecTab('import')">📥 Importar</button>
+  </div>
+  <!-- ABA CHAT -->
+  <div id="secTabChat" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="sec-body">
+      <div class="sec-inner">
+        <div class="sec-chatbox" id="secChatBox"></div>
+        <div class="sec-quick-bar">
+          <div id="secQuickBar" style="display:contents"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-input-area">
+      <div class="sec-input-row">
+        <label for="secFile" class="sec-file-btn" title="Enviar foto ou arquivo">📎</label>
+        <input type="file" id="secFile" accept="image/*,.pdf" style="display:none" onchange="handleSecFile(this)">
+        <textarea id="secInput" class="sec-textarea" placeholder='Ex: "Recebi R$ 1500 consulta da Ana hoje"' rows="1"></textarea>
+        <button class="sec-send-btn" onclick="sendSecMsg()">➤</button>
+      </div>
+    </div>
+  </div>
+  <!-- ABA TABELA -->
+  <div id="secTabTable" style="display:none;flex-direction:column;flex:1;overflow:hidden;padding:12px 16px">
+    <div style="max-width:780px;width:100%;margin:0 auto;display:flex;flex-direction:column;height:100%">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+        <select id="secTblMes" onchange="loadSecTable()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px;flex:1"></select>
+        <select id="secTblAno" onchange="loadSecTable()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select>
+      </div>
+      <div id="secTblSummary" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"></div>
+      <div class="sec-table-wrap">
+        <table class="sec-tbl" id="secTblMain">
+          <thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th style="text-align:right">Valor</th></tr></thead>
+          <tbody id="secTblBody"><tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- ABA IMPORTAR (Secretaria) -->
+  <div id="secTabImport" style="display:none;flex-direction:column;flex:1;overflow:hidden;padding:12px 16px">
+    <div style="max-width:780px;width:100%;margin:0 auto">
+      <div id="secImportDrop" style="border:2px dashed #cbd5e1;border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:#f8fafc" onclick="document.getElementById('secImportFile').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor='#cbd5e1'" ondrop="handleImportDrop(event)">
+        <div style="font-size:36px;margin-bottom:10px">📊</div>
+        <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">Clique ou arraste sua planilha</div>
+        <div style="font-size:11px;color:#94a3b8">Excel (.xlsx, .xls) ou CSV</div>
+        <input type="file" id="secImportFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleSecImportFile(this)">
+      </div>
+      <div id="secImportMapping" style="display:none;margin-top:16px">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">📅 Coluna Data</label><select id="sColData" style="width:100%;padding:6px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">📝 Coluna Descrição</label><select id="sColDesc" style="width:100%;padding:6px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">💰 Coluna Valor</label><select id="sColValor" style="width:100%;padding:6px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:3px">📂 Tipo</label><select id="sColTipo" style="width:100%;padding:6px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"><option value="_auto">Auto (sinal do valor)</option></select></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="buildSecImportPreview()">👁️ Visualizar</button>
+      </div>
+      <div id="secImportPreview" style="display:none;margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+          <span id="secImportTitle" style="font-size:13px;font-weight:600;color:#374151"></span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="secImportStats" style="font-size:11px;color:#64748b;padding:3px 8px;background:#f1f5f9;border-radius:12px"></span>
+            <button class="btn btn-primary btn-sm" onclick="confirmSecImport()">✅ Importar</button>
+          </div>
+        </div>
+        <div style="overflow:auto;max-height:300px;border-radius:8px;border:1px solid #e2e8f0">
+          <table class="sec-tbl"><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Tipo</th></tr></thead><tbody id="secImportBody"></tbody></table>
+        </div>
+      </div>
+      <div id="secImportResult" style="display:none;margin-top:16px;padding:16px;background:#dcfce7;border-radius:10px;text-align:center">
+        <div style="font-size:28px">🎉</div>
+        <div id="secImportResultText" style="font-weight:700;color:#166534;margin-top:6px"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="resetSecImport()">📥 Novo arquivo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen">
+<nav id="sidebar">
+  <div class="sb-logo"><div class="n">💊 Dr. Victor Vaz</div><div class="s">IA Financeira Online</div></div>
+  <div class="sb-user"><div class="un" id="uNome">Usuário</div><div class="ur" id="uRole">-</div></div>
+  <div class="sb-sect"><div class="sb-t">Principal</div><div id="sidebarNav"></div></div>
+  <div class="sb-foot"><div class="dt" id="sbDate"></div><button class="nb" onclick="logout()" style="margin-top:8px;color:#ef4444"><span class="ic">🚪</span>Sair</button></div>
+</nav>
+<main id="main">
+<div class="topbar no-print">
+  <div class="topbar-title" id="pgTitle">Dashboard</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span id="mesLabel" style="font-size:11px;color:#64748b"></span>
+    <button class="btn btn-primary" onclick="openModal('mLanc')">+ Lançamento</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="s-dashboard" class="section active pc">
+  <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+    <select id="dMes" onchange="renderDash()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select>
+    <select id="dAno" onchange="renderDash()" style="padding:6px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select>
+    <button class="btn btn-ghost btn-sm" onclick="renderDash()">🔄</button>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi g"><div class="lbl">💚 Receita (mês)</div><div class="val" id="kR">—</div><div class="meta">Ambas as clínicas</div></div>
+    <div class="kpi r"><div class="lbl">🔴 Despesas (mês)</div><div class="val" id="kD">—</div><div class="meta">Ambas as clínicas</div></div>
+    <div class="kpi b"><div class="lbl">🔵 Lucro Líquido</div><div class="val" id="kL">—</div><div class="meta" id="kLm">—</div></div>
+    <div class="kpi p"><div class="lbl">🧾 NFs Emitidas</div><div class="val" id="kN">—</div><div class="meta" id="kNv">—</div></div>
+  </div>
+  <div class="clin-grid">
+    <div class="clin-box dtm"><h4>🦷 DTM &amp; Sono</h4><div class="clin-inner">
+      <div class="cmin g"><div class="lbl">Receita</div><div class="val" id="dR">—</div></div>
+      <div class="cmin r"><div class="lbl">Despesas</div><div class="val" id="dD">—</div></div>
+      <div class="cmin b"><div class="lbl">Lucro</div><div class="val" id="dL">—</div></div>
+    </div></div>
+    <div class="clin-box hernia"><h4>⚕️ Dr. Hérnia SJC</h4><div class="clin-inner">
+      <div class="cmin g"><div class="lbl">Receita</div><div class="val" id="hR">—</div></div>
+      <div class="cmin r"><div class="lbl">Despesas</div><div class="val" id="hD">—</div></div>
+      <div class="cmin b"><div class="lbl">Lucro</div><div class="val" id="hL">—</div></div>
+    </div></div>
+  </div>
+  <div class="charts-row">
+    <div class="chart-card"><h3>📈 Receita vs Despesas — 6 Meses</h3><div style="position:relative;height:210px"><canvas id="chEv"></canvas></div></div>
+    <div class="chart-card"><h3>🥧 Formas de Recebimento</h3><div style="position:relative;height:210px"><canvas id="chPg"></canvas></div></div>
+  </div>
+  <div class="tcard"><div class="thead2"><h3>📋 Últimos 10 Lançamentos</h3><button class="btn btn-ghost btn-sm" onclick="showSection('lancamentos')">Ver todos →</button></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead><tbody id="dashTb"><tr><td colspan="7"><div class="empty"><div class="ic">⏳</div><p>Carregando...</p></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- LANÇAMENTOS -->
+<div id="s-lancamentos" class="section pc">
+  <div class="fbar no-print">
+    <div class="fg" style="flex:0 0 130px"><label>Clínica</label><select id="fCl" onchange="renderLanc()"><option value="">Todas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
+    <div class="fg" style="flex:0 0 110px"><label>Tipo</label><select id="fTp" onchange="renderLanc()"><option value="">Todos</option><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
+    <div class="fg" style="flex:0 0 130px"><label>Mês</label><select id="fMs" onchange="renderLanc()"><option value="">Todos</option></select></div>
+    <div class="fg" style="flex:0 0 85px"><label>Ano</label><select id="fAn" onchange="renderLanc()"></select></div>
+    <div class="fg" style="flex:1"><label>Buscar</label><input id="fBk" placeholder="Descrição, categoria..." oninput="renderLanc()"></div>
+    <div style="padding-bottom:1px;display:flex;gap:5px">
+      <button class="btn btn-success" onclick="exportExcelLanc()">📥 Excel</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨️</button>
+    </div>
+  </div>
+  <div class="tcard"><div class="thead2"><h3>💳 Lançamentos</h3><div style="display:flex;gap:5px;align-items:center"><span id="lCount" style="font-size:11px;color:#64748b"></span><button class="btn btn-primary btn-sm" onclick="openModal('mLanc')">+ Novo</button></div></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody id="lancTb"></tbody></table></div></div>
+</div>
+
+<!-- NOTAS FISCAIS -->
+<div id="s-notas" class="section pc">
+  <div class="alert alert-warn no-print">⚠️ Para emissão oficial de NFS-e utilize o portal da Prefeitura. Este módulo faz o controle e registro.</div>
+  <div class="tcard"><div class="thead2"><h3>🧾 Notas Fiscais</h3><button class="btn btn-primary btn-sm" onclick="openModal('mNota')">+ Nova NF</button></div>
+  <div class="twrap"><table><thead><tr><th>Nº</th><th>Data</th><th>Clínica</th><th>Paciente</th><th>CPF/CNPJ</th><th>Serviço</th><th style="text-align:right">Valor</th><th>ISS</th><th>Status</th><th>Ações</th></tr></thead><tbody id="notasTb"></tbody></table></div></div>
+</div>
+
+<!-- HORAS EXTRAS -->
+<div id="s-horas" class="section pc">
+  <div class="tcard"><div class="thead2"><h3>⏱️ Horas Extras — Fisioterapeuta</h3><button class="btn btn-primary btn-sm" onclick="openModal('mHora')">+ Registrar</button></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Funcionário</th><th>Cargo</th><th>Horas</th><th style="text-align:right">Valor/h</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody id="horasTb"></tbody></table></div></div>
+</div>
+
+<!-- COMISSÕES -->
+<div id="s-comissoes" class="section pc">
+  <div class="fbar no-print">
+    <div class="fg" style="flex:0 0 130px"><label>Clínica</label><select id="fComCl" onchange="renderComissoes()"><option value="">Todas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
+    <div class="fg" style="flex:0 0 110px"><label>Status</label><select id="fComSt" onchange="renderComissoes()"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+    <div class="fg" style="flex:0 0 130px"><label>Mês</label><select id="fComMs" onchange="renderComissoes()"><option value="">Todos</option></select></div>
+  </div>
+  <div class="tcard"><div class="thead2"><h3>💸 Comissões (2,5% sobre Protocolos)</h3><div style="display:flex;gap:5px"><span id="comTotal" style="font-size:11px;color:#64748b;align-self:center"></span><button class="btn btn-primary btn-sm" onclick="openModal('mCom')">+ Nova</button></div></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Profissional</th><th>Protocolo</th><th style="text-align:right">Valor Protocolo</th><th style="text-align:right">% Com.</th><th style="text-align:right">Comissão</th><th>Status</th><th>Ações</th></tr></thead><tbody id="comTb"></tbody></table></div></div>
+</div>
+
+<!-- PROCEDIMENTOS -->
+<div id="s-procedimentos" class="section pc">
+  <div class="alert alert-info no-print">📋 Tabela de preços. <span id="procEditHint"></span></div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+    <select id="fProcCl" onchange="renderProcedimentos()" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px">
+      <option value="">Ambas as clínicas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option>
+    </select>
+    <input id="fProcBk" placeholder="Buscar procedimento..." oninput="renderProcedimentos()" style="flex:1;min-width:140px;padding:7px 10px;border:1px solid #d1d5db;border-radius:7px;font-size:12px">
+    <button id="btnNewProc" class="btn btn-primary btn-sm" onclick="newProc()" style="display:none">+ Novo Procedimento</button>
+  </div>
+  <div id="procContent"></div>
+</div>
+
+<!-- RELATÓRIOS -->
+<div id="s-relatorios" class="section pc">
+  <div class="msel no-print"><label>Período:</label>
+    <select id="rMes"></select><select id="rAno"></select>
+    <select id="rCl"><option value="">Ambas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select>
+    <button class="btn btn-primary" onclick="renderRel()">📊 Gerar</button>
+    <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn btn-success no-print" onclick="exportRelExcel()">📥 Excel</button>
+  </div>
+  <div id="relContent"></div>
+</div>
+
+<!-- IA CONSULTORA -->
+<div id="s-ia" class="section pc" style="padding-bottom:0">
+  <div class="alert alert-info no-print" style="margin-bottom:12px">🤖 <strong>IA Consultora</strong> — Pergunte sobre suas finanças. Respostas baseadas nos seus dados reais.</div>
+  <div class="chat-wrap"><div class="chat-msgs" id="chatMsgs">
+    <div class="chat-msg ai"><div class="msg-b">Olá Dr. Victor! 👋 Sou sua consultora financeira.<br>Posso analisar receitas, despesas, comparar as clínicas, fluxo de caixa, horas extras e comissões.<br><br>O que gostaria de analisar hoje?</div><div class="msg-t">Consultora IA</div></div>
+  </div>
+  <div id="chatTyping" style="font-size:11px;color:#94a3b8;padding:0 16px 6px;display:none">🤖 Analisando seus dados...</div>
+  <div class="chat-in-wrap"><textarea class="chat-in" id="chatIn" rows="1" placeholder="Pergunte sobre suas finanças..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button class="btn btn-primary" onclick="sendChat()">Enviar</button></div></div>
+</div>
+
+<!-- CONTABILIDADE -->
+<div id="s-contabilidade" class="section pc">
+  <div class="msel no-print" style="flex-wrap:wrap;gap:8px">
+    <label style="font-weight:600;color:#1e40af">📒 Relatório Contábil</label>
+    <select id="ctAno" style="min-width:90px"></select>
+    <select id="ctCl"><option value="">Ambas as Clínicas</option><option value="dtm">🦷 DTM &amp; Sono</option><option value="hernia">⚕️ Dr. Hérnia SJC</option></select>
+    <button class="btn btn-primary" onclick="renderContab()">📊 Gerar</button>
+    <button class="btn btn-success no-print" onclick="exportContabPDF()">📄 PDF</button>
+    <button class="btn btn-ghost no-print" onclick="exportContabExcel()">📥 Excel</button>
+    <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+  <div id="contabContent"><div class="empty"><div class="ic">📒</div><h4>Selecione o ano e clique em Gerar</h4><p>Relatório anual completo com DRE, fluxo por mês e comparativo entre clínicas.</p></div></div>
+</div>
+
+<!-- AUDITORIA -->
+<div id="s-auditoria" class="section pc">
+  <div class="msel no-print"><label>Período:</label><select id="audMes"></select><select id="audAno"></select>
+    <select id="audCl"><option value="">Ambas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select>
+    <button class="btn btn-primary" onclick="runAudit()">🔍 Auditar</button>
+    <button class="btn btn-ghost no-print" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+  <div id="auditContent"><div class="empty"><div class="ic">🔍</div><h4>Selecione o período e clique em Auditar</h4></div></div>
+</div>
+
+<!-- USUÁRIOS -->
+<div id="s-usuarios" class="section pc">
+  <div class="tcard"><div class="thead2"><h3>👥 Usuários do Sistema</h3><button class="btn btn-primary btn-sm" onclick="openModal('mUser')">+ Novo Usuário</button></div>
+  <div class="twrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Ativo</th><th>Ações</th></tr></thead><tbody id="usersTb"></tbody></table></div></div>
+  <div class="alert alert-info" style="margin-top:12px">ℹ️ Para criar usuários: vá em Authentication → Users no Supabase e crie com e-mail/senha. O papel é definido na tabela profiles.</div>
+</div>
+
+<!-- IMPORTAR SECTION -->
+<div id="s-importar" class="section pc">
+  <div class="tcard">
+    <div class="thead2"><h3>📥 Importar Planilha</h3></div>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px">Importe arquivos Excel (.xlsx, .xls) ou CSV com lançamentos. O sistema detecta as colunas automaticamente e organiza por data e mês.</p>
+    <div id="importDropArea" style="border:2px dashed #cbd5e1;border-radius:12px;padding:40px;text-align:center;cursor:pointer;background:#f8fafc;transition:all .2s" onclick="document.getElementById('importFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='#3b82f6'" ondragleave="this.style.borderColor='#cbd5e1'" ondrop="handleImportDrop(event)">
+      <div style="font-size:40px;margin-bottom:12px">📊</div>
+      <div style="font-size:15px;font-weight:600;color:#374151;margin-bottom:6px">Clique ou arraste o arquivo aqui</div>
+      <div style="font-size:12px;color:#94a3b8">Aceita: .xlsx, .xls, .csv</div>
+      <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
+    </div>
+    <div id="importMapping" style="display:none;margin-top:20px">
+      <h4 style="margin-bottom:12px;color:#374151;font-size:14px">🗂️ Mapeamento de Colunas</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px">
+        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📅 Data</label><select id="colData" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📝 Descrição</label><select id="colDesc" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">💰 Valor</label><select id="colValor" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"></select></div>
+        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📂 Tipo</label><select id="colTipo" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"><option value="_auto">Auto (pelo sinal do valor)</option></select></div>
+        <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">🏥 Clínica</label><select id="importClinicSel" style="width:100%;padding:7px;border:1px solid #d1d5db;border-radius:7px;font-size:12px"><option value="auto">Minha clínica</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
+      </div>
+      <button class="btn btn-primary" onclick="buildImportPreview()">👁️ Visualizar Importação</button>
+    </div>
+    <div id="importPreview" style="display:none;margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h4 style="color:#374151;font-size:14px" id="importPreviewTitle">📋 Prévia</h4>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="importStats" style="font-size:12px;color:#64748b;padding:4px 10px;background:#f1f5f9;border-radius:20px"></span>
+          <button class="btn btn-primary btn-sm" onclick="confirmImport()">✅ Importar Tudo</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto;border-radius:10px;border:1px solid #e2e8f0">
+        <table class="sec-tbl"><thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right">Valor</th><th>Tipo</th><th>Categoria</th></tr></thead><tbody id="importPreviewBody"></tbody></table>
+      </div>
+    </div>
+    <div id="importResult" style="display:none;margin-top:20px;padding:20px;background:#dcfce7;border-radius:10px;border:1px solid #bbf7d0;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">🎉</div>
+      <div id="importResultText" style="font-weight:700;color:#166534;font-size:15px"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="resetImport()">📥 Importar outro arquivo</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- /appScreen -->
+
+<!-- MODAIS -->
+<!-- Lançamento -->
+<div id="mLanc" class="modal-bg">
+  <div class="modal-box">
+    <button class="mclose" onclick="closeModal('mLanc')">✕</button>
+    <h3>💰 Novo Lançamento</h3>
+    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="lCl" onchange="updCats()"><option value="dtm">🦷 DTM &amp; Sono</option><option value="hernia">⚕️ Dr. Hérnia SJC</option></select></div><div class="fg"><label>Tipo *</label><select id="lTp" onchange="updCats()"><option value="receita">💚 Receita</option><option value="despesa">🔴 Despesa</option></select></div></div>
+    <div class="frow c2"><div class="fg"><label>Procedimento (opcional)</label><select id="lProc" onchange="onProcSel()"><option value="">— Selecionar da tabela —</option></select></div><div class="fg"><label>Categoria *</label><select id="lCat"></select></div></div>
+    <div class="frow c3"><div class="fg"><label>Data *</label><input type="date" id="lDt"></div><div class="fg"><label>Valor (R$) *</label><input type="number" id="lVl" placeholder="0.00" step="0.01" min="0"></div><div class="fg"><label>Pagamento *</label><select id="lPg"><option value="pix">PIX</option><option value="cartao_credito">Cartão Crédito</option><option value="cartao_debito">Cartão Débito</option><option value="dinheiro">Dinheiro</option><option value="transferencia">Transferência</option><option value="plano">Plano/Convênio</option><option value="cheque">Cheque</option><option value="boleto">Boleto</option></select></div></div>
+    <div class="frow c1"><div class="fg"><label>Descrição *</label><input id="lDs" placeholder="Detalhe do lançamento..."></div></div>
+    <div class="frow c1"><div class="fg"><label>Observação</label><input id="lObs" placeholder="Informação adicional..."></div></div>
+    <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mLanc')">Cancelar</button><button class="btn btn-primary" onclick="saveLanc()">💾 Salvar</button></div>
+  </div>
+</div>
+<!-- Nota Fiscal -->
+<div id="mNota" class="modal-bg">
+  <div class="modal-box">
+    <button class="mclose" onclick="closeModal('mNota')">✕</button>
+    <h3>🧾 Nova Nota Fiscal</h3>
+    <div class="frow c3"><div class="fg"><label>Clínica *</label><select id="nCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="nDt"></div><div class="fg"><label>Número NF</label><input id="nNum" placeholder="Auto"></div></div>
+    <div class="frow c2"><div class="fg"><label>Paciente / Tomador *</label><input id="nPac" placeholder="Nome completo"></div><div class="fg"><label>CPF / CNPJ *</label><input id="nCpf" placeholder="000.000.000-00"></div></div>
+    <div class="frow c1"><div class="fg"><label>Serviço *</label><textarea id="nDesc" rows="2" placeholder="Descrição do serviço prestado..."></textarea></div></div>
+    <div class="frow c3"><div class="fg"><label>Valor (R$) *</label><input type="number" id="nVl" placeholder="0.00" step="0.01"></div><div class="fg"><label>ISS (%)</label><input type="number" id="nIss" value="2" step="0.1" min="0" max="5"></div><div class="fg"><label>Código NFS-e</label><input id="nCod" placeholder="Opcional"></div></div>
+    <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mNota')">Cancelar</button><button class="btn btn-primary" onclick="saveNota()">🧾 Salvar</button></div>
+  </div>
+</div>
+<!-- Horas Extras -->
+<div id="mHora" class="modal-bg">
+  <div class="modal-box">
+    <button class="mclose" onclick="closeModal('mHora')">✕</button>
+    <h3>⏱️ Registrar Horas Extras</h3>
+    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="hCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="hDt"></div></div>
+    <div class="frow c2"><div class="fg"><label>Funcionário *</label><input id="hFunc" placeholder="Nome do funcionário"></div><div class="fg"><label>Cargo</label><input id="hCargo" value="Fisioterapeuta"></div></div>
+    <div class="frow c3"><div class="fg"><label>Horas Extras *</label><input type="number" id="hHrs" placeholder="Ex: 2.5" step="0.5" min="0.5"></div><div class="fg"><label>Valor por Hora (R$) *</label><input type="number" id="hVh" placeholder="0.00" step="0.01"></div><div class="fg"><label>Total (calculado)</label><input id="hTot" readonly style="background:#f8fafc;font-weight:600;color:#059669"></div></div>
+    <div class="frow c1"><div class="fg"><label>Descrição</label><input id="hDs" placeholder="Motivo das horas extras..."></div></div>
+    <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mHora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Salvar</button></div>
+  </div>
+</div>
+<!-- Comissão -->
+<div id="mCom" class="modal-bg">
+  <div class="modal-box">
+    <button class="mclose" onclick="closeModal('mCom')">✕</button>
+    <h3>💸 Registrar Comissão</h3>
+    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="coCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="coDt"></div></div>
+    <div class="frow c2"><div class="fg"><label>Profissional *</label><input id="coProf" placeholder="Nome do profissional"></div><div class="fg"><label>Protocolo / Serviço *</label><input id="coProt" placeholder="Nome do protocolo vendido"></div></div>
+    <div class="frow c3"><div class="fg"><label>Valor do Protocolo (R$) *</label><input type="number" id="coVp" placeholder="0.00" step="0.01" oninput="calcCom()"></div><div class="fg"><label>% Comissão</label><input type="number" id="coPct" value="2.5" step="0.1" oninput="calcCom()"></div><div class="fg"><label>Valor da Comissão</label><input id="coVc" readonly style="background:#f8fafc;font-weight:600;color:#059669"></div></div>
+    <div class="frow c1"><div class="fg"><label>Observação</label><input id="coObs" placeholder="..."></div></div>
+    <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mCom')">Cancelar</button><button class="btn btn-primary" onclick="saveCom()">💾 Salvar</button></div>
+  </div>
+</div>
+<!-- Editar Procedimento -->
+<div id="mProc" class="modal-bg">
+  <div class="modal-box" style="width:420px">
+    <button class="mclose" onclick="closeModal('mProc')">✕</button>
+    <h3 id="mProcTitle">✏️ Editar Procedimento</h3>
+    <input type="hidden" id="procId">
+    <div class="frow c2" style="margin-top:14px">
+      <div class="fg"><label>Clínica *</label>
+        <select id="procClinic">
+          <option value="dtm">🦷 DTM & Sono</option>
+          <option value="hernia">⚕️ Dr. Hérnia SJC</option>
+        </select>
+      </div>
+      <div class="fg"><label>Categoria *</label><input id="procCat" placeholder="Ex: Protocolo, Consulta..."></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px"><label>Nome do Procedimento *</label><input id="procNome" placeholder="Ex: Protocolo Curto (8 sessões)"></div>
+    <div class="frow c2">
+      <div class="fg"><label>Valor (R$) *</label><input type="number" id="procVal" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="fg"><label>Gera Comissão?</label><select id="procCom" onchange="toggleProcPct()"><option value="false">Não</option><option value="true">Sim</option></select></div>
+    </div>
+    <div class="fg" style="margin-bottom:16px" id="procPctRow"><label>% Comissão</label><input type="number" id="procPct" value="2.5" step="0.1" min="0" max="100" placeholder="2.5"></div>
+    <div class="factions">
+      <button class="btn btn-ghost" onclick="closeModal('mProc')">Cancelar</button>
+      <button class="btn btn-danger btn-sm" id="procDelBtn" onclick="delProc()" style="display:none">🗑️ Remover</button>
+      <button class="btn btn-primary" onclick="saveProc()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+<!-- Usuário -->
+<div id="mUser" class="modal-bg">
+  <div class="modal-box" style="width:440px">
+    <button class="mclose" onclick="closeModal('mUser')">✕</button>
+    <h3 id="mUserTitle">👤 Novo Usuário</h3>
+    <input type="hidden" id="uId">
+    <div class="frow c1" style="margin-top:14px">
+      <div class="fg"><label>Nome completo</label><input id="uNomeField" placeholder="Ex: Ana Paula"></div>
+    </div>
+    <div class="frow c1">
+      <div class="fg"><label>E-mail</label><input id="uEmailField" type="email" placeholder="email@clinica.com"></div>
+    </div>
+    <div class="frow c1" id="uSenhaRow">
+      <div class="fg"><label>Senha <span style="color:#94a3b8;font-size:10px">(mín. 6 caracteres)</span></label><input id="uSenhaField" type="password" placeholder="••••••••"></div>
+    </div>
+    <div class="frow c2">
+      <div class="fg"><label>Perfil de Acesso</label>
+        <select id="uRoleField">
+          <option value="secretaria_dtm">Secretaria DTM</option>
+          <option value="secretaria_sjc">Secretaria SJC</option>
+          <option value="contabilidade">Contabilidade</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+      <div class="fg" id="uAtivoRow"><label>Status</label>
+        <select id="uAtivoField">
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveUser()">💾 Salvar</button>
+      <button class="btn btn-ghost" onclick="closeModal('mUser')">Cancelar</button>
+    </div>
+  </div>
+</div>
+<script>
+// ===== CONSTANTS =====
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const PG={pix:'PIX',cartao_credito:'Cartão Crédito',cartao_debito:'Cartão Débito',dinheiro:'Dinheiro',transferencia:'Transferência',plano:'Plano/Convênio',cheque:'Cheque',boleto:'Boleto'};
+const ROLE_LABELS={admin:'Administrador',contabilidade:'Contabilidade',secretaria_sjc:'Secretaria SJC',secretaria_dtm:'Secretaria DTM'};
+const NAV_ITEMS=[
+  {id:'dashboard',ic:'📊',lbl:'Dashboard',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'lancamentos',ic:'💰',lbl:'Lançamentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'notas',ic:'🧾',lbl:'Notas Fiscais',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'horas',ic:'⏱️',lbl:'Horas Extras',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'comissoes',ic:'💸',lbl:'Comissões',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'procedimentos',ic:'📋',lbl:'Procedimentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'relatorios',ic:'📈',lbl:'Relatórios',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'ia',ic:'🤖',lbl:'IA Consultora',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'contabilidade',ic:'📒',lbl:'Contabilidade',roles:['admin','contabilidade']},
+  {id:'auditoria',ic:'🔍',lbl:'Auditoria',roles:['admin','contabilidade']},
+  {id:'usuarios',ic:'👥',lbl:'Usuários',roles:['admin']},
+];
+const CATS={
+  dtm:{receita:['Consulta Particular','Placa DTM','Toxina Botulínica','Tratamento Sono','Retorno','Convênio','Terapia Miofuncional','Radiografia','Protocolo','Outros'],
+       despesa:['Aluguel','Funcionários','Material Odontológico','Equipamentos','Marketing','Contador','Impostos','Softwares','Água/Luz/Internet','Cursos','Royalties','Outros']},
+  hernia:{receita:['Consulta Cirúrgica','Cirurgia','Retorno','Convênio','Pré-operatório','Pós-operatório','Protocolo','Exames','Outros'],
+          despesa:['Aluguel','Funcionários','Material Cirúrgico','Equipamentos','Marketing','Contador','Impostos','Softwares','Água/Luz/Internet','Royalties (Franquia)','Outros']}
+};
+// ===== STATE =====
+let sb=null, currentUser=null, userProfile=null, procedimentos=[], charts={};
+function getSB(){
+  if(!sb) sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  return sb;
+}
+let _comAutoProc=null; // auto commission after transaction save
+// ===== UTILS =====
+const fmt=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+const fmts=v=>Math.abs(v)>=1000?'R$'+(v/1000).toFixed(1)+'k':fmt(v);
+const fmtD=d=>{if(!d)return'';const p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
+const today=()=>new Date().toISOString().split('T')[0];
+function toast(msg,tp='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=tp;el.style.display='block';setTimeout(()=>el.style.display='none',3500);}
+function loading(on){const el=document.getElementById('loadingOverlay');el.className=on?'show':'';}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function isAdmin(){return userProfile?.role==='admin';}
+function isContab(){return userProfile?.role==='contabilidade';}
+function canEdit(){return isAdmin()||isContab();}
+function userClinic(){if(userProfile?.role==='secretaria_sjc')return'hernia';if(userProfile?.role==='secretaria_dtm')return'dtm';return null;}
+// ===== SUPABASE INIT =====
+// Credenciais pré-configuradas — Clinica Dr Victor Vaz
+const SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+const SB_SVC  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc4MzUxOSwiZXhwIjoyMDkzMzU5NTE5fQ.8iBhtPYH3wJ9dTzdGZTZekVMak5pC_DDynAoq09Tpq0';
+async function initApp(){
+  try{
+    sb=getSB();
+    loading(true);
+    const{data:{user},error}=await sb.auth.getUser();
+    loading(false);
+    if(error||!user){showLoginScreen();return;}
+    currentUser=user;
+    await loadProfile();
+    showAppScreen();
+  }catch(e){loading(false);showLoginScreen();}
+}
+function showSetupScreen(){
+  document.getElementById('setupScreen').className='screen active';
+  document.getElementById('loginScreen').className='screen';
+  document.getElementById('appScreen').className='';
+}
+function showLoginScreen(){
+  document.getElementById('setupScreen').className='screen';
+  document.getElementById('loginScreen').className='screen active';
+  document.getElementById('appScreen').className='';
+}
+function showSecretaryMode(){
+  document.getElementById('setupScreen').className='screen';
+  document.getElementById('loginScreen').className='screen';
+  document.getElementById('appScreen').className='';
+  document.getElementById('secScreen').className='active';
+  const isSjc=userProfile?.role==='secretaria_sjc';
+  document.getElementById('secClinic').textContent=isSjc?'⚕️ Dr. Hérnia SJC':'🦷 Clínica DTM & Sono';
+  document.getElementById('secUserName').textContent=userProfile?.nome||currentUser?.email||'Secretária';
+  // Botões rápidos dinâmicos por clínica
+  const qbar=document.getElementById('secQuickBar');
+  if(qbar){
+    if(isSjc){
+      qbar.innerHTML=`
+        <button class="sec-quick" onclick="secQuick('Recebi R$ ')">💰 Receita</button>
+        <button class="sec-quick" onclick="secQuick('Paguei R$ ')">💸 Despesa</button>
+        <button class="sec-quick" onclick="secQuick('Consulta R$ 250 ')">🩺 Consulta</button>
+        <button class="sec-quick" onclick="secQuick('Protocolo Curto R$ 2200 ')">📋 Curto (R$2.200)</button>
+        <button class="sec-quick" onclick="secQuick('Protocolo Médio R$ 2500 ')">📋 Médio (R$2.500)</button>
+        <button class="sec-quick" onclick="secQuick('Protocolo Longo R$ 3800 ')">📋 Longo (R$3.800)</button>
+        <button class="sec-quick" onclick="secQuick('Liberação Miofascial R$ 1200 ')">🏃 Miofascial (R$1.200)</button>`;
+    }else{
+      qbar.innerHTML=`
+        <button class="sec-quick" onclick="secQuick('Recebi R$ ')">💰 Receita</button>
+        <button class="sec-quick" onclick="secQuick('Paguei R$ ')">💸 Despesa</button>
+        <button class="sec-quick" onclick="secQuick('Consulta R$ ')">🩺 Consulta</button>
+        <button class="sec-quick" onclick="secQuick('Protocolo R$ ')">📋 Protocolo</button>
+        <button class="sec-quick" onclick="secQuick('Placa DTM R$ ')">🦷 Placa</button>`;
+    }
+  }
+  // Inicializa seletores da aba tabela
+  const selMes=document.getElementById('secTblMes');
+  const selAno=document.getElementById('secTblAno');
+  if(selMes&&selMes.options.length===0){
+    const now=new Date();
+    for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][i-1];if(i===now.getMonth()+1)o.selected=true;selMes.appendChild(o);}
+  }
+  if(selAno&&selAno.options.length===0){
+    const y=new Date().getFullYear();
+    for(let i=y;i>=y-3;i--){const o=document.createElement('option');o.value=i;o.textContent=i;selAno.appendChild(o);}
+  }
+  // Mensagem de boas-vindas no chat
+  const box=document.getElementById('secChatBox');
+  if(box&&box.children.length===0){
+    const nome=userProfile?.nome?.split(' ')[0]||'';
+    if(isSjc){
+      addSecMsg('ia','Olá '+nome+'! 👋\n\nUse os botões acima para lançar rapidamente, ou escreva aqui.\n\nProtocolos Dr. Hérnia SJC:\n• Protocolo Curto — 8 sessões — R$ 2.200,00 (10x R$ 220)\n• Protocolo Médio — 16 sessões — R$ 2.500,00 (10x R$ 250)\n• Protocolo Longo — 24 sessões — R$ 3.800,00 (10x R$ 380)\n• Liberação Miofascial — 10 sessões — R$ 1.200,00 (10x R$ 120)\n\nEx: "Protocolo Curto R$ 2200 parcelado 10x paciente João"');
+    }else{
+      addSecMsg('ia','Olá '+nome+'! 👋\n\nPode lançar aqui qualquer entrada ou saída da clínica.\n\nExemplos:\n• "Recebi R$ 800 de consulta hoje"\n• "Paguei R$ 150 de material"');
+    }
+  }
+}
+function showAppScreen(){
+  // Secretárias vão para o chat simplificado
+  const role=userProfile?.role;
+  if(role==='secretaria_dtm'||role==='secretaria_sjc'){showSecretaryMode();return;}
+  document.getElementById('setupScreen').className='screen';
+  document.getElementById('loginScreen').className='screen';
+  document.getElementById('secScreen').className='';
+  document.getElementById('appScreen').className='active';
+  document.getElementById('uNome').textContent=userProfile?.nome||currentUser?.email||'Usuário';
+  document.getElementById('uRole').textContent=ROLE_LABELS[userProfile?.role]||'—';
+  buildNav();initSelectors();initAppState();
+}
+async function setupConnect(){
+  const url=document.getElementById('sbUrl').value.trim();
+  const key=document.getElementById('sbKey').value.trim();
+  const err=document.getElementById('setupErr');
+  err.style.display='none';
+  if(!url||!key){err.textContent='Preencha URL e chave.';err.style.display='block';return;}
+  loading(true);
+  try{
+    const client=window.supabase.createClient(url,key);
+    const{error}=await client.from('profiles').select('id').limit(1);
+    loading(false);
+    if(error&&error.code!=='42501'&&error.code!=='PGRST301'){
+      err.textContent='Erro ao conectar: '+error.message;err.style.display='block';return;
+    }
+    localStorage.setItem('sb_url',url);localStorage.setItem('sb_key',key);
+    sb=client;showLoginScreen();
+  }catch(e){loading(false);err.textContent='Falha na conexão: '+e.message;err.style.display='block';}
+}
+async function login(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginErr');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Preencha e-mail e senha.';err.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Entrando...';
+  sb=getSB();
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false;btn.textContent='Entrar →';
+  if(error){err.textContent='Erro: '+error.message;err.style.display='block';return;}
+  currentUser=data.user;await loadProfile();showAppScreen();
+}
+async function loadProfile(){
+  const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  userProfile=error||!data?{role:'secretaria_dtm',nome:currentUser.email,id:currentUser.id}:data;
+}
+function buildNav(){
+  const nav=document.getElementById('sidebarNav');
+  const uc=userClinic();
+  nav.innerHTML=NAV_ITEMS
+    .filter(i=>i.roles.includes(userProfile?.role))
+    .map(i=>`<button class="nb" onclick="showSection('${i.id}')" data-s="${i.id}"><span class="ic">${i.ic}</span>${i.lbl}</button>`)
+    .join('');
+}
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const sec=document.getElementById('s-'+id);
+  if(sec)sec.classList.add('active');
+  document.querySelectorAll('.nb[data-s]').forEach(b=>b.classList.toggle('active',b.dataset.s===id));
+  const titles={dashboard:'Dashboard',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
+  document.getElementById('pgTitle').textContent=titles[id]||id;
+  if(id==='dashboard')renderDash();
+  else if(id==='lancamentos')renderLanc();
+  else if(id==='notas')renderNotas();
+  else if(id==='horas')renderHoras();
+  else if(id==='comissoes')renderComissoes();
+  else if(id==='procedimentos')renderProcedimentos();
+  else if(id==='relatorios')renderRel();
+  else if(id==='contabilidade')initContabSelects();
+  else if(id==='auditoria'){}
+  else if(id==='usuarios')renderUsers();
+}
+function initAppState(){
+  const now=new Date();const cy=now.getFullYear();const cm=now.getMonth()+1;
+  const uc=userClinic();
+  // pre-set clinic filters for secretaria
+  if(uc){['fCl','fComCl'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=uc;}});}
+  document.getElementById('sbDate').textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('mesLabel').textContent=MESES[cm-1]+' '+cy;
+  loadProcedimentos();
+  setupRealtime();
+}
+function setupRealtime(){
+  if(!sb)return;
+  sb.channel('db-rt').on('postgres_changes',{event:'*',schema:'public',table:'transactions'},()=>{
+    const ac=document.querySelector('.nb.active');
+    const sid=ac?.dataset?.s;
+    if(sid==='dashboard')renderDash();
+    else if(sid==='lancamentos')renderLanc();
+  }).subscribe();
+}
+</script>
+<script>
+// ===== SELECTORS INIT =====
+function initSelectors(){
+  const now=new Date();const cy=now.getFullYear();const cm=now.getMonth()+1;
+  ['dMes','rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=cm;});
+  ['dAno','rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=cy;});
+  const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value=String(cm).padStart(2,'0');}
+  ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value=String(cm).padStart(2,'0');});
+  const fAn=document.getElementById('fAn');if(fAn){for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value=cy;}
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));});
+  // Horas extras auto total
+  ['hHrs','hVh'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>{
+    const h=parseFloat(document.getElementById('hHrs')?.value)||0;
+    const v=parseFloat(document.getElementById('hVh')?.value)||0;
+    const t=document.getElementById('hTot');if(t)t.value=h&&v?fmt(h*v):'';
+  }));
+  const ph=document.getElementById('procEditHint');if(ph)ph.textContent=isAdmin()?'Clique em ✏️ para editar nome, valor e comissão. Use "+ Novo Procedimento" para adicionar.':'Somente o Administrador pode editar.';
+  const btnN=document.getElementById('btnNewProc');if(btnN)btnN.style.display=isAdmin()?'':'none';
+}
+// ===== DATA: PROCEDIMENTOS =====
+async function loadProcedimentos(){
+  const{data}=await sb.from('procedimentos').select('*').eq('ativo',true).order('clinic').order('categoria').order('nome');
+  procedimentos=data||[];
+  updProcSelect();
+}
+function updProcSelect(){
+  const cl=document.getElementById('lCl')?.value||'dtm';
+  const tp=document.getElementById('lTp')?.value||'receita';
+  const s=document.getElementById('lProc');if(!s)return;
+  const list=tp==='receita'?procedimentos.filter(p=>p.clinic===cl):[];
+  s.innerHTML='<option value="">— Selecionar da tabela —</option>'+list.map(p=>`<option value="${p.id}" data-val="${p.valor}" data-cat="${p.categoria}" data-com="${p.gera_comissao}" data-pct="${p.percentual_comissao}" data-nome="${p.nome}">${p.nome} — ${fmt(p.valor)}</option>`).join('');
+}
+function onProcSel(){
+  const s=document.getElementById('lProc');
+  const opt=s?.selectedOptions[0];
+  if(!opt||!opt.value)return;
+  document.getElementById('lVl').value=opt.dataset.val||'';
+  const catSel=document.getElementById('lCat');
+  if(catSel){Array.from(catSel.options).forEach(o=>{if(o.value===opt.dataset.cat)catSel.value=o.value;});}
+  _comAutoProc=opt.dataset.com==='true'?{nome:opt.dataset.nome,pct:parseFloat(opt.dataset.pct)||2.5}:null;
+}
+function updCats(){
+  const cl=document.getElementById('lCl')?.value||'dtm';
+  const tp=document.getElementById('lTp')?.value||'receita';
+  const s=document.getElementById('lCat');if(!s)return;
+  const cats=CATS[cl]?.[tp]||[];
+  s.innerHTML=cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  updProcSelect();
+}
+// ===== DATA: TRANSACTIONS =====
+async function loadTx(filters={}){
+  let q=sb.from('transactions').select('*').order('data',{ascending:false});
+  const uc=userClinic();if(uc)q=q.eq('clinic',uc);
+  if(filters.clinic)q=q.eq('clinic',filters.clinic);
+  if(filters.tipo)q=q.eq('tipo',filters.tipo);
+  if(filters.year&&filters.month){
+    const start=filters.year+'-'+String(filters.month).padStart(2,'0')+'-01';
+    const end=new Date(filters.year,filters.month,0).toISOString().split('T')[0];
+    q=q.gte('data',start).lte('data',end);
+  }
+  if(filters.search)q=q.or(`descricao.ilike.%${filters.search}%,categoria.ilike.%${filters.search}%`);
+  const{data,error}=await q.limit(500);
+  if(error)throw error;
+  return data||[];
+}
+async function saveLanc(){
+  const cl=document.getElementById('lCl').value;
+  const tp=document.getElementById('lTp').value;
+  const dt=document.getElementById('lDt').value;
+  const vl=parseFloat(document.getElementById('lVl').value);
+  const pg=document.getElementById('lPg').value;
+  const cat=document.getElementById('lCat').value;
+  const ds=document.getElementById('lDs').value.trim();
+  const obs=document.getElementById('lObs').value.trim();
+  if(!dt||!vl||isNaN(vl)||vl<=0||!ds){toast('Preencha todos os campos!','err');return;}
+  loading(true);
+  const{error}=await sb.from('transactions').insert({clinic:cl,tipo:tp,categoria:cat,descricao:ds,valor:vl,data:dt,pagamento:pg,observacao:obs});
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mLanc');
+  toast('✅ Lançamento salvo!');
+  document.getElementById('lVl').value='';document.getElementById('lDs').value='';document.getElementById('lObs').value='';
+  const ac=document.querySelector('.nb.active');const sid=ac?.dataset?.s;
+  if(sid==='dashboard')renderDash();else if(sid==='lancamentos')renderLanc();
+  // Auto commission
+  if(_comAutoProc&&tp==='receita'){
+    const proc=_comAutoProc;_comAutoProc=null;
+    if(confirm(`Este protocolo gera comissão de ${proc.pct}%.\nDeseja registrar agora?`)){
+      document.getElementById('coCl').value=cl;
+      document.getElementById('coDt').value=dt;
+      document.getElementById('coProt').value=proc.nome;
+      document.getElementById('coVp').value=vl;
+      document.getElementById('coPct').value=proc.pct;
+      document.getElementById('coVc').value=fmt(vl*proc.pct/100);
+      openModal('mCom');
+    }
+  }
+}
+async function delTx(id){
+  if(!confirm('Remover este lançamento?'))return;
+  const{error}=await sb.from('transactions').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  toast('Lançamento removido.');renderLanc();
+}
+// ===== RENDER: DASHBOARD =====
+async function renderDash(){
+  const m=parseInt(document.getElementById('dMes')?.value)||new Date().getMonth()+1;
+  const y=parseInt(document.getElementById('dAno')?.value)||new Date().getFullYear();
+  try{
+    const tx=await loadTx({month:m,year:y});
+    const rec=tx.filter(t=>t.tipo==='receita'),des=tx.filter(t=>t.tipo==='despesa');
+    const tR=rec.reduce((s,t)=>s+parseFloat(t.valor),0);
+    const tD=des.reduce((s,t)=>s+parseFloat(t.valor),0);
+    const lc=tR-tD;const mg=tR>0?((lc/tR)*100).toFixed(1):0;
+    document.getElementById('kR').textContent=fmt(tR);
+    document.getElementById('kD').textContent=fmt(tD);
+    document.getElementById('kL').textContent=fmt(lc);
+    document.getElementById('kL').style.color=lc>=0?'#0ea5e9':'#dc2626';
+    document.getElementById('kLm').textContent='Margem: '+mg+'%';
+    const{data:nfs}=await sb.from('notas_fiscais').select('valor').eq('status','emitida').gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',new Date(y,m,0).toISOString().split('T')[0]);
+    document.getElementById('kN').textContent=(nfs||[]).length;
+    document.getElementById('kNv').textContent=fmt((nfs||[]).reduce((s,n)=>s+parseFloat(n.valor),0));
+    ['dtm','hernia'].forEach(c=>{
+      const cr=tx.filter(t=>t.clinic===c&&t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const cd=tx.filter(t=>t.clinic===c&&t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const p=c==='dtm'?'d':'h';
+      document.getElementById(p+'R').textContent=fmts(cr);
+      document.getElementById(p+'D').textContent=fmts(cd);
+      const cl2=cr-cd;
+      document.getElementById(p+'L').textContent=fmts(cl2);
+      document.getElementById(p+'L').style.color=cl2>=0?'#1d4ed8':'#dc2626';
+    });
+    // Last 10
+    const tb=document.getElementById('dashTb');
+    const recent=[...tx].slice(0,10);
+    if(!recent.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ic">💸</div><h4>Sem lançamentos neste período</h4></div></td></tr>`;return;}
+    tb.innerHTML=recent.map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'💚 Rec.':'🔴 Desp.'}</span></td><td>${x.categoria||'-'}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.descricao}</td><td>${PG[x.pagamento]||x.pagamento||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('');
+    // Charts
+    const allTx=await loadTx({});
+    const ev=[];const now=new Date();
+    for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const tm=allTx.filter(t=>t.data.startsWith(k));ev.push({lbl:MESES[d.getMonth()].slice(0,3),r:tm.filter(t=>t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0),d:tm.filter(t=>t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0)});}
+    if(charts.ev)charts.ev.destroy();
+    const c1=document.getElementById('chEv')?.getContext('2d');
+    if(c1)charts.ev=new Chart(c1,{type:'bar',data:{labels:ev.map(e=>e.lbl),datasets:[{label:'Receita',data:ev.map(e=>e.r),backgroundColor:'#059669',borderRadius:4},{label:'Despesa',data:ev.map(e=>e.d),backgroundColor:'#dc2626',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'R$'+(v/1000).toFixed(0)+'k',font:{size:10}}}}}});
+    const pgd={};rec.forEach(t=>{const lb=PG[t.pagamento]||t.pagamento||'Outro';pgd[lb]=(pgd[lb]||0)+parseFloat(t.valor);});
+    if(charts.pg)charts.pg.destroy();
+    const c2=document.getElementById('chPg')?.getContext('2d');
+    const pgl=Object.keys(pgd),pgv=Object.values(pgd);
+    if(c2)charts.pg=new Chart(c2,{type:'doughnut',data:{labels:pgl.length?pgl:['Sem dados'],datasets:[{data:pgv.length?pgv:[1],backgroundColor:['#3b82f6','#059669','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#84cc16']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+  }catch(e){console.error(e);toast('Erro ao carregar dashboard','err');}
+}
+// ===== RENDER: LANÇAMENTOS =====
+async function renderLanc(){
+  const fCl=document.getElementById('fCl')?.value||'';
+  const fTp=document.getElementById('fTp')?.value||'';
+  const fMs=document.getElementById('fMs')?.value||'';
+  const fAn=document.getElementById('fAn')?.value||'';
+  const fBk=document.getElementById('fBk')?.value||'';
+  const now=new Date();
+  const filters={clinic:fCl,tipo:fTp,search:fBk};
+  if(fAn)filters.year=parseInt(fAn);
+  if(fMs)filters.month=parseInt(fMs);
+  const tb=document.getElementById('lancTb');
+  tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">⏳</div><p>Carregando...</p></div></td></tr>`;
+  try{
+    const tx=await loadTx(filters);
+    document.getElementById('lCount').textContent=tx.length+' registro(s)';
+    if(!tx.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">💸</div><h4>Nenhum lançamento encontrado</h4></div></td></tr>`;return;}
+    tb.innerHTML=tx.map(x=>`<tr>
+      <td>${fmtD(x.data)}</td>
+      <td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+      <td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'💚 Receita':'🔴 Despesa'}</span></td>
+      <td>${x.categoria||'-'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.descricao}">${x.descricao}</td>
+      <td>${PG[x.pagamento]||x.pagamento||'-'}</td>
+      <td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td>
+      <td>${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delTx(${x.id})">🗑️</button>`:''}</td>
+    </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">❌</div><h4>Erro ao carregar dados</h4></div></td></tr>`;console.error(e);}
+}
+</script>
+<script>
+// ===== NOTAS FISCAIS =====
+async function renderNotas(){
+  const uc=userClinic();
+  let q=sb.from('notas_fiscais').select('*').order('data',{ascending:false});
+  if(uc)q=q.eq('clinic',uc);
+  const{data,error}=await q.limit(300);
+  const tb=document.getElementById('notasTb');
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ic">🧾</div><h4>${error?'Erro ao carregar':'Nenhuma nota registrada'}</h4></div></td></tr>`;return;}
+  tb.innerHTML=data.map(n=>`<tr>
+    <td><strong>${n.numero||'-'}</strong></td><td>${fmtD(n.data)}</td>
+    <td><span class="badge badge-${n.clinic}">${n.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+    <td>${n.paciente}</td><td style="font-size:10px;color:#64748b">${n.cpf||'-'}</td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${n.descricao}">${n.descricao||'-'}</td>
+    <td style="text-align:right;font-weight:600;color:#059669">${fmt(parseFloat(n.valor||0))}</td>
+    <td style="text-align:center">${n.iss||2}%</td>
+    <td><span class="badge badge-${n.status}">${n.status==='emitida'?'✅ Emitida':'❌ Cancelada'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost btn-sm" onclick="printNF(${n.id},'${n.clinic}','${n.numero||''}','${n.data}','${n.paciente}','${n.cpf||''}','${(n.descricao||'').replace(/'/g,"\\'")}',${n.valor||0},${n.iss||2},'${n.codigo||''}')">🖨️</button>
+      ${n.status==='emitida'&&canEdit()?`<button class="btn btn-ghost btn-sm" onclick="cancelNF(${n.id})">❌</button>`:''}
+      ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delNF(${n.id})">🗑️</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+async function saveNota(){
+  const cl=document.getElementById('nCl').value;
+  const dt=document.getElementById('nDt').value;
+  const pac=document.getElementById('nPac').value.trim();
+  const cpf=document.getElementById('nCpf').value.trim();
+  const desc=document.getElementById('nDesc').value.trim();
+  const vl=parseFloat(document.getElementById('nVl').value);
+  const iss=parseFloat(document.getElementById('nIss').value)||2;
+  const cod=document.getElementById('nCod').value.trim();
+  if(!dt||!pac||!cpf||!desc||!vl||isNaN(vl)){toast('Preencha todos os campos!','err');return;}
+  // Auto numero
+  const{data:last}=await sb.from('notas_fiscais').select('numero').eq('clinic',cl).order('created_at',{ascending:false}).limit(1);
+  const lastNum=last&&last[0]?.numero?parseInt(last[0].numero)||0:0;
+  const numero=document.getElementById('nNum').value||String(lastNum+1).padStart(4,'0');
+  loading(true);
+  const{error}=await sb.from('notas_fiscais').insert({clinic:cl,numero,paciente:pac,cpf,descricao:desc,valor:vl,iss,codigo:cod||null,data:dt});
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mNota');toast('✅ NF registrada!');
+  document.getElementById('nPac').value='';document.getElementById('nCpf').value='';document.getElementById('nDesc').value='';document.getElementById('nVl').value='';document.getElementById('nNum').value='';
+  renderNotas();
+}
+async function cancelNF(id){if(!confirm('Cancelar esta nota?'))return;await sb.from('notas_fiscais').update({status:'cancelada'}).eq('id',id);renderNotas();toast('Nota cancelada.');}
+async function delNF(id){if(!confirm('Remover esta nota?'))return;await sb.from('notas_fiscais').delete().eq('id',id);renderNotas();toast('Nota removida.');}
+function printNF(id,cl,num,dt,pac,cpf,desc,vl,iss,cod){
+  const cNome=cl==='dtm'?'Clínica DTM & Sono':'Dr. Hérnia SJC';
+  const issVal=parseFloat(vl)*iss/100;const liq=parseFloat(vl)-issVal;
+  document.getElementById('nfPrint').innerHTML=`<div style="max-width:660px;margin:30px auto;font-family:Segoe UI,sans-serif;border:2px solid #1d4ed8;border-radius:12px;overflow:hidden">
+    <div style="background:#1d4ed8;color:white;padding:16px 22px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:18px;font-weight:700">${cNome}</div><div style="font-size:11px;opacity:.8">Dr. Victor Vaz</div></div>
+      <div style="text-align:right"><div style="font-size:15px;font-weight:700">RECIBO / NF</div><div style="font-size:13px">Nº ${num||id}</div></div>
+    </div>
+    <div style="padding:20px 22px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e2e8f0">
+        <div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase">Data</div><div style="font-size:14px;font-weight:600">${fmtD(dt)}</div></div>
+        <div><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase">Prestador</div><div style="font-size:14px;font-weight:600">Dr. Victor Vaz</div></div>
+      </div>
+      <div style="background:#f8fafc;border-radius:7px;padding:12px;margin-bottom:12px">
+        <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:4px">Tomador</div>
+        <div style="font-size:13px;font-weight:700">${pac}</div><div style="font-size:12px;color:#64748b">CPF/CNPJ: ${cpf}</div>
+      </div>
+      <div style="background:#f0f9ff;border-radius:7px;padding:12px;margin-bottom:12px">
+        <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;margin-bottom:4px">Serviço</div>
+        <div style="font-size:13px">${desc}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="text-align:center;background:#f8fafc;padding:10px;border-radius:7px"><div style="font-size:10px;color:#64748b">Valor Bruto</div><div style="font-size:16px;font-weight:700">${fmt(parseFloat(vl))}</div></div>
+        <div style="text-align:center;background:#fff7ed;padding:10px;border-radius:7px"><div style="font-size:10px;color:#64748b">ISS (${iss}%)</div><div style="font-size:16px;font-weight:700;color:#d97706">${fmt(issVal)}</div></div>
+        <div style="text-align:center;background:#f0fdf4;padding:10px;border-radius:7px"><div style="font-size:10px;color:#64748b">Valor Líquido</div><div style="font-size:16px;font-weight:700;color:#059669">${fmt(liq)}</div></div>
+      </div>
+      ${cod?`<div style="font-size:11px;color:#64748b;margin-bottom:10px">Código NFS-e: ${cod}</div>`:''}
+      <div style="border-top:1px solid #e2e8f0;padding-top:12px;text-align:right"><div style="margin-top:24px;border-top:1px solid #1d4ed8;padding-top:6px;font-size:11px;color:#64748b;width:180px;margin-left:auto">Assinatura</div></div>
+    </div></div>`;
+  document.body.classList.add('pnf');window.print();document.body.classList.remove('pnf');
+}
+// ===== HORAS EXTRAS =====
+async function renderHoras(){
+  const uc=userClinic();
+  let q=sb.from('horas_extras').select('*').order('data',{ascending:false});
+  if(uc)q=q.eq('clinic',uc);
+  const{data,error}=await q.limit(200);
+  const tb=document.getElementById('horasTb');
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">⏱️</div><h4>${error?'Erro':'Nenhuma hora extra registrada'}</h4></div></td></tr>`;return;}
+  tb.innerHTML=data.map(h=>`<tr>
+    <td>${fmtD(h.data)}</td>
+    <td><span class="badge badge-${h.clinic}">${h.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+    <td>${h.funcionario}</td><td>${h.cargo||'-'}</td>
+    <td style="text-align:center;font-weight:600">${h.horas}h</td>
+    <td style="text-align:right">${fmt(parseFloat(h.valor_hora||0))}</td>
+    <td style="text-align:right;font-weight:600;color:#1d4ed8">${fmt(parseFloat(h.total||0))}</td>
+    <td>${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delHora(${h.id})">🗑️</button>`:''}</td>
+  </tr>`).join('');
+}
+async function saveHora(){
+  const cl=document.getElementById('hCl').value;
+  const dt=document.getElementById('hDt').value;
+  const func=document.getElementById('hFunc').value.trim();
+  const cargo=document.getElementById('hCargo').value.trim()||'Fisioterapeuta';
+  const hrs=parseFloat(document.getElementById('hHrs').value);
+  const vh=parseFloat(document.getElementById('hVh').value);
+  const ds=document.getElementById('hDs').value.trim();
+  if(!dt||!func||!hrs||!vh){toast('Preencha todos os campos!','err');return;}
+  loading(true);
+  const{error}=await sb.from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds});
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mHora');toast('✅ Horas extras registradas!');renderHoras();
+}
+async function delHora(id){if(!confirm('Remover?'))return;await sb.from('horas_extras').delete().eq('id',id);renderHoras();toast('Removido.');}
+// ===== COMISSÕES =====
+async function renderComissoes(){
+  const fCl=document.getElementById('fComCl')?.value||'';
+  const fSt=document.getElementById('fComSt')?.value||'';
+  const fMs=document.getElementById('fComMs')?.value||'';
+  const uc=userClinic();
+  let q=sb.from('comissoes').select('*').order('data',{ascending:false});
+  if(uc)q=q.eq('clinic',uc);
+  if(fCl)q=q.eq('clinic',fCl);
+  if(fSt)q=q.eq('status',fSt);
+  const{data,error}=await q.limit(300);
+  const tb=document.getElementById('comTb');
+  let rows=data||[];
+  if(fMs)rows=rows.filter(r=>r.data&&r.data.substring(5,7)===fMs);
+  const totalPend=rows.filter(r=>r.status==='pendente').reduce((s,r)=>s+parseFloat(r.valor_comissao||0),0);
+  document.getElementById('comTotal').textContent='Pendente: '+fmt(totalPend);
+  if(error||!rows.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">💸</div><h4>${error?'Erro':'Nenhuma comissão registrada'}</h4></div></td></tr>`;return;}
+  tb.innerHTML=rows.map(c=>`<tr>
+    <td>${fmtD(c.data)}</td>
+    <td><span class="badge badge-${c.clinic}">${c.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+    <td>${c.profissional}</td><td>${c.protocolo}</td>
+    <td style="text-align:right">${fmt(parseFloat(c.valor_protocolo||0))}</td>
+    <td style="text-align:center">${c.percentual||2.5}%</td>
+    <td style="text-align:right;font-weight:600;color:#d97706">${fmt(parseFloat(c.valor_comissao||0))}</td>
+    <td><span class="badge badge-${c.status}">${c.status==='pendente'?'⏳ Pendente':'✅ Pago'}</span></td>
+    <td style="white-space:nowrap">
+      ${c.status==='pendente'&&canEdit()?`<button class="btn btn-success btn-sm" onclick="pagaCom(${c.id})">💰 Pagar</button>`:''} 
+      ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delCom(${c.id})">🗑️</button>`:''}
+    </td>
+  </tr>`).join('');
+}
+async function saveCom(){
+  const cl=document.getElementById('coCl').value;
+  const dt=document.getElementById('coDt').value;
+  const prof=document.getElementById('coProf').value.trim();
+  const prot=document.getElementById('coProt').value.trim();
+  const vp=parseFloat(document.getElementById('coVp').value);
+  const pct=parseFloat(document.getElementById('coPct').value)||2.5;
+  const obs=document.getElementById('coObs').value.trim();
+  if(!dt||!prof||!prot||!vp){toast('Preencha todos os campos!','err');return;}
+  const vc=vp*pct/100;
+  loading(true);
+  const{error}=await sb.from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs});
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mCom');toast('✅ Comissão registrada!');renderComissoes();
+}
+function calcCom(){
+  const vp=parseFloat(document.getElementById('coVp')?.value)||0;
+  const pct=parseFloat(document.getElementById('coPct')?.value)||2.5;
+  const el=document.getElementById('coVc');if(el)el.value=fmt(vp*pct/100);
+}
+async function pagaCom(id){if(!confirm('Marcar como pago?'))return;await sb.from('comissoes').update({status:'pago'}).eq('id',id);renderComissoes();toast('✅ Comissão marcada como paga!');}
+async function delCom(id){if(!confirm('Remover?'))return;await sb.from('comissoes').delete().eq('id',id);renderComissoes();toast('Removido.');}
+</script>
+<script>
+// ===== PROCEDIMENTOS =====
+async function renderProcedimentos(){
+  const fCl=document.getElementById('fProcCl')?.value||'';
+  const fBk=(document.getElementById('fProcBk')?.value||'').toLowerCase();
+  let rows=procedimentos.filter(p=>p.ativo);
+  if(fCl)rows=rows.filter(p=>p.clinic===fCl);
+  if(fBk)rows=rows.filter(p=>p.nome.toLowerCase().includes(fBk)||p.categoria.toLowerCase().includes(fBk));
+  const grouped={};
+  rows.forEach(p=>{const k=p.clinic+'|'+p.categoria;if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  const cNomes={dtm:'🦷 Clínica DTM & Sono',hernia:'⚕️ Dr. Hérnia SJC'};
+  const div=document.getElementById('procContent');
+  if(!rows.length){div.innerHTML='<div class="empty"><div class="ic">📋</div><h4>Nenhum procedimento encontrado</h4></div>';return;}
+  let html='';
+  let lastClinic='';
+  Object.keys(grouped).sort().forEach(k=>{
+    const[cl,cat]=k.split('|');
+    if(cl!==lastClinic){html+=`<div style="font-size:13px;font-weight:700;color:#0f172a;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid ${cl==='dtm'?'#7c3aed':'#f59e0b'}">${cNomes[cl]||cl}</div>`;lastClinic=cl;}
+    html+=`<div class="tcard" style="margin-bottom:10px"><div class="thead2" style="padding:8px 14px"><h3 style="font-size:12px">${cat}</h3></div><div class="twrap"><table><thead><tr><th>Procedimento</th><th style="text-align:right">Valor</th><th style="text-align:right;color:#64748b">10x</th><th style="text-align:center">Gera Comissão</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>`;
+    grouped[k].forEach(p=>{
+      html+=`<tr><td>${p.nome}</td><td style="text-align:right"><span class="proc-val" onclick="${isAdmin()?`editProc(${p.id},'${p.nome.replace(/'/g,"\\'")}',${p.valor},${p.gera_comissao},'${p.categoria||''}','${p.clinic||''}')`:'void(0)'}" title="${isAdmin()?'Clique para editar':''}">${fmt(parseFloat(p.valor))}</span></td><td style="text-align:right;color:#64748b;font-size:12px">${fmt(parseFloat(p.valor)/10)}</td><td style="text-align:center">${p.gera_comissao?'✅ Sim ('+p.percentual_comissao+'%)':'—'}</td>${isAdmin()?`<td><button class="btn btn-ghost btn-sm" onclick="editProc(${p.id},'${p.nome.replace(/'/g,"\\'")}',${p.valor},${p.gera_comissao},'${p.categoria||''}','${p.clinic||''}')">✏️</button></td>`:''}</tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  });
+  div.innerHTML=html;
+}
+function toggleProcPct(){
+  const v=document.getElementById('procCom').value==='true';
+  document.getElementById('procPctRow').style.display=v?'':'none';
+}
+function newProc(){
+  document.getElementById('procId').value='';
+  document.getElementById('mProcTitle').textContent='➕ Novo Procedimento';
+  document.getElementById('procNome').value='';
+  document.getElementById('procVal').value='';
+  document.getElementById('procCom').value='false';
+  document.getElementById('procPct').value='2.5';
+  document.getElementById('procPctRow').style.display='none';
+  document.getElementById('procDelBtn').style.display='none';
+  // Pre-select clinic based on filter
+  const cl=document.getElementById('fProcCl')?.value||'dtm';
+  document.getElementById('procClinic').value=cl||'dtm';
+  document.getElementById('procCat').value='';
+  openModal('mProc');
+}
+function editProc(id,nome,val,com,cat,clinic){
+  document.getElementById('procId').value=id;
+  document.getElementById('mProcTitle').textContent='✏️ Editar Procedimento';
+  document.getElementById('procNome').value=nome;
+  document.getElementById('procVal').value=val;
+  document.getElementById('procCom').value=String(com);
+  document.getElementById('procCat').value=cat||'';
+  document.getElementById('procClinic').value=clinic||'dtm';
+  document.getElementById('procPctRow').style.display=com?'':'none';
+  document.getElementById('procDelBtn').style.display='block';
+  openModal('mProc');
+}
+async function saveProc(){
+  const id=document.getElementById('procId').value;
+  const nome=document.getElementById('procNome').value.trim();
+  const cat=document.getElementById('procCat').value.trim();
+  const clinic=document.getElementById('procClinic').value;
+  const val=parseFloat(document.getElementById('procVal').value);
+  const com=document.getElementById('procCom').value==='true';
+  const pct=parseFloat(document.getElementById('procPct').value)||2.5;
+  if(!nome){toast('Informe o nome do procedimento.','warn');return;}
+  if(!cat){toast('Informe a categoria.','warn');return;}
+  if(isNaN(val)||val<0){toast('Informe um valor válido.','err');return;}
+  loading(true);
+  let error;
+  if(!id){
+    const r=await sb.from('procedimentos').insert({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0,ativo:true});
+    error=r.error;
+  }else{
+    const r=await sb.from('procedimentos').update({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0}).eq('id',id);
+    error=r.error;
+  }
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mProc');toast(id?'✅ Procedimento atualizado!':'✅ Procedimento criado!');
+  await loadProcedimentos();renderProcedimentos();
+}
+async function delProc(){
+  const id=document.getElementById('procId').value;
+  if(!id)return;
+  if(!confirm('Remover este procedimento da tabela?'))return;
+  loading(true);
+  const{error}=await sb.from('procedimentos').update({ativo:false}).eq('id',id);
+  loading(false);
+  if(error){toast('Erro: '+error.message,'err');return;}
+  closeModal('mProc');toast('Procedimento removido.');
+  await loadProcedimentos();renderProcedimentos();
+}
+// ===== RELATÓRIOS =====
+async function renderRel(){
+  const m=parseInt(document.getElementById('rMes')?.value)||new Date().getMonth()+1;
+  const y=parseInt(document.getElementById('rAno')?.value)||new Date().getFullYear();
+  const cl=document.getElementById('rCl')?.value||'';
+  const uc=userClinic();
+  const filters={month:m,year:y};
+  if(uc)filters.clinic=uc;else if(cl)filters.clinic=cl;
+  const div=document.getElementById('relContent');
+  div.innerHTML='<div class="empty"><div class="ic">⏳</div><p>Gerando relatório...</p></div>';
+  try{
+    const tx=await loadTx(filters);
+    const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
+    const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const lc=tR-tD;const mg=tR>0?((lc/tR)*100).toFixed(1):0;
+    const byC=arr=>{const g={};arr.forEach(x=>{g[x.categoria]=(g[x.categoria]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
+    const clLbl=cl==='dtm'?'Clínica DTM & Sono':cl==='hernia'?'Dr. Hérnia SJC':'Ambas as Clínicas';
+    div.innerHTML=`
+      <div style="margin-bottom:16px"><h2 style="font-size:17px;font-weight:700">📊 Relatório — ${MESES[m-1]} ${y}</h2><p style="color:#64748b;font-size:12px;margin-top:2px">${clLbl}</p></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+        <div class="kpi g"><div class="lbl">💚 Receitas</div><div class="val">${fmt(tR)}</div><div class="meta">${rec.length} lançamentos</div></div>
+        <div class="kpi r"><div class="lbl">🔴 Despesas</div><div class="val">${fmt(tD)}</div><div class="meta">${des.length} lançamentos</div></div>
+        <div class="kpi b"><div class="lbl">${lc>=0?'💙 Lucro':'⚠️ Prejuízo'}</div><div class="val" style="color:${lc>=0?'#0ea5e9':'#dc2626'}">${fmt(lc)}</div><div class="meta">Margem ${mg}%</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="tcard"><div class="thead2"><h3>💚 Receitas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byC(rec).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tR>0?(v/tR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${rec.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tR)}</strong></td><td></td></tr>`:''}
+        </tbody></table></div>
+        <div class="tcard"><div class="thead2"><h3>🔴 Despesas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byC(des).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tD>0?(v/tD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${des.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tD)}</strong></td><td></td></tr>`:''}
+        </tbody></table></div>
+      </div>
+      <div class="tcard"><div class="thead2"><h3>📋 Extrato Completo</h3></div><div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead><tbody>
+        ${tx.sort((a,b)=>a.data.localeCompare(b.data)).map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'DTM':'Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'Receita':'Despesa'}</span></td><td>${x.categoria||'-'}</td><td>${x.descricao}</td><td>${PG[x.pagamento]||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:16px;color:#94a3b8">Sem lançamentos</td></tr>'}
+      </tbody></table></div></div>`;
+  }catch(e){div.innerHTML=`<div class="empty"><div class="ic">❌</div><h4>Erro ao gerar relatório</h4></div>`;console.error(e);}
+}
+async function exportExcelLanc(){
+  const fCl=document.getElementById('fCl')?.value||'';
+  const fTp=document.getElementById('fTp')?.value||'';
+  const fMs=document.getElementById('fMs')?.value||'';
+  const fAn=document.getElementById('fAn')?.value||'';
+  const filters={clinic:fCl,tipo:fTp};
+  if(fAn)filters.year=parseInt(fAn);
+  if(fMs)filters.month=parseInt(fMs);
+  try{
+    const tx=await loadTx(filters);
+    const rows=tx.map(x=>({'Data':fmtD(x.data),'Clínica':x.clinic==='dtm'?'DTM & Sono':'Dr. Hérnia SJC','Tipo':x.tipo==='receita'?'Receita':'Despesa','Categoria':x.categoria,'Descrição':x.descricao,'Pagamento':PG[x.pagamento]||x.pagamento,'Valor':parseFloat(x.valor),'Obs':x.observacao||''}));
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Lançamentos');
+    XLSX.writeFile(wb,'lancamentos_clinica.xlsx');toast('📥 Excel gerado!');
+  }catch(e){toast('Erro ao exportar','err');}
+}
+async function exportRelExcel(){
+  const m=parseInt(document.getElementById('rMes')?.value)||new Date().getMonth()+1;
+  const y=parseInt(document.getElementById('rAno')?.value)||new Date().getFullYear();
+  const cl=document.getElementById('rCl')?.value||'';
+  const uc=userClinic();
+  const filters={month:m,year:y};if(uc)filters.clinic=uc;else if(cl)filters.clinic=cl;
+  try{
+    const tx=await loadTx(filters);
+    const rows=tx.map(x=>({'Data':fmtD(x.data),'Clínica':x.clinic==='dtm'?'DTM & Sono':'Dr. Hérnia SJC','Tipo':x.tipo==='receita'?'Receita':'Despesa','Categoria':x.categoria,'Descrição':x.descricao,'Pagamento':PG[x.pagamento]||x.pagamento,'Valor':parseFloat(x.valor)}));
+    const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,MESES[m-1]+' '+y);
+    XLSX.writeFile(wb,`relatorio_${MESES[m-1].toLowerCase()}_${y}.xlsx`);toast('📥 Exportado!');
+  }catch(e){toast('Erro ao exportar','err');}
+}
+// ===== CONTABILIDADE =====
+function initContabSelects(){
+  const sel=document.getElementById('ctAno');
+  if(!sel||sel.options.length>1)return;
+  const y=new Date().getFullYear();
+  for(let i=y;i>=y-4;i--){const o=document.createElement('option');o.value=i;o.textContent=i;sel.appendChild(o);}
+}
+async function renderContab(){
+  const y=parseInt(document.getElementById('ctAno')?.value)||new Date().getFullYear();
+  const cl=document.getElementById('ctCl')?.value||'';
+  const div=document.getElementById('contabContent');
+  div.innerHTML='<div class="empty"><div class="ic">⏳</div><p>Carregando dados do ano '+y+'...</p></div>';
+  try{
+    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+    // Busca todos os lançamentos do ano
+    let q=svc.from('transactions').select('*').gte('data',y+'-01-01').lte('data',y+'-12-31').order('data');
+    if(cl)q=q.eq('clinic',cl);
+    const{data:allTx,error}=await q;
+    if(error)throw error;
+    const tx=allTx||[];
+    // Monta dados por mês
+    const meses=Array.from({length:12},(_,i)=>i+1);
+    const byMes=meses.map(m=>{
+      const mt=tx.filter(x=>parseInt(x.data.split('-')[1])===m);
+      const r=mt.filter(x=>x.tipo==='receita').reduce((s,x)=>s+parseFloat(x.valor),0);
+      const d=mt.filter(x=>x.tipo==='despesa').reduce((s,x)=>s+parseFloat(x.valor),0);
+      return{m,lbl:MESES[m-1],r,d,l:r-d,tx:mt};
+    });
+    const totR=byMes.reduce((s,x)=>s+x.r,0);
+    const totD=byMes.reduce((s,x)=>s+x.d,0);
+    const totL=totR-totD;
+    const mg=totR>0?((totL/totR)*100).toFixed(1):0;
+    // Por clínica
+    const dtmTx=tx.filter(x=>x.clinic==='dtm');
+    const herTx=tx.filter(x=>x.clinic==='hernia');
+    const dtmR=dtmTx.filter(x=>x.tipo==='receita').reduce((s,x)=>s+parseFloat(x.valor),0);
+    const dtmD=dtmTx.filter(x=>x.tipo==='despesa').reduce((s,x)=>s+parseFloat(x.valor),0);
+    const herR=herTx.filter(x=>x.tipo==='receita').reduce((s,x)=>s+parseFloat(x.valor),0);
+    const herD=herTx.filter(x=>x.tipo==='despesa').reduce((s,x)=>s+parseFloat(x.valor),0);
+    // Categorias de despesa (DRE)
+    const catDes={};tx.filter(x=>x.tipo==='despesa').forEach(x=>{const c=x.categoria||'Outros';catDes[c]=(catDes[c]||0)+parseFloat(x.valor);});
+    const catRec={};tx.filter(x=>x.tipo==='receita').forEach(x=>{const c=x.categoria||'Outros';catRec[c]=(catRec[c]||0)+parseFloat(x.valor);});
+    const clLbl=cl==='dtm'?'🦷 Clínica DTM & Sono':cl==='hernia'?'⚕️ Dr. Hérnia SJC':'🏥 Ambas as Clínicas';
+    // Melhor e pior mês
+    const mesesComDados=byMes.filter(x=>x.r>0||x.d>0);
+    const melhor=mesesComDados.length?mesesComDados.reduce((a,b)=>b.l>a.l?b:a,mesesComDados[0]):null;
+    const pior=mesesComDados.length?mesesComDados.reduce((a,b)=>b.l<a.l?b:a,mesesComDados[0]):null;
+    div.innerHTML=`
+<div id="contabPrintArea">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:8px">
+  <div>
+    <h2 style="font-size:18px;font-weight:700;color:#1e40af">📒 Relatório Contábil Anual — ${y}</h2>
+    <p style="font-size:12px;color:#64748b;margin-top:3px">${clLbl} &nbsp;·&nbsp; Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>
+  </div>
+</div>
+<!-- KPIs anuais -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+  <div class="kpi g"><div class="lbl">💚 Receita Total</div><div class="val">${fmt(totR)}</div><div class="meta">${tx.filter(x=>x.tipo==='receita').length} lançamentos</div></div>
+  <div class="kpi r"><div class="lbl">🔴 Despesa Total</div><div class="val">${fmt(totD)}</div><div class="meta">${tx.filter(x=>x.tipo==='despesa').length} lançamentos</div></div>
+  <div class="kpi b"><div class="lbl">${totL>=0?'💙 Lucro Líquido':'⚠️ Prejuízo'}</div><div class="val" style="color:${totL>=0?'#0ea5e9':'#dc2626'}">${fmt(totL)}</div><div class="meta">Margem ${mg}%</div></div>
+  <div class="kpi" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #c4b5fd"><div class="lbl">📊 Ticket Médio</div><div class="val" style="color:#7c3aed">${tx.filter(x=>x.tipo==='receita').length?fmt(totR/tx.filter(x=>x.tipo==='receita').length):fmt(0)}</div><div class="meta">por receita</div></div>
+</div>
+${!cl?`<!-- Comparativo clínicas -->
+<div class="tcard" style="margin-bottom:14px">
+  <div class="thead2"><h3>🏥 Comparativo entre Clínicas — ${y}</h3></div>
+  <div class="twrap"><table><thead><tr><th>Clínica</th><th style="text-align:right">Receitas</th><th style="text-align:right">Despesas</th><th style="text-align:right">Lucro</th><th style="text-align:right">Margem</th><th style="text-align:right">% Receita Total</th></tr></thead><tbody>
+    <tr><td>🦷 DTM &amp; Sono</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(dtmR)}</td><td style="text-align:right;color:#dc2626">${fmt(dtmD)}</td><td style="text-align:right;font-weight:700;color:${(dtmR-dtmD)>=0?'#1d4ed8':'#dc2626'}">${fmt(dtmR-dtmD)}</td><td style="text-align:right">${dtmR>0?((dtmR-dtmD)/dtmR*100).toFixed(1):0}%</td><td style="text-align:right">${totR>0?(dtmR/totR*100).toFixed(1):0}%</td></tr>
+    <tr><td>⚕️ Dr. Hérnia SJC</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(herR)}</td><td style="text-align:right;color:#dc2626">${fmt(herD)}</td><td style="text-align:right;font-weight:700;color:${(herR-herD)>=0?'#1d4ed8':'#dc2626'}">${fmt(herR-herD)}</td><td style="text-align:right">${herR>0?((herR-herD)/herR*100).toFixed(1):0}%</td><td style="text-align:right">${totR>0?(herR/totR*100).toFixed(1):0}%</td></tr>
+    <tr style="background:#f8fafc;font-weight:700"><td>Total Geral</td><td style="text-align:right;color:#059669">${fmt(totR)}</td><td style="text-align:right;color:#dc2626">${fmt(totD)}</td><td style="text-align:right;color:${totL>=0?'#1d4ed8':'#dc2626'}">${fmt(totL)}</td><td style="text-align:right">${mg}%</td><td style="text-align:right">100%</td></tr>
+  </tbody></table></div>
+</div>`:''}
+<!-- Fluxo mensal -->
+<div class="tcard" style="margin-bottom:14px">
+  <div class="thead2"><h3>📅 Fluxo de Caixa Mensal — ${y}</h3>${melhor?`<span style="font-size:11px;color:#64748b">Melhor mês: <strong style="color:#059669">${melhor.lbl}</strong> &nbsp;|&nbsp; Pior: <strong style="color:#dc2626">${pior.lbl}</strong></span>`:''}  </div>
+  <div class="twrap"><table><thead><tr><th>Mês</th><th style="text-align:right">Receitas</th><th style="text-align:right">Despesas</th><th style="text-align:right">Resultado</th><th style="text-align:right">Margem</th><th style="text-align:right">Acumulado</th></tr></thead><tbody>
+    ${byMes.map((x,i)=>{const acc=byMes.slice(0,i+1).reduce((s,m)=>s+m.l,0);return`<tr style="${(x.r===0&&x.d===0)?'opacity:0.4':''}"><td style="font-weight:600">${x.lbl}</td><td style="text-align:right;color:#059669">${x.r>0?fmt(x.r):'—'}</td><td style="text-align:right;color:#dc2626">${x.d>0?fmt(x.d):'—'}</td><td style="text-align:right;font-weight:700;color:${x.l>=0?'#1d4ed8':'#dc2626'}">${(x.r>0||x.d>0)?fmt(x.l):'—'}</td><td style="text-align:right;color:#64748b">${x.r>0?(x.l/x.r*100).toFixed(1)+'%':'—'}</td><td style="text-align:right;font-weight:600;color:${acc>=0?'#059669':'#dc2626'}">${(x.r>0||x.d>0)?fmt(acc):'—'}</td></tr>`;}).join('')}
+    <tr style="background:#eff6ff;font-weight:700;border-top:2px solid #bfdbfe"><td>TOTAL ${y}</td><td style="text-align:right;color:#059669">${fmt(totR)}</td><td style="text-align:right;color:#dc2626">${fmt(totD)}</td><td style="text-align:right;color:${totL>=0?'#1d4ed8':'#dc2626'}">${fmt(totL)}</td><td style="text-align:right">${mg}%</td><td style="text-align:right;color:${totL>=0?'#059669':'#dc2626'}">${fmt(totL)}</td></tr>
+  </tbody></table></div>
+</div>
+<!-- DRE -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+  <div class="tcard">
+    <div class="thead2"><h3>💚 Receitas por Categoria</h3></div>
+    <div class="twrap"><table><thead><tr><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>
+      ${Object.entries(catRec).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${totR>0?(v/totR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+      ${Object.keys(catRec).length?`<tr style="background:#f0fdf4;font-weight:700"><td>Total Receitas</td><td style="text-align:right;color:#059669">${fmt(totR)}</td><td></td></tr>`:''}
+    </tbody></table></div>
+  </div>
+  <div class="tcard">
+    <div class="thead2"><h3>🔴 Despesas por Categoria</h3></div>
+    <div class="twrap"><table><thead><tr><th>Categoria</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th></tr></thead><tbody>
+      ${Object.entries(catDes).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${totD>0?(v/totD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+      ${Object.keys(catDes).length?`<tr style="background:#fef2f2;font-weight:700"><td>Total Despesas</td><td style="text-align:right;color:#dc2626">${fmt(totD)}</td><td></td></tr>`:''}
+    </tbody></table></div>
+  </div>
+</div>
+<!-- DRE resumido -->
+<div class="tcard" style="margin-bottom:14px">
+  <div class="thead2"><h3>📑 DRE — Demonstrativo de Resultado do Exercício ${y}</h3></div>
+  <div class="twrap"><table><thead><tr><th>Descrição</th><th style="text-align:right">Valor</th><th style="text-align:right">% Receita</th></tr></thead><tbody>
+    <tr style="background:#f0fdf4"><td style="font-weight:700">(+) Receita Bruta Total</td><td style="text-align:right;font-weight:700;color:#059669">${fmt(totR)}</td><td style="text-align:right">100,0%</td></tr>
+    ${Object.entries(catRec).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<tr><td style="padding-left:20px;color:#64748b">• ${c}</td><td style="text-align:right;color:#059669">${fmt(v)}</td><td style="text-align:right;color:#64748b">${totR>0?(v/totR*100).toFixed(1):0}%</td></tr>`).join('')}
+    <tr style="border-top:1px solid #e2e8f0;background:#fef2f2"><td style="font-weight:700">(-) Despesas Totais</td><td style="text-align:right;font-weight:700;color:#dc2626">(${fmt(totD)})</td><td style="text-align:right;color:#dc2626">${totR>0?(totD/totR*100).toFixed(1):0}%</td></tr>
+    ${Object.entries(catDes).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`<tr><td style="padding-left:20px;color:#64748b">• ${c}</td><td style="text-align:right;color:#dc2626">(${fmt(v)})</td><td style="text-align:right;color:#64748b">${totR>0?(v/totR*100).toFixed(1):0}%</td></tr>`).join('')}
+    <tr style="border-top:2px solid #1d4ed8;background:#eff6ff"><td style="font-weight:800;font-size:13px">(=) ${totL>=0?'LUCRO LÍQUIDO':'PREJUÍZO LÍQUIDO'}</td><td style="text-align:right;font-weight:800;font-size:14px;color:${totL>=0?'#1d4ed8':'#dc2626'}">${totL>=0?'':'-'}${fmt(Math.abs(totL))}</td><td style="text-align:right;font-weight:700;color:${totL>=0?'#1d4ed8':'#dc2626'}">${mg}%</td></tr>
+  </tbody></table></div>
+</div>
+</div>`;
+    // Guarda dados para export
+    window._contabData={y,cl,tx,byMes,totR,totD,totL,mg,catRec,catDes,dtmR,dtmD,herR,herD,clLbl};
+  }catch(e){div.innerHTML=`<div class="empty"><div class="ic">❌</div><h4>Erro ao gerar relatório</h4><p>${e.message}</p></div>`;console.error(e);}
+}
+async function exportContabPDF(){
+  if(!window._contabData){toast('Gere o relatório primeiro.','warn');return;}
+  const{y,cl,byMes,totR,totD,totL,mg,catRec,catDes,dtmR,dtmD,herR,herD,clLbl}=window._contabData;
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=doc.internal.pageSize.getWidth();
+    // Cabeçalho
+    doc.setFillColor(30,64,175);doc.rect(0,0,pw,22,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(14);doc.setFont('helvetica','bold');
+    doc.text('Relatório Contábil Anual — '+y,14,10);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text(clLbl.replace(/[^\x00-\x7F]/g,'?')+' · Gerado em '+new Date().toLocaleDateString('pt-BR'),14,17);
+    doc.setTextColor(0,0,0);
+    let y2=28;
+    // KPIs
+    doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text('Receita Total: R$ '+totR.toLocaleString('pt-BR',{minimumFractionDigits:2}),14,y2);
+    doc.text('Despesa Total: R$ '+totD.toLocaleString('pt-BR',{minimumFractionDigits:2}),80,y2);
+    doc.text((totL>=0?'Lucro: ':'Prejuizo: ')+'R$ '+Math.abs(totL).toLocaleString('pt-BR',{minimumFractionDigits:2}),155,y2);
+    y2+=8;
+    // Fluxo mensal
+    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('Fluxo de Caixa Mensal',14,y2);y2+=4;
+    doc.autoTable({
+      startY:y2,
+      head:[['Mes','Receitas','Despesas','Resultado','Margem','Acumulado']],
+      body:[...byMes.map((x,i)=>{const acc=byMes.slice(0,i+1).reduce((s,m)=>s+m.l,0);return[x.lbl,(x.r>0?'R$ '+x.r.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'),(x.d>0?'R$ '+x.d.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'),((x.r>0||x.d>0)?'R$ '+x.l.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'),(x.r>0?(x.l/x.r*100).toFixed(1)+'%':'—'),((x.r>0||x.d>0)?'R$ '+acc.toLocaleString('pt-BR',{minimumFractionDigits:2}):'—')];}),
+      ['TOTAL '+y,'R$ '+totR.toLocaleString('pt-BR',{minimumFractionDigits:2}),'R$ '+totD.toLocaleString('pt-BR',{minimumFractionDigits:2}),'R$ '+totL.toLocaleString('pt-BR',{minimumFractionDigits:2}),mg+'%','R$ '+totL.toLocaleString('pt-BR',{minimumFractionDigits:2})]],
+      styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[30,64,175],textColor:255,fontStyle:'bold'},
+      footStyles:{fillColor:[239,246,255],textColor:[30,64,175],fontStyle:'bold'},
+      columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right'}},
+      margin:{left:14,right:14}
+    });
+    y2=doc.lastAutoTable.finalY+8;
+    // DRE
+    if(y2>240){doc.addPage();y2=14;}
+    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('DRE — Demonstrativo de Resultado do Exercicio '+y,14,y2);y2+=4;
+    const dreBody=[];
+    dreBody.push(['(+) Receita Bruta Total','R$ '+totR.toLocaleString('pt-BR',{minimumFractionDigits:2}),'100,0%']);
+    Object.entries(catRec).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{dreBody.push(['  '+c,'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2}),(totR>0?(v/totR*100).toFixed(1):0)+'%']);});
+    dreBody.push(['(-) Despesas Totais','(R$ '+totD.toLocaleString('pt-BR',{minimumFractionDigits:2})+')',(totR>0?(totD/totR*100).toFixed(1):0)+'%']);
+    Object.entries(catDes).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>{dreBody.push(['  '+c,'(R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2})+')',(totR>0?(v/totR*100).toFixed(1):0)+'%']);});
+    dreBody.push(['(=) '+(totL>=0?'LUCRO LIQUIDO':'PREJUIZO LIQUIDO'),'R$ '+totL.toLocaleString('pt-BR',{minimumFractionDigits:2}),mg+'%']);
+    doc.autoTable({
+      startY:y2,
+      head:[['Descricao','Valor','% Receita']],
+      body:dreBody,
+      styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[30,64,175],textColor:255,fontStyle:'bold'},
+      columnStyles:{1:{halign:'right'},2:{halign:'right'}},
+      didParseCell:function(d){if(d.row.index===dreBody.length-1&&d.section==='body'){d.cell.styles.fillColor=[239,246,255];d.cell.styles.fontStyle='bold';d.cell.styles.textColor=[30,64,175];}},
+      margin:{left:14,right:14}
+    });
+    // Rodapé
+    const totalPages=doc.internal.getNumberOfPages();
+    for(let p=1;p<=totalPages;p++){doc.setPage(p);doc.setFontSize(8);doc.setTextColor(148,163,184);doc.text('Clinicas Dr. Victor Vaz · Pagina '+p+' de '+totalPages,pw/2,doc.internal.pageSize.getHeight()-6,{align:'center'});}
+    doc.save('relatorio_contabil_'+y+'.pdf');
+    toast('📄 PDF gerado com sucesso!','ok');
+  }catch(e){toast('Erro ao gerar PDF: '+e.message,'err');console.error(e);}
+}
+async function exportContabExcel(){
+  if(!window._contabData){toast('Gere o relatório primeiro.','warn');return;}
+  const{y,byMes,totR,totD,totL,mg,catRec,catDes,dtmR,dtmD,herR,herD}=window._contabData;
+  try{
+    const wb=XLSX.utils.book_new();
+    // Aba 1: Fluxo Mensal
+    const fluxo=[['Mês','Receitas (R$)','Despesas (R$)','Resultado (R$)','Margem (%)','Acumulado (R$)']];
+    let acc=0;
+    byMes.forEach(x=>{acc+=x.l;fluxo.push([x.lbl,x.r||0,x.d||0,x.l,(x.r>0?parseFloat((x.l/x.r*100).toFixed(1)):0),(x.r>0||x.d>0)?acc:0]);});
+    fluxo.push(['TOTAL '+y,totR,totD,totL,parseFloat(mg),totL]);
+    const ws1=XLSX.utils.aoa_to_sheet(fluxo);ws1['!cols']=[{wch:12},{wch:16},{wch:16},{wch:16},{wch:12},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws1,'Fluxo Mensal');
+    // Aba 2: DRE
+    const dre=[['Descrição','Valor (R$)','% Receita']];
+    dre.push(['(+) Receita Bruta Total',totR,100]);
+    Object.entries(catRec).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>dre.push(['  '+c,v,totR>0?parseFloat((v/totR*100).toFixed(1)):0]));
+    dre.push(['(-) Despesas Totais',-totD,totR>0?parseFloat((totD/totR*100).toFixed(1)):0]);
+    Object.entries(catDes).sort((a,b)=>b[1]-a[1]).forEach(([c,v])=>dre.push(['  '+c,-v,totR>0?parseFloat((v/totR*100).toFixed(1)):0]));
+    dre.push(['(=) '+(totL>=0?'LUCRO LÍQUIDO':'PREJUÍZO LÍQUIDO'),totL,parseFloat(mg)]);
+    const ws2=XLSX.utils.aoa_to_sheet(dre);ws2['!cols']=[{wch:30},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws2,'DRE');
+    // Aba 3: Comparativo Clínicas
+    const comp=[['Clínica','Receitas (R$)','Despesas (R$)','Lucro (R$)','Margem (%)','% Receita Total']];
+    comp.push(['DTM & Sono',dtmR,dtmD,dtmR-dtmD,dtmR>0?parseFloat(((dtmR-dtmD)/dtmR*100).toFixed(1)):0,totR>0?parseFloat((dtmR/totR*100).toFixed(1)):0]);
+    comp.push(['Dr. Hérnia SJC',herR,herD,herR-herD,herR>0?parseFloat(((herR-herD)/herR*100).toFixed(1)):0,totR>0?parseFloat((herR/totR*100).toFixed(1)):0]);
+    comp.push(['TOTAL',totR,totD,totL,parseFloat(mg),100]);
+    const ws3=XLSX.utils.aoa_to_sheet(comp);ws3['!cols']=[{wch:18},{wch:16},{wch:16},{wch:16},{wch:12},{wch:18}];
+    XLSX.utils.book_append_sheet(wb,ws3,'Comparativo Clínicas');
+    // Aba 4: Lançamentos completos
+    const rows=(window._contabData.tx||[]).map(x=>({'Data':fmtD(x.data),'Clínica':x.clinic==='dtm'?'DTM & Sono':'Dr. Hérnia SJC','Tipo':x.tipo==='receita'?'Receita':'Despesa','Categoria':x.categoria||'','Descrição':x.descricao||'','Pagamento':PG[x.pagamento]||x.pagamento||'','Valor (R$)':parseFloat(x.valor),'Obs':x.observacao||''}));
+    if(rows.length){const ws4=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws4,'Lançamentos');}
+    XLSX.writeFile(wb,'relatorio_contabil_'+y+'.xlsx');
+    toast('📥 Excel gerado com sucesso!','ok');
+  }catch(e){toast('Erro ao exportar Excel: '+e.message,'err');console.error(e);}
+}
+// ===== AUDITORIA =====
+async function runAudit(){
+  const m=parseInt(document.getElementById('audMes')?.value)||new Date().getMonth()+1;
+  const y=parseInt(document.getElementById('audAno')?.value)||new Date().getFullYear();
+  const cl=document.getElementById('audCl')?.value||'';
+  const uc=userClinic();
+  const filters={month:m,year:y};if(uc)filters.clinic=uc;else if(cl)filters.clinic=cl;
+  const div=document.getElementById('auditContent');
+  div.innerHTML='<div class="empty"><div class="ic">⏳</div><p>Executando auditoria...</p></div>';
+  try{
+    const tx=await loadTx(filters);
+    const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',new Date(y,m,0).toISOString().split('T')[0]);
+    const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
+    const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const lc=tR-tD;const mg=tR>0?((lc/tR)*100):0;
+    let score=100;const items=[];
+    if(!tx.length){items.push({ic:'❌',cor:'#dc2626',t:'Sem lançamentos no período',d:'Nenhum dado encontrado para análise.'});score-=50;}
+    else{
+      if(mg<0){items.push({ic:'❌',cor:'#dc2626',t:'Resultado negativo: '+fmt(lc),d:`Prejuízo de ${fmt(Math.abs(lc))}. Despesas ${(-mg).toFixed(1)}% acima das receitas.`});score-=30;}
+      else if(mg<15){items.push({ic:'⚠️',cor:'#d97706',t:'Margem baixa: '+mg.toFixed(1)+'%',d:'Margem ideal acima de 20%. Revise custos ou preços.'});score-=15;}
+      else items.push({ic:'✅',cor:'#059669',t:'Margem saudável: '+mg.toFixed(1)+'%',d:'Bom equilíbrio entre receitas e despesas.'});
+      const semDesc=tx.filter(x=>!x.descricao||x.descricao.length<3);
+      if(semDesc.length>0){items.push({ic:'⚠️',cor:'#d97706',t:`${semDesc.length} lançamento(s) sem descrição`,d:'Descrições incompletas dificultam a auditoria.'});score-=5;}
+      else items.push({ic:'✅',cor:'#059669',t:'Todos os lançamentos bem descritos',d:'Boa prática de documentação.'});
+      const ratio=tR>0?tD/tR*100:0;
+      if(ratio>85){items.push({ic:'❌',cor:'#dc2626',t:`Despesas em ${ratio.toFixed(0)}% da receita`,d:'Índice crítico. Revise custos urgentemente.'});score-=20;}
+      else if(ratio>70)items.push({ic:'⚠️',cor:'#d97706',t:`Despesas em ${ratio.toFixed(0)}% da receita`,d:'Índice elevado. Monitore de perto.'});
+      else if(tR>0)items.push({ic:'✅',cor:'#059669',t:`Índice Desp/Rec: ${ratio.toFixed(0)}%`,d:'Proporção saudável.'});
+      if((nfs||[]).length===0&&tR>0){items.push({ic:'⚠️',cor:'#d97706',t:'Nenhuma NF emitida no período',d:'Verifique a necessidade de emissão de notas fiscais.'});score-=5;}
+      else if((nfs||[]).length>0)items.push({ic:'✅',cor:'#059669',t:`${(nfs||[]).length} NF(s) emitida(s)`,d:`Total: ${fmt((nfs||[]).reduce((s,n)=>s+parseFloat(n.valor||0),0))}`});
+    }
+    score=Math.max(0,Math.min(100,score));
+    const scoreC=score>=80?'#059669':score>=60?'#d97706':'#dc2626';
+    const scoreLbl=score>=80?'Excelente':score>=60?'Regular':'Atenção Necessária';
+    const clLbl=cl==='dtm'?'DTM & Sono':cl==='hernia'?'Dr. Hérnia SJC':'Ambas';
+    div.innerHTML=`
+      <div style="margin-bottom:14px"><h2 style="font-size:17px;font-weight:700">🔍 Auditoria — ${MESES[m-1]} ${y}</h2><p style="color:#64748b;font-size:11px">${clLbl} · ${new Date().toLocaleString('pt-BR')}</p></div>
+      <div style="display:flex;align-items:center;gap:18px;background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px">
+        <div style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:22px;font-weight:700;border:4px solid ${scoreC};color:${scoreC}">${score}<div style="font-size:10px;font-weight:400">/100</div></div>
+        <div><div style="font-size:15px;font-weight:700">${scoreLbl}</div><div style="font-size:12px;color:#64748b;margin-top:4px">Receita ${fmt(tR)} · Despesas ${fmt(tD)} · Lucro <strong style="color:${lc>=0?'#1d4ed8':'#dc2626'}">${fmt(lc)}</strong></div></div>
+        <div style="margin-left:auto" class="no-print"><button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimir</button></div>
+      </div>
+      <div style="background:white;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden">
+        ${items.map(it=>`<div style="padding:12px 16px;border-bottom:1px solid #f8fafc;display:flex;align-items:flex-start;gap:10px">
+          <div style="font-size:16px;flex-shrink:0">${it.ic}</div>
+          <div><div style="font-size:12px;font-weight:600;color:${it.cor}">${it.t}</div><div style="font-size:11px;color:#64748b;margin-top:2px">${it.d}</div></div>
+        </div>`).join('')}
+      </div>`;
+  }catch(e){div.innerHTML=`<div class="empty"><div class="ic">❌</div><h4>Erro na auditoria</h4></div>`;console.error(e);}
+}
+
+// ============================================================
+// IA CONSULTORA — CHAT
+// ============================================================
+function chatKey(){return 'iachat_'+currentUser?.id;}
+function addChatMsg(role,text){
+  const box=document.getElementById('chatBox');if(!box)return;
+  const isUser=role==='user';
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;justify-content:${isUser?'flex-end':'flex-start'};margin-bottom:10px`;
+  div.innerHTML=`<div style="max-width:80%;padding:10px 14px;border-radius:${isUser?'14px 14px 4px 14px':'14px 14px 14px 4px'};background:${isUser?'#1d4ed8':'white'};color:${isUser?'white':'#1e293b'};font-size:13px;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.08)">${text.replace(/\n/g,'<br>')}</div>`;
+  box.appendChild(div);box.scrollTop=box.scrollHeight;
+  // persist
+  try{const h=JSON.parse(localStorage.getItem(chatKey())||'[]');h.push({role,text,ts:Date.now()});if(h.length>100)h.splice(0,h.length-100);localStorage.setItem(chatKey(),JSON.stringify(h));}catch(e){}
+}
+async function loadChatHistory(){
+  const box=document.getElementById('chatBox');if(!box)return;
+  box.innerHTML='';
+  try{const h=JSON.parse(localStorage.getItem(chatKey())||'[]');
+    if(h.length===0){addChatMsg('ia','Olá, Dr. Victor! 👋 Sou sua IA Financeira. Posso analisar receitas, despesas, margens, comissões e dar orientações financeiras para a Clínica DTM & Sono e a Dr. Hérnia SJC.\n\nComo posso ajudar hoje?');}
+    else{h.forEach(m=>addChatMsg(m.role,m.text));}
+  }catch(e){addChatMsg('ia','Olá! Como posso ajudar?');}
+}
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const msg=inp?.value?.trim();if(!msg)return;
+  inp.value='';addChatMsg('user',msg);
+  const thinking=document.createElement('div');
+  thinking.id='chatThinking';thinking.style.cssText='display:flex;justify-content:flex-start;margin-bottom:10px';
+  thinking.innerHTML='<div style="padding:10px 14px;border-radius:14px 14px 14px 4px;background:white;color:#64748b;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.08)">⏳ Analisando...</div>';
+  const box=document.getElementById('chatBox');box.appendChild(thinking);box.scrollTop=box.scrollHeight;
+  const resp=await smartFinancialResponse(msg);
+  thinking.remove();addChatMsg('ia',resp);
+}
+async function smartFinancialResponse(q){
+  const ql=q.toLowerCase();
+  const m=new Date().getMonth()+1,y=new Date().getFullYear();
+  try{
+    // Coleta dados financeiros recentes
+    const uc=userClinic();
+    const filters={month:m,year:y};if(uc)filters.clinic=uc;
+    const tx=await loadTx(filters);
+    const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
+    const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const lucro=tR-tD;
+    const mg=tR>0?((lucro/tR)*100).toFixed(1):0;
+    const ctx=`Dados ${MESES[m-1]}/${y}: Receitas ${fmt(tR)}, Despesas ${fmt(tD)}, Lucro ${fmt(lucro)}, Margem ${mg}%, Lançamentos: ${tx.length}`;
+
+    // Análise contextual por palavra-chave
+    if(/receita|faturamento|vendas|quanto.*entr/i.test(q)){
+      const cats={};rec.forEach(x=>{cats[x.categoria||'Outros']=(cats[x.categoria||'Outros']||0)+parseFloat(x.valor);});
+      const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}: ${fmt(v)}`).join(', ');
+      return `📈 **Receitas — ${MESES[m-1]}/${y}**\n\nTotal faturado: **${fmt(tR)}**\n\nPrincipais categorias: ${top||'sem dados'}\n\nTotal de ${rec.length} lançamentos de receita no período.\n\n${tR===0?'⚠️ Nenhuma receita lançada ainda neste mês.':'✅ Dados atualizados até agora.'}`;
+    }
+    if(/despesa|custo|gasto|saída/i.test(q)){
+      const cats={};des.forEach(x=>{cats[x.categoria||'Outros']=(cats[x.categoria||'Outros']||0)+parseFloat(x.valor);});
+      const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}: ${fmt(v)}`).join(', ');
+      return `📉 **Despesas — ${MESES[m-1]}/${y}**\n\nTotal de despesas: **${fmt(tD)}**\n\nPrincipais: ${top||'sem dados'}\n\n${tR>0?`Índice Desp/Rec: ${(tD/tR*100).toFixed(0)}% ${tD/tR>0.8?'⚠️ Atenção — índice elevado!':'✅ Dentro do esperado'}`:''} `;
+    }
+    if(/lucro|resultado|margem|saldo/i.test(q)){
+      const status=lucro>=0?'✅ Resultado positivo':'❌ Resultado negativo';
+      const conselho=parseFloat(mg)<0?'Despesas estão superando receitas. Revise custos imediatamente.':parseFloat(mg)<15?'Margem abaixo do ideal (20%+). Considere aumentar preços ou reduzir custos.':parseFloat(mg)<30?'Margem razoável. Há espaço para melhorias.':'Excelente margem! Continue monitorando.';
+      return `💰 **Resultado — ${MESES[m-1]}/${y}**\n\n${status}: **${fmt(lucro)}**\nMargem líquida: **${mg}%**\n\nReceitas: ${fmt(tR)}\nDespesas: ${fmt(tD)}\n\n💡 ${conselho}`;
+    }
+    if(/comiss[aã]o|comiss[oõ]e/i.test(q)){
+      const{data:coms}=await sb.from('comissoes').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
+      const pend=(coms||[]).filter(x=>x.status==='pendente').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
+      const pago=(coms||[]).filter(x=>x.status==='pago').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
+      return `🏆 **Comissões — ${MESES[m-1]}/${y}**\n\nPendentes: **${fmt(pend)}**\nPagas: ${fmt(pago)}\nTotal: ${fmt(pend+pago)}\n\n${pend>0?`⚠️ Há ${(coms||[]).filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}`;
+    }
+    if(/nota.?fiscal|nf|issqn|iss/i.test(q)){
+      const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
+      const total=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0),0);
+      const iss=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0)*parseFloat(x.iss||2)/100,0);
+      return `🧾 **Notas Fiscais — ${MESES[m-1]}/${y}**\n\n${(nfs||[]).length} nota(s) emitida(s)\nValor total: ${fmt(total)}\nISSQN estimado (2%): ${fmt(iss)}\n\n💡 Mantenha as NFs em dia para facilitar a contabilidade.`;
+    }
+    if(/hora.?extra|funcionário|fisioterapeuta/i.test(q)){
+      const{data:he}=await sb.from('horas_extras').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
+      const total=(he||[]).reduce((s,x)=>s+parseFloat(x.total||0),0);
+      return `⏰ **Horas Extras — ${MESES[m-1]}/${y}**\n\n${(he||[]).length} registro(s)\nCusto total: ${fmt(total)}\n\n${total>0?`Funcionário(s): ${[...new Set((he||[]).map(x=>x.funcionario))].join(', ')}`:'Nenhum registro de horas extras este mês.'}`;
+    }
+    if(/auditoria|análise|analise|relatório completo/i.test(q)){
+      const ratio=tR>0?tD/tR*100:0;
+      const score=lucro<0?30:parseFloat(mg)<15?55:parseFloat(mg)<30?75:90;
+      return `🔍 **Análise Rápida — ${MESES[m-1]}/${y}**\n\nPontuação estimada: **${score}/100**\n\n• Receitas: ${fmt(tR)}\n• Despesas: ${fmt(tD)}\n• Resultado: ${fmt(lucro)}\n• Margem: ${mg}%\n• Índice Desp/Rec: ${ratio.toFixed(0)}%\n\n${score>=80?'✅ Saúde financeira excelente!':score>=60?'⚠️ Atenção a alguns indicadores.':'❌ Situação requer ação imediata.'}\n\nPara detalhes completos, acesse a seção **Auditoria**.`;
+    }
+    if(/dica|conselho|sugestão|melhorar|otimizar/i.test(q)){
+      const dicas=[];
+      if(parseFloat(mg)<20)dicas.push('📌 Revise os preços dos protocolos — a margem está abaixo de 20%.');
+      if(tR>0&&tD/tR>0.7)dicas.push('📌 Despesas acima de 70% da receita. Identifique os maiores custos.');
+      if(tx.filter(x=>!x.descricao).length>0)dicas.push('📌 Complete as descrições dos lançamentos para facilitar auditorias.');
+      dicas.push('📌 Registre comissões assim que protocolos forem vendidos.');
+      dicas.push('📌 Emita NFs de todos os atendimentos particulares para deduções fiscais.');
+      return `💡 **Dicas Financeiras**\n\n${dicas.join('\n')}\n\n${ctx}`;
+    }
+    return `🤖 **IA Financeira — ${MESES[m-1]}/${y}**\n\n${ctx}\n\nPosso analisar receitas, despesas, margem, NFs, comissões e horas extras.\n\nEx: "Qual foi o faturamento este mês?" ou "Quais são minhas maiores despesas?"`;
+  }catch(e){
+    return '⚠️ Não foi possível carregar os dados financeiros. Verifique a conexão.';
+  }
+}
+
+// ============================================================
+// USUÁRIOS
+// ============================================================
+async function renderUsers(){
+  if(!sb||!userProfile)return;
+  if(userProfile.role!=='admin'){return;}
+  const tb=document.getElementById('usersTb');
+  if(!tb)return;
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#64748b">⏳ Carregando...</td></tr>';
+  try{
+    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+    const{data:users,error}=await svc.from('profiles').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    if(!users||!users.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">Nenhum usuário encontrado.</td></tr>';return;}
+    tb.innerHTML=users.map(u=>`<tr>
+      <td style="font-weight:600">${u.nome||'—'}</td>
+      <td style="color:#64748b;font-size:12px">${u.email||'—'}</td>
+      <td><span class="badge badge-${u.role==='admin'?'red':u.role==='contabilidade'?'blue':'green'}">${ROLE_LABELS[u.role]||u.role}</span></td>
+      <td><span style="color:${u.ativo?'#059669':'#dc2626'};font-weight:600">${u.ativo?'✅ Ativo':'❌ Inativo'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}','${u.email||''}','${u.role}',${u.ativo})">✏️ Editar</button></td>
+    </tr>`).join('');
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">Erro: ${e.message}</td></tr>`;}
+}
+function editUser(id,nome,email,role,ativo){
+  document.getElementById('uId').value=id;
+  document.getElementById('uNomeField').value=nome;
+  document.getElementById('uEmailField').value=email;
+  document.getElementById('uEmailField').disabled=true;
+  document.getElementById('uSenhaField').value='';
+  document.getElementById('uRoleField').value=role;
+  document.getElementById('uAtivoField').value=String(ativo);
+  document.getElementById('mUserTitle').textContent='Editar Usuário';
+  openModal('mUser');
+}
+async function saveUser(){
+  const id=document.getElementById('uId').value;
+  const nome=document.getElementById('uNomeField').value.trim();
+  const email=document.getElementById('uEmailField').value.trim();
+  const senha=document.getElementById('uSenhaField').value;
+  const role=document.getElementById('uRoleField').value;
+  const ativo=document.getElementById('uAtivoField').value==='true';
+  if(!nome){toast('Digite o nome.','warn');return;}
+  const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+  if(!id){
+    if(!email){toast('Digite o e-mail.','warn');return;}
+    if(!senha||senha.length<6){toast('Senha mínimo 6 caracteres.','warn');return;}
+    loading(true);
+    try{
+      const r=await fetch(SB_URL+'/auth/v1/admin/users',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC},body:JSON.stringify({email,password:senha,email_confirm:true,user_metadata:{nome,role}})});
+      const d=await r.json();
+      let userId=d.id;
+      if(!userId){
+        const em=(d.msg||d.message||'').toLowerCase();
+        if(em.includes('already')||em.includes('registered')||em.includes('exist')){
+          const lr=await fetch(SB_URL+'/auth/v1/admin/users?per_page=1000',{headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC}});
+          const ld=await lr.json();
+          const found=(ld.users||[]).find(u=>u.email===email);
+          if(found)userId=found.id;
+        }
+        if(!userId){loading(false);toast('Erro: '+(d.msg||d.message||'Falha ao criar'),'err');return;}
+      }
+      await svc.from('profiles').upsert({id:userId,email,nome,role,ativo:true},{onConflict:'id'});
+      loading(false);toast('Usuário '+nome+' criado!','ok');closeModal('mUser');renderUsers();
+    }catch(e){loading(false);toast('Erro: '+e.message,'err');}
+  }else{
+    loading(true);
+    try{
+      const{error}=await svc.from('profiles').update({nome,role,ativo}).eq('id',id);
+      loading(false);if(error)throw error;
+      closeModal('mUser');toast('Perfil atualizado!','ok');renderUsers();
+    }catch(e){loading(false);toast('Erro: '+e.message,'err');}
+  }
+}
+async function logout(){
+  try{await getSB().auth.signOut();}catch(e){}
+  currentUser=null;userProfile=null;
+  document.getElementById('appScreen').className='';
+  document.getElementById('secScreen').className='';
+  document.getElementById('loginScreen').className='screen active';
+}
+// ============================================================
+// TELA SECRETÁRIA — FUNÇÕES
+// ============================================================
+function switchSecTab(tab){
+  document.getElementById('secTabChat').style.display=tab==='chat'?'flex':'none';
+  document.getElementById('secTabTable').style.display=tab==='table'?'flex':'none';
+  const impEl=document.getElementById('secTabImport');if(impEl)impEl.style.display=tab==='import'?'flex':'none';
+  document.getElementById('tabChat').className='sec-tab'+(tab==='chat'?' active':'');
+  document.getElementById('tabTable').className='sec-tab'+(tab==='table'?' active':'');
+  const tbImp=document.getElementById('tabImport');if(tbImp)tbImp.className='sec-tab'+(tab==='import'?' active':'');
+  if(tab==='table')loadSecTable();
+}
+function secQuick(txt){
+  const inp=document.getElementById('secInput');
+  if(!inp)return;
+  inp.value=txt;inp.focus();
+  inp.setSelectionRange(txt.length,txt.length);
+}
+function addSecMsg(role,text){
+  const box=document.getElementById('secChatBox');if(!box)return;
+  const isUser=role==='user';
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;justify-content:'+(isUser?'flex-end':'flex-start')+';margin-bottom:8px';
+  const formatted=text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  div.innerHTML='<div style="max-width:88%;padding:9px 13px;border-radius:'+(isUser?'14px 14px 4px 14px':'14px 14px 14px 4px')+';background:'+(isUser?'#1d4ed8':'white')+';color:'+(isUser?'white':'#1e293b')+';font-size:13px;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.08)">'+formatted+'</div>';
+  box.appendChild(div);box.scrollTop=box.scrollHeight;
+}
+async function sendSecMsg(){
+  const inp=document.getElementById('secInput');
+  const msg=inp&&inp.value?inp.value.trim():'';if(!msg)return;
+  inp.value='';
+  addSecMsg('user',msg);
+  await parseAndSaveSecMsg(msg);
+}
+async function parseAndSaveSecMsg(msg){
+  const isSjc=userProfile&&userProfile.role==='secretaria_sjc';
+  const clinic=isSjc?'hernia':'dtm';
+  let tipo='receita';
+  if(/pagu|despes|gast|sa[íi]da|saiu|custo|comprei|compra/i.test(msg))tipo='despesa';
+  const vm=msg.match(/R\$\s*([\d.,]+)/i)||msg.match(/(\d+[.,]\d+|\d{3,})/);
+  const valor=vm?parseFloat(vm[1].replace(/\./g,'').replace(',','.')):0;
+  if(!valor){addSecMsg('ia','⚠️ Não identifiquei o valor.\n\nEx: "Protocolo Curto R$ 2200 parcelado 10x"');return;}
+  let categoria='Outros';let descricao=msg;
+  if(/protocolo curto/i.test(msg)){categoria='Protocolo';descricao='Protocolo Curto — 8 sessões';}
+  else if(/protocolo m[eé]dio/i.test(msg)){categoria='Protocolo';descricao='Protocolo Médio — 16 sessões';}
+  else if(/protocolo longo/i.test(msg)){categoria='Protocolo';descricao='Protocolo Longo — 24 sessões';}
+  else if(/libera[çc]|miofascial/i.test(msg)){categoria='Protocolo';descricao='Liberação Miofascial — 10 sessões';}
+  else if(/protocolo/i.test(msg)){categoria='Protocolo';}
+  else if(/consul/i.test(msg)){categoria='Consulta';}
+  else if(/placa/i.test(msg)){categoria='Placa';}
+  else if(/retorno|avalia/i.test(msg)){categoria='Consulta';descricao='Retorno/Avaliação';}
+  else if(/material|insumo/i.test(msg)){categoria='Material';}
+  else if(/aluguel/i.test(msg)){categoria='Aluguel';}
+  else if(/funcio|sal[aá]rio/i.test(msg)){categoria='Pessoal';}
+  let pagamento='dinheiro';
+  if(/pix/i.test(msg))pagamento='pix';
+  else if(/cart[aã]o|cr[eé]dito|d[eé]bito/i.test(msg))pagamento='cartao';
+  else if(/parcel|10x|vezes/i.test(msg))pagamento='parcelado';
+  else if(/transfer/i.test(msg))pagamento='transferencia';
+  const parcM=msg.match(/(\d+)\s*[xX]/);
+  const obsExtra=parcM?' Parcelado '+parcM[1]+'x':'';
+  const dt=new Date().toISOString().split('T')[0];
+  try{
+    const{error}=await sb.from('transactions').insert({clinic,tipo,categoria,descricao,valor,data:dt,pagamento,observacao:'Via secretária'+obsExtra});
+    if(error)throw error;
+    const fv=function(v){return 'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    const clinicLabel=isSjc?'Dr. Hérnia SJC':'DTM & Sono';
+    addSecMsg('ia',(tipo==='receita'?'✅':'📤')+' **'+(tipo==='receita'?'Receita':'Despesa')+' registrada!**\n\n💰 '+fv(valor)+obsExtra+'\n📋 '+descricao+'\n🏥 '+clinicLabel+'\n📅 '+new Date().toLocaleDateString('pt-BR'));
+  }catch(e){
+    addSecMsg('ia','❌ Erro ao salvar: '+e.message+'\n\nTente novamente.');
+  }
+}
+async function handleSecFile(input){
+  if(!input.files||!input.files[0])return;
+  addSecMsg('user','📎 [Arquivo: '+input.files[0].name+']');
+  addSecMsg('ia','📎 Arquivo recebido! Descreva no chat o lançamento relacionado a este arquivo.');
+  input.value='';
+}
+async function loadSecTable(){
+  const mes=parseInt((document.getElementById('secTblMes')||{}).value)||new Date().getMonth()+1;
+  const ano=parseInt((document.getElementById('secTblAno')||{}).value)||new Date().getFullYear();
+  const clinic=userProfile&&userProfile.role==='secretaria_sjc'?'hernia':'dtm';
+  const tb=document.getElementById('secTblBody');
+  const sumDiv=document.getElementById('secTblSummary');
+  if(!tb)return;
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b;padding:16px">⏳ Carregando...</td></tr>';
+  try{
+    const m=String(mes).padStart(2,'0');
+    const lastDay=new Date(ano,mes,0).toISOString().split('T')[0];
+    const{data:tx}=await sb.from('transactions').select('*').eq('clinic',clinic).gte('data',ano+'-'+m+'-01').lte('data',lastDay).order('data',{ascending:false});
+    if(!tx||!tx.length){
+      tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px">Nenhum lançamento neste período</td></tr>';
+      if(sumDiv)sumDiv.innerHTML='';return;
+    }
+    const fv=function(v){return 'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    const tR=tx.filter(function(x){return x.tipo==='receita';}).reduce(function(s,x){return s+parseFloat(x.valor);},0);
+    const tD=tx.filter(function(x){return x.tipo==='despesa';}).reduce(function(s,x){return s+parseFloat(x.valor);},0);
+    if(sumDiv){
+      const res=tR-tD;
+      const resColor=res>=0?'#1e40af':'#991b1b';
+      const resBg=res>=0?'#dbeafe':'#fee2e2';
+      sumDiv.innerHTML='<div style="background:#dcfce7;border-radius:8px;padding:8px 12px;font-size:12px;flex:1;min-width:110px"><div style="color:#166534;font-weight:600">💚 Receitas</div><div style="color:#166534;font-size:14px;font-weight:700">'+fv(tR)+'</div></div>'
+        +'<div style="background:#fee2e2;border-radius:8px;padding:8px 12px;font-size:12px;flex:1;min-width:110px"><div style="color:#991b1b;font-weight:600">🔴 Despesas</div><div style="color:#991b1b;font-size:14px;font-weight:700">'+fv(tD)+'</div></div>'
+        +'<div style="background:'+resBg+';border-radius:8px;padding:8px 12px;font-size:12px;flex:1;min-width:110px"><div style="color:'+resColor+';font-weight:600">📊 Resultado</div><div style="color:'+resColor+';font-size:14px;font-weight:700">'+fv(res)+'</div></div>';
+    }
+    tb.innerHTML=tx.map(function(x){
+      var dt=new Date(x.data+'T12:00:00').toLocaleDateString('pt-BR');
+      var recBg=x.tipo==='receita'?'#dcfce7':'#fee2e2';
+      var recColor=x.tipo==='receita'?'#166534':'#991b1b';
+      var valColor=x.tipo==='receita'?'#059669':'#dc2626';
+      return '<tr><td style="white-space:nowrap;font-size:12px">'+dt+'</td>'
+        +'<td><span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;background:'+recBg+';color:'+recColor+'">'+(x.tipo==='receita'?'Rec.':'Desp.')+'</span></td>'
+        +'<td style="font-size:11px;color:#64748b">'+(x.categoria||'—')+'</td>'
+        +'<td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(x.descricao||'')+'">'+(x.descricao||'—')+'</td>'
+        +'<td style="text-align:right;font-weight:600;white-space:nowrap;color:'+valColor+'">'+fv(x.valor)+'</td></tr>';
+    }).join('');
+  }catch(e){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">Erro ao carregar</td></tr>';}
+}
+
+// ===== IMPORT PLANILHA =====
+let _importRows=[],_importHeaders=[];
+function handleImportDrop(e){e.preventDefault();document.getElementById('importDropArea').style.borderColor='#cbd5e1';const f=e.dataTransfer.files[0];if(f)processImportFile(f);}
+function handleImportFile(inp){const f=inp.files[0];if(f)processImportFile(f);}
+function processImportFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let rows=[];
+      if(/\.csv$/i.test(file.name)){
+        const text=e.target.result;
+        const lines=text.split(/\r?\n/).filter(l=>l.trim());
+        const sep=lines[0].includes(';')?';':',';
+        rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
+      } else {
+        const data=new Uint8Array(e.target.result);
+        const wb=XLSX.read(data,{type:'array',cellDates:true});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+      }
+      if(!rows.length){toast('Arquivo vazio ou inválido','err');return;}
+      _importHeaders=rows[0].map(String);
+      _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
+      ['colData','colDesc','colValor'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
+      document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (pelo sinal do valor)</option>'+opts;
+      autoDetectImportCols();
+      document.getElementById('importMapping').style.display='block';
+      document.getElementById('importPreview').style.display='none';
+      document.getElementById('importResult').style.display='none';
+      toast(`📊 ${_importRows.length} linhas lidas de "${file.name}"`);
+    }catch(err){toast('Erro ao ler: '+err.message,'err');}
+  };
+  if(/\.csv$/i.test(file.name)) reader.readAsText(file,'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+function autoDetectImportCols(){
+  const hh=_importHeaders.map(h=>h.toLowerCase());
+  const find=re=>{const i=hh.findIndex(h=>re.test(h));return i>=0?i:null;};
+  const di=find(/data|date|dt\b|dia|vencim/)||0;
+  const dsi=find(/descri|histor|memo|obs|nome|lanc|detalh|item|compet/)||1;
+  const vi=find(/valor|value|vl\b|vlr|total|montant|amount|quantia/)||2;
+  const ti=find(/tipo|type|naturez|movim/);
+  document.getElementById('colData').value=di;
+  document.getElementById('colDesc').value=dsi;
+  document.getElementById('colValor').value=vi;
+  if(ti!==null)document.getElementById('colTipo').value=ti;
+}
+function buildImportPreview(){
+  const cd=parseInt(document.getElementById('colData').value);
+  const cds=parseInt(document.getElementById('colDesc').value);
+  const cv=parseInt(document.getElementById('colValor').value);
+  const ct=document.getElementById('colTipo').value;
+  const clinicSel=document.getElementById('importClinicSel').value;
+  const tbody=document.getElementById('importPreviewBody');
+  tbody.innerHTML='';
+  const preview=[];let recT=0,desT=0;
+  _importRows.forEach(row=>{
+    const rawDate=String(row[cd]||'').trim();
+    const desc=String(row[cds]||'').trim();
+    const rawVal=String(row[cv]||'').trim();
+    if(!rawVal&&!desc)return;
+    let valor=parseFloat(rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.'));
+    if(isNaN(valor)||valor===0)return;
+    let tipo='receita';
+    if(ct!=='_auto'){
+      const rt=String(row[parseInt(ct)]||'').toLowerCase();
+      tipo=/despes|saida|saída|debito|deb|out|d$|debit/i.test(rt)?'despesa':/receit|entrada|credito|cred|in|c$|credit/i.test(rt)?'receita':valor<0?'despesa':'receita';
+    } else {tipo=valor<0?'despesa':'receita';}
+    valor=Math.abs(valor);
+    let dataISO=today();
+    if(rawDate){
+      if(/^\d{4}-\d{2}-\d{2}/.test(rawDate))dataISO=rawDate.substring(0,10);
+      else if(/^(\d{2})\/(\d{2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
+      else if(/^(\d{2})\/(\d{2})\/(\d{2})$/.test(rawDate)){const p=rawDate.split('/');const yr=parseInt(p[2])<50?'20'+p[2]:'19'+p[2];dataISO=yr+'-'+p[1]+'-'+p[0];}
+      else if(/^(\d{2})-(\d{2})-(\d{4})/.test(rawDate)){const p=rawDate.split('-');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
+    }
+    const dl=desc.toLowerCase();
+    let cat='Outros';
+    if(/aluguel/i.test(dl))cat='Aluguel';
+    else if(/funcio|sal[áa]rio|folha/i.test(dl))cat='Pessoal';
+    else if(/consul/i.test(dl))cat='Consulta';
+    else if(/protocolo/i.test(dl))cat='Protocolo';
+    else if(/material|insumo/i.test(dl))cat='Material';
+    else if(/imposto|taxa|tribut/i.test(dl))cat='Impostos';
+    else if(/luz|energia|agua|internet|telefon/i.test(dl))cat='Utilidades';
+    else if(/market|publici|anuncio|tráfego/i.test(dl))cat='Marketing';
+    else if(tipo==='receita')cat='Receita';
+    const c=clinicSel==='auto'?userClinic():clinicSel;
+    if(tipo==='receita')recT+=valor;else desT+=valor;
+    preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,cat,clinic:c});
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtD(dataISO)}</td><td title="${desc}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc.length>45?desc.substring(0,45)+'…':desc}</td><td style="text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td><td style="font-size:11px;color:#64748b">${cat}</td>`;
+    tbody.appendChild(tr);
+  });
+  window._importPreviewData=preview;
+  document.getElementById('importPreview').style.display='block';
+  document.getElementById('importPreviewTitle').textContent=`📋 Prévia — ${preview.length} lançamentos`;
+  document.getElementById('importStats').textContent=`✅ ${fmt(recT)}  |  🔴 ${fmt(desT)}`;
+}
+async function confirmImport(){
+  const data=window._importPreviewData;
+  if(!data||!data.length){toast('Nada para importar','err');return;}
+  loading(true);
+  let ok=0,fail=0;
+  for(let i=0;i<data.length;i+=50){
+    const batch=data.slice(i,i+50).map(r=>({clinic:r.clinic,tipo:r.tipo,categoria:r.cat,descricao:r.desc,valor:r.valor,data:r.dataISO,pagamento:'importado',observacao:'Importado via planilha'}));
+    const{error}=await sb.from('transactions').insert(batch);
+    if(error)fail+=batch.length;else ok+=batch.length;
+  }
+  loading(false);
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importMapping').style.display='none';
+  document.getElementById('importResult').style.display='block';
+  document.getElementById('importResultText').innerHTML=`${ok} lançamentos importados!<br><small style="font-weight:400;color:#4b7a5e">${fail>0?fail+' com erro':'Todos OK ✓'}</small>`;
+  toast(`✅ ${ok} lançamentos importados!`);
+}
+function resetImport(){
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importMapping').style.display='none';
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importFileInput').value='';
+}
+// Also add import tab to secretary screen
+
+function handleSecImportFile(inp){if(!inp.files||!inp.files[0])return;processSecImportFile(inp.files[0]);}
+function processSecImportFile(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let rows=[];
+      if(/\.csv$/i.test(file.name)){const text=e.target.result;const lines=text.split(/\r?\n/).filter(l=>l.trim());const sep=lines[0].includes(';')?';':',';rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));}
+      else{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellDates:true});const ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});}
+      if(!rows.length){toast('Arquivo vazio','err');return;}
+      const headers=rows[0].map(String);
+      window._secImportRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      window._secImportHeaders=headers;
+      const opts=headers.map((h,i)=>`<option value="${i}">${h||'Col '+(i+1)}</option>`).join('');
+      ['sColData','sColDesc','sColValor'].forEach(id=>document.getElementById(id).innerHTML=opts);
+      document.getElementById('sColTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
+      const hh=headers.map(h=>h.toLowerCase());
+      const fi=re=>{const i=hh.findIndex(h=>re.test(h));return i>=0?i:null;};
+      const di=fi(/data|date|dt\b|dia/)||0,dsi=fi(/descri|histor|memo|nome|lanc/)||1,vi=fi(/valor|vl\b|total|amount/)||2,ti=fi(/tipo|type|naturez/);
+      document.getElementById('sColData').value=di;
+      document.getElementById('sColDesc').value=dsi;
+      document.getElementById('sColValor').value=vi;
+      if(ti!==null)document.getElementById('sColTipo').value=ti;
+      document.getElementById('secImportMapping').style.display='block';
+      document.getElementById('secImportPreview').style.display='none';
+      document.getElementById('secImportResult').style.display='none';
+      toast(`📊 ${window._secImportRows.length} linhas lidas`);
+    }catch(err){toast('Erro: '+err.message,'err');}
+  };
+  if(/\.csv$/i.test(file.name))reader.readAsText(file,'UTF-8');else reader.readAsArrayBuffer(file);
+}
+function buildSecImportPreview(){
+  const cd=parseInt(document.getElementById('sColData').value),cds=parseInt(document.getElementById('sColDesc').value),cv=parseInt(document.getElementById('sColValor').value),ct=document.getElementById('sColTipo').value;
+  const tbody=document.getElementById('secImportBody');tbody.innerHTML='';
+  const preview=[];let recT=0,desT=0;
+  (window._secImportRows||[]).forEach(row=>{
+    const rawDate=String(row[cd]||'').trim(),desc=String(row[cds]||'').trim(),rawVal=String(row[cv]||'').trim();
+    if(!rawVal&&!desc)return;
+    let valor=parseFloat(rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.'));
+    if(isNaN(valor)||valor===0)return;
+    let tipo='receita';
+    if(ct!=='_auto'){const rt=String(row[parseInt(ct)]||'').toLowerCase();tipo=/despes|saida|debito|deb|out/i.test(rt)?'despesa':valor<0?'despesa':'receita';}
+    else tipo=valor<0?'despesa':'receita';
+    valor=Math.abs(valor);
+    let dataISO=today();
+    if(/^\d{4}-\d{2}-\d{2}/.test(rawDate))dataISO=rawDate.substring(0,10);
+    else if(/^(\d{2})\/(\d{2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
+    else if(/^(\d{2})\/(\d{2})\/(\d{2})$/.test(rawDate)){const p=rawDate.split('/');dataISO=(parseInt(p[2])<50?'20':'19')+p[2]+'-'+p[1]+'-'+p[0];}
+    if(tipo==='receita')recT+=valor;else desT+=valor;
+    preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,clinic:userClinic()});
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${fmtD(dataISO)}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc.length>35?desc.substring(0,35)+'…':desc}</td><td style="text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  window._secImportData=preview;
+  document.getElementById('secImportPreview').style.display='block';
+  document.getElementById('secImportTitle').textContent=`${preview.length} lançamentos detectados`;
+  document.getElementById('secImportStats').textContent=`✅ ${fmt(recT)} | 🔴 ${fmt(desT)}`;
+}
+async function confirmSecImport(){
+  const data=window._secImportData;
+  if(!data||!data.length){toast('Nada para importar','err');return;}
+  loading(true);
+  let ok=0,fail=0;
+  for(let i=0;i<data.length;i+=50){
+    const batch=data.slice(i,i+50).map(r=>({clinic:r.clinic,tipo:r.tipo,categoria:r.tipo==='receita'?'Receita':'Outros',descricao:r.desc,valor:r.valor,data:r.dataISO,pagamento:'importado',observacao:'Importado via planilha'}));
+    const{error}=await sb.from('transactions').insert(batch);
+    if(error)fail+=batch.length;else ok+=batch.length;
+  }
+  loading(false);
+  document.getElementById('secImportPreview').style.display='none';
+  document.getElementById('secImportMapping').style.display='none';
+  document.getElementById('secImportResult').style.display='block';
+  document.getElementById('secImportResultText').innerHTML=`${ok} lançamentos importados!`;
+  toast(`✅ ${ok} importados!`);
+}
+function resetSecImport(){
+  document.getElementById('secImportResult').style.display='none';
+  document.getElementById('secImportMapping').style.display='none';
+  document.getElementById('secImportPreview').style.display='none';
+  document.getElementById('secImportFile').value='';
+}
+
+window.onload=function(){initApp();};
+</script>
 </body>
 </html>
