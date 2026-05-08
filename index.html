@@ -2230,59 +2230,85 @@ function autoDetectImportCols(){
   if(ti!==null)document.getElementById('colTipo').value=ti;
 }
 function buildImportPreview(){
-  const cd=parseInt(document.getElementById('colData').value);
-  const cds=parseInt(document.getElementById('colDesc').value);
-  const cv=parseInt(document.getElementById('colValor').value);
-  const ct=document.getElementById('colTipo').value;
-  const clinicSel=document.getElementById('importClinicSel').value;
-  const tbody=document.getElementById('importPreviewBody');
-  tbody.innerHTML='';
-  const preview=[];let recT=0,desT=0;
-  _importRows.forEach(row=>{
-    const rawDate=String(row[cd]||'').trim();
-    const desc=String(row[cds]||'').trim();
-    const rawVal=String(row[cv]||'').trim();
-    if(!rawVal&&!desc)return;
-    let valor=parseFloat(rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.'));
-    if(isNaN(valor)||valor===0)return;
-    let tipo='receita';
-    if(ct!=='_auto'){
-      const rt=String(row[parseInt(ct)]||'').toLowerCase();
-      tipo=/despes|saida|saída|debito|deb|out|d$|debit/i.test(rt)?'despesa':/receit|entrada|credito|cred|in|c$|credit/i.test(rt)?'receita':valor<0?'despesa':'receita';
-    } else {tipo=valor<0?'despesa':'receita';}
-    valor=Math.abs(valor);
-    let dataISO=today();
-    if(rawDate){
-      if(/^\d{4}-\d{2}-\d{2}/.test(rawDate))dataISO=rawDate.substring(0,10);
-      else if(/^(\d{2})\/(\d{2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
-      else if(/^(\d{2})\/(\d{2})\/(\d{2})$/.test(rawDate)){const p=rawDate.split('/');const yr=parseInt(p[2])<50?'20'+p[2]:'19'+p[2];dataISO=yr+'-'+p[1]+'-'+p[0];}
-      else if(/^(\d{2})-(\d{2})-(\d{4})/.test(rawDate)){const p=rawDate.split('-');dataISO=p[2]+'-'+p[1]+'-'+p[0];}
+  try{
+    toast('⏳ Processando prévia...');
+    if(!_importRows||!_importRows.length){
+      alert('Nenhum dado carregado. Selecione o arquivo novamente.');
+      return;
     }
-    const dl=desc.toLowerCase();
-    let cat='Outros';
-    if(/aluguel/i.test(dl))cat='Aluguel';
-    else if(/funcio|sal[áa]rio|folha/i.test(dl))cat='Pessoal';
-    else if(/consul/i.test(dl))cat='Consulta';
-    else if(/protocolo/i.test(dl))cat='Protocolo';
-    else if(/material|insumo/i.test(dl))cat='Material';
-    else if(/imposto|taxa|tribut/i.test(dl))cat='Impostos';
-    else if(/luz|energia|agua|internet|telefon/i.test(dl))cat='Utilidades';
-    else if(/market|publici|anuncio/i.test(dl))cat='Marketing';
-    else if(tipo==='receita')cat='Receita';
-    const c=clinicSel==='auto'?userClinic():clinicSel;
-    if(tipo==='receita')recT+=valor;else desT+=valor;
-    preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,cat,clinic:c});
-    const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
-    const tr=document.createElement('tr');
-    tr.style.borderBottom='1px solid #f1f5f9';
-    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${desc}</td><td style="padding:8px 12px;font-size:12px;font-weight:600;color:${tipo==='receita'?'#16a34a':'#dc2626'}">${tipo==='receita'?'+':'-'} ${fmtN(valor)}</td><td style="padding:8px 12px;font-size:11px;color:#64748b">${cat}</td><td style="padding:8px 12px;font-size:11px">${clinicLabel}</td>`;
-    tbody.appendChild(tr);
-  });
-  if(!preview.length){alert('Nenhum dado válido encontrado. Verifique as colunas selecionadas.');return;}
-  _importPreview=preview;
-  const sumEl=document.getElementById('importStats');
-  if(sumEl)sumEl.innerHTML=`<span style="color:#16a34a">✅ ${preview.length} lançamentos</span> &nbsp;|&nbsp; <span style="color:#16a34a">Receitas: ${fmtN(recT)}</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: ${fmtN(desT)}</span> &nbsp;|&nbsp; <b>Saldo: ${fmtN(recT-desT)}</b>`;
-  document.getElementById('importPreview').style.display='block';
+    const cd=parseInt(document.getElementById('colData').value)||0;
+    const cds=parseInt(document.getElementById('colDesc').value)||1;
+    const cv=parseInt(document.getElementById('colValor').value)||2;
+    const ct=document.getElementById('colTipo').value||'_auto';
+    const clinicSel=document.getElementById('importClinicSel').value||'dtm';
+    const tbody=document.getElementById('importPreviewBody');
+    if(tbody) tbody.innerHTML='';
+    const preview=[];let recT=0,desT=0,skipped=0;
+    _importRows.forEach(function(row){
+      const rawDate=String(row[cd]||'').trim();
+      const desc=String(row[cds]||'').trim();
+      const rawVal=String(row[cv]||'').trim();
+      if(!rawVal&&!desc){skipped++;return;}
+      const cleaned=rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.');
+      let valor=parseFloat(cleaned);
+      if(isNaN(valor)||valor===0){skipped++;return;}
+      let tipo='receita';
+      if(ct!=='_auto'){
+        const rt=String(row[parseInt(ct)]||'').toLowerCase();
+        if(/despes|saida|sa[ií]da|debito|d[eé]b|debit/i.test(rt)) tipo='despesa';
+        else if(/receit|entrada|credito|cr[eé]d|credit/i.test(rt)) tipo='receita';
+        else tipo=valor<0?'despesa':'receita';
+      } else {tipo=valor<0?'despesa':'receita';}
+      valor=Math.abs(valor);
+      let dataISO=today();
+      if(rawDate){
+        if(/^\d{4}-\d{2}-\d{2}/.test(rawDate)) dataISO=rawDate.substring(0,10);
+        else if(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
+        else if(/^(\d{1,2})-(\d{1,2})-(\d{4})/.test(rawDate)){const p=rawDate.split('-');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
+      }
+      const dl=desc.toLowerCase();
+      let cat='Outros';
+      if(/aluguel/i.test(dl)) cat='Aluguel';
+      else if(/funcio|sal[aá]rio|folha/i.test(dl)) cat='Pessoal';
+      else if(/consul/i.test(dl)) cat='Consulta';
+      else if(/protocolo/i.test(dl)) cat='Protocolo';
+      else if(/material|insumo/i.test(dl)) cat='Material';
+      else if(/imposto|taxa|tribut/i.test(dl)) cat='Impostos';
+      else if(/luz|energia|[aá]gua|internet|telefon/i.test(dl)) cat='Utilidades';
+      else if(/market|publici|anuncio|tr[aá]fego/i.test(dl)) cat='Marketing';
+      else if(tipo==='receita') cat='Receita';
+      const c=(clinicSel==='auto')?userClinic()||'dtm':clinicSel;
+      if(tipo==='receita') recT+=valor; else desT+=valor;
+      preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,cat,clinic:c});
+      if(tbody){
+        const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
+        const tr=document.createElement('tr');
+        tr.style.borderBottom='1px solid #f1f5f9';
+        tr.innerHTML='<td style="padding:8px 12px;font-size:12px">'+fmtD(dataISO)+'</td>'
+          +'<td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+desc+'</td>'
+          +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+(tipo==='receita'?'#16a34a':'#dc2626')+'">'+(tipo==='receita'?'+':'-')+' R$ '+valor.toFixed(2).replace('.',',')+'</td>'
+          +'<td style="padding:8px 12px;font-size:11px;color:#64748b">'+cat+'</td>'
+          +'<td style="padding:8px 12px;font-size:11px">'+clinicLabel+'</td>';
+        tbody.appendChild(tr);
+      }
+    });
+    if(!preview.length){
+      alert('Nenhum dado válido encontrado.\n\n'+_importRows.length+' linhas lidas, '+skipped+' puladas.\n\nVerifique se as colunas Valor e Descrição estão corretas.');
+      return;
+    }
+    _importPreview=preview;
+    const sumEl=document.getElementById('importStats');
+    if(sumEl) sumEl.textContent='✅ '+preview.length+' lançamentos | Receitas: R$ '+recT.toFixed(2)+' | Despesas: R$ '+desT.toFixed(2);
+    const previewDiv=document.getElementById('importPreview');
+    if(previewDiv){
+      previewDiv.style.display='block';
+      previewDiv.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    toast('✅ '+preview.length+' lançamentos prontos para importar!');
+  }catch(err){
+    console.error('buildImportPreview error:',err);
+    alert('Erro ao gerar prévia:\n\n'+err.message+'\n\nTente novamente ou use o console (F12) para mais detalhes.');
+  }
 }
 async function confirmImport(){
   if(!_importPreview||!_importPreview.length){alert('Nenhum dado para importar.');return;}
