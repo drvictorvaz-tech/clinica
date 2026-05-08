@@ -741,6 +741,7 @@ const PG={pix:'PIX',cartao_credito:'Cartão Crédito',cartao_debito:'Cartão Dé
 const ROLE_LABELS={admin:'Administrador',contabilidade:'Contabilidade',secretaria_sjc:'Secretaria SJC',secretaria_dtm:'Secretaria DTM'};
 const NAV_ITEMS=[
   {id:'dashboard',ic:'📊',lbl:'Dashboard',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
+  {id:'importar',ic:'📥',lbl:'Importar Planilha',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'lancamentos',ic:'💰',lbl:'Lançamentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'notas',ic:'🧾',lbl:'Notas Fiscais',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'horas',ic:'⏱️',lbl:'Horas Extras',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
@@ -2159,8 +2160,4 @@ function buildImportPreview(){
 }
 async function confirmImport(){
   const data=window._importPreviewData;
-  if(!data||!data.length){toast('Nada para importar','err');return;}
-  loading(true);
-  let ok=0,fail=0;
-  for(let i=0;i<data.length;i+=50){
-    const batch=data.slice(i,i+50).map(r=
+  if(!data||!data.length){toast('Nada para importar','err');ret
