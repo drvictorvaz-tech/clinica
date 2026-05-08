@@ -2275,15 +2275,15 @@ async function confirmImport(){
   if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
   try{
     const rows=_importPreview.map(r=>({
-      clinica:r.clinic||'dtm',tipo:r.tipo,categoria:r.cat,
+      clinic:r.clinic||'dtm',tipo:r.tipo,categoria:r.cat,
       descricao:r.desc,valor:r.valor,data:r.dataISO,
-      pagamento:'pix',user_id:currentUser.id,created_by:currentUser.id
+      pagamento:'pix',created_by:currentUser.id
     }));
     const chunkSize=50;
     let total=0;
     for(let i=0;i<rows.length;i+=chunkSize){
       const chunk=rows.slice(i,i+chunkSize);
-      const {error}=await getSB().from('transacoes').insert(chunk);
+      const {error}=await getSB().from('transactions').insert(chunk);
       if(error)throw error;
       total+=chunk.length;
     }
@@ -2368,9 +2368,10 @@ async function uploadDocFile(file){
     bar.style.width='70%';
     msg.textContent='Registrando metadados...';
     const {error:dbErr}=await getSvc().from('documentos').insert({
-      clinica:clinic,nome:desc,nome_arquivo:file.name,
-      tipo:tipo,tamanho:file.size,caminho:path,
-      user_id:currentUser.id
+      clinic:clinic,nome:desc,
+      tipo:tipo,tamanho:file.size,storage_path:path,
+      uploaded_by:currentUser.id,
+      descricao:desc
     });
     if(dbErr)throw dbErr;
     bar.style.width='100%';
@@ -2401,7 +2402,7 @@ async function loadDocs(){
   const tipoF=document.getElementById('docFilterTipo')?.value||'';
   try{
     let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
-    if(clinicF)q=q.eq('clinica',clinicF);
+    if(clinicF)q=q.eq('clinic',clinicF);
     if(tipoF)q=q.eq('tipo',tipoF);
     const{data,error}=await q;
     if(error)throw error;
@@ -2410,7 +2411,7 @@ async function loadDocs(){
       return;
     }
     const rows=data.map(d=>{
-      const clinicLbl=d.clinica==='dtm'?'🦷 DTM & Sono':'⚕️ Dr. Hérnia SJC';
+      const clinicLbl=d.clinic==='dtm'?'🦷 DTM & Sono':'⚕️ Dr. Hérnia SJC';
       const dt=d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):'';
       const icon=docFileIcon(d.tipo);
       const size=docFileSizeStr(d.tamanho||0);
@@ -2418,14 +2419,14 @@ async function loadDocs(){
         <td style="padding:10px 12px;font-size:22px;width:40px">${icon}</td>
         <td style="padding:10px 12px">
           <div style="font-size:13px;font-weight:600;color:#0f172a">${d.nome||d.nome_arquivo}</div>
-          <div style="font-size:11px;color:#94a3b8">${d.nome_arquivo||''}</div>
+          <div style="font-size:11px;color:#94a3b8">${d.storage_path ? d.storage_path.split('/').pop() : ''}</div>
         </td>
         <td style="padding:10px 12px;font-size:12px;color:#64748b">${clinicLbl}</td>
         <td style="padding:10px 12px;font-size:12px;color:#64748b">${dt}</td>
         <td style="padding:10px 12px;font-size:11px;color:#94a3b8">${size}</td>
         <td style="padding:10px 12px">
-          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.caminho}','${(d.nome_arquivo||'arquivo').replace(/'/g,'')}')">⬇️ Baixar</button>
-          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.caminho||'').replace(/'/g,'')}')">🗑️</button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.storage_path}','${(d.nome||'arquivo').replace(/'/g,'')}')">⬇️ Baixar</button>
+          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.storage_path||'').replace(/'/g,'')}')">🗑️</button>`:''}
         </td>
       </tr>`;
     }).join('');
