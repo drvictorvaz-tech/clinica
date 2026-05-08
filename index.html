@@ -526,9 +526,15 @@ tbody tr:last-child td{border-bottom:none}
     </button>
     <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportFile(this)">
   </div>
+  <!-- Loading indicator -->
+  <div id="importLoading" style="display:none;margin-top:20px;text-align:center;padding:24px;color:#64748b;font-size:14px;background:white;border-radius:12px">
+    <div style="font-size:36px;margin-bottom:10px">⏳</div>
+    <div style="font-weight:600">Lendo arquivo...</div>
+    <div style="font-size:12px;margin-top:4px">Aguarde um momento</div>
+  </div>
 
   <!-- Nome do arquivo selecionado -->
-  <div id="importFileName" style="display:none;margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:12px;color:#1d4ed8;font-weight:600;display:flex;align-items:center;gap:8px">
+  <div id="importFileName" style="display:none;margin-top:12px;padding:10px 14px;background:#eff6ff;border-radius:8px;font-size:12px;color:#1d4ed8;font-weight:600;align-items:center;gap:8px">
     <span>📄</span><span id="importFileNameText"></span>
     <button type="button" class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="resetImportFile()">✕ Remover</button>
   </div>
@@ -2046,42 +2052,65 @@ function handleImportDrop(e){
   const f=e.dataTransfer.files[0];
   if(f)processImportFile(f);
 }
-function handleImportFile(inp){const f=inp.files[0];if(f)processImportFile(f);}
+function handleImportFile(inp){
+  const f=inp.files[0];
+  if(!f){return;}
+  // Show loading immediately
+  document.getElementById('importDropArea').style.display='none';
+  const loadEl=document.getElementById('importLoading');
+  if(loadEl) loadEl.style.display='block';
+  setTimeout(()=>processImportFile(f),100);
+}
 function resetImportFile(){
   document.getElementById('importFileInput').value='';
   document.getElementById('importFileName').style.display='none';
   document.getElementById('importMapping').style.display='none';
   document.getElementById('importPreview').style.display='none';
   document.getElementById('importResult').style.display='none';
+  document.getElementById('importDropArea').style.display='block';
+  const loadEl=document.getElementById('importLoading');
+  if(loadEl) loadEl.style.display='none';
 }
 function processImportFile(file){
+  if(typeof XLSX==='undefined'){
+    alert('Biblioteca de leitura ainda carregando. Aguarde 3 segundos e tente novamente.');
+    resetImportFile();
+    return;
+  }
   const reader=new FileReader();
+  reader.onerror=function(){
+    alert('Erro ao ler o arquivo. Tente novamente.');
+    resetImportFile();
+  };
   reader.onload=function(e){
     try{
       let rows=[];
-      if(/\.csv$/i.test(file.name)){
+      const isCSV=/\.(csv|txt)$/i.test(file.name);
+      if(isCSV){
         const text=e.target.result;
         const lines=text.split(/\r?\n/).filter(l=>l.trim());
-        if(!lines.length){toast('Arquivo CSV vazio','err');return;}
+        if(!lines.length){alert('Arquivo CSV vazio.');resetImportFile();return;}
         const sep=lines[0].includes(';')?';':',';
         rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
       } else {
         const data=new Uint8Array(e.target.result);
         const wb=XLSX.read(data,{type:'array',cellDates:true});
+        if(!wb||!wb.SheetNames||!wb.SheetNames.length){alert('Arquivo Excel inválido ou corrompido.');resetImportFile();return;}
         const ws=wb.Sheets[wb.SheetNames[0]];
         rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
       }
-      if(!rows||!rows.length){toast('Arquivo vazio ou inválido','err');return;}
+      const loadEl=document.getElementById('importLoading');
+      if(loadEl) loadEl.style.display='none';
+      if(!rows||rows.length<2){alert('Planilha vazia ou só tem cabeçalho. Verifique o arquivo.');resetImportFile();return;}
       _importHeaders=rows[0].map(h=>String(h||''));
       _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
-      if(!_importRows.length){toast('Nenhum dado encontrado na planilha','err');return;}
+      if(!_importRows.length){alert('Nenhum dado encontrado. Verifique se a planilha tem dados abaixo do cabeçalho.');resetImportFile();return;}
       const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
       ['colData','colDesc','colValor'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
       document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
       autoDetectImportCols();
-      // Show filename badge
       const fnEl=document.getElementById('importFileName');
-      document.getElementById('importFileNameText').textContent=`${file.name}  (${_importRows.length} linhas encontradas)`;
+      document.getElementById('importFileNameText').textContent=file.name+'  ('+_importRows.length+' linhas encontradas)';
       fnEl.style.display='flex';
       document.getElementById('importMapping').style.display='block';
       document.getElementById('importPreview').style.display='none';
@@ -2150,14 +2179,4 @@ function buildImportPreview(){
     const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
     const tr=document.createElement('tr');
     tr.style.borderBottom='1px solid #f1f5f9';
-    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${desc}">${desc.length>50?desc.substring(0,50)+'…':desc}</td><td style="padding:8px 12px;font-size:12px;text-align:right;font-weight:600;color:${tipo==='receita'?'#166534':'#991b1b'}">${fmt(valor)}</td><td style="padding:8px 12px"><span class="${tipo==='receita'?'tag-rec':'tag-des'}">${tipo}</span></td><td style="padding:8px 12px;font-size:11px;color:#64748b">${cat}</td><td style="padding:8px 12px;font-size:11px;color:#64748b">${clinicLabel}</td>`;
-    tbody.appendChild(tr);
-  });
-  window._importPreviewData=preview;
-  document.getElementById('importPreview').style.display='block';
-  document.getElementById('importPreviewTitle').textContent=`📋 Prévia — ${preview.length} lançamentos`;
-  document.getElementById('importStats').textContent=`✅ ${fmt(recT)}  |  🔴 ${fmt(desT)}`;
-}
-async function confirmImport(){
-  const data=window._importPreviewData;
-  if(!data||!data.length){toast('Nada para importar','err');ret
+    tr.innerHTML=`<td style="padding:8px 12px;font-size:12px">${fmtD(dataISO)}</td><td style="padding:8px 12px;f
