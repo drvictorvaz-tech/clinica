@@ -1007,6 +1007,7 @@ function showSection(id){
   const titles={dashboard:'Dashboard',importar:'Importar Planilha',documentos:'Documentos',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
   document.getElementById('pgTitle').textContent=titles[id]||id;
   if(id==='dashboard')renderDash();
+  else if(id==='importar')resetImport();
   else if(id==='documentos')loadDocs();
   else if(id==='lancamentos')renderLanc();
   else if(id==='notas')renderNotas();
@@ -2142,10 +2143,17 @@ function handleImportFile(inp){
     alert('Biblioteca Excel não carregou. Recarregue a página (Ctrl+Shift+R) e tente novamente.');
     return;
   }
+  // Reset all previous state before loading new file
+  _importPreview=[];
+  _importRows=[];
+  _importHeaders=[];
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importMapping').style.display='none';
   document.getElementById('importDropArea').style.display='none';
   const loadEl=document.getElementById('importLoading');
   if(loadEl) loadEl.style.display='block';
-  toast('📂 Arquivo selecionado: '+f.name);
+  toast('📂 Lendo: '+f.name);
   setTimeout(()=>processImportFile(f),100);
 }
 function resetImportFile(){
@@ -2346,14 +2354,14 @@ function resetImport(){
   _importPreview=[];
   _importRows=[];
   _importHeaders=[];
-  document.getElementById('importFileInput').value='';
-  document.getElementById('importFileName').style.display='none';
-  document.getElementById('importMapping').style.display='none';
-  document.getElementById('importPreview').style.display='none';
-  document.getElementById('importResult').style.display='none';
-  document.getElementById('importDropArea').style.display='block';
-  const loadEl=document.getElementById('importLoading');
-  if(loadEl)loadEl.style.display='none';
+  const fi=document.getElementById('importFileInput');
+  if(fi) fi.value='';
+  const els=['importFileName','importMapping','importPreview','importResult','importLoading'];
+  els.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const da=document.getElementById('importDropArea');
+  if(da) da.style.display='block';
+  const btn=document.getElementById('confirmImportBtn');
+  if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
 }
 
 // ===== DOCUMENTOS =====
