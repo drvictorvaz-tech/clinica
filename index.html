@@ -1231,6 +1231,11 @@ async function loadTx(filters={}){
     const start=filters.year+'-'+String(filters.month).padStart(2,'0')+'-01';
     const end=new Date(filters.year,filters.month,0).toISOString().split('T')[0];
     q=q.gte('data',start).lte('data',end);
+  } else if(filters.year){
+    q=q.gte('data',filters.year+'-01-01').lte('data',filters.year+'-12-31');
+  } else if(filters.month){
+    q=q.gte('data','2020-'+String(filters.month).padStart(2,'0')+'-01')
+       .lte('data','2099-'+String(filters.month).padStart(2,'0')+'-31');
   }
   if(filters.search)q=q.or(`descricao.ilike.%${filters.search}%,categoria.ilike.%${filters.search}%`);
   const{data,error}=await q.limit(500);
@@ -1416,21 +1421,32 @@ function renderAgenda(){
   if(!items.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">Sem compromissos cadastrados</div>';return;}
   const today=new Date();today.setHours(0,0,0,0);
   const sorted=[...items].sort((a,b)=>new Date(a.data)-new Date(b.data));
-  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">
-    <thead><tr><th style="text-align:left;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Descrição</th><th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Vencimento</th><th style="text-align:right;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Valor</th><th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Tipo</th><th style="padding:5px 8px;border-bottom:1px solid #e2e8f0"></th></tr></thead>
-    <tbody>${sorted.map((ag,i)=>{
-      const dt=new Date(ag.data+'T00:00:00');
-      const diff=Math.ceil((dt-today)/(1000*60*60*24));
-      const urgente=diff<=3&&diff>=0;const atrasado=diff<0;
-      const bg=atrasado?'#fef2f2':urgente?'#fffbeb':'';
-      return`<tr style="border-top:1px solid #f1f5f9;background:${bg}">
-        <td style="padding:5px 8px">${ag.desc}${atrasado?' <span style="color:#dc2626;font-size:10px">ATRASADO</span>':urgente?` <span style="color:#f59e0b;font-size:10px">${diff===0?'HOJE':diff+'d'}</span>':''}</td>
-        <td style="text-align:center;padding:5px 8px">${fmtD(ag.data)}</td>
-        <td style="text-align:right;padding:5px 8px;font-weight:600;color:${ag.tipo==='receber'?'#059669':'#dc2626'}">${fmt(parseFloat(ag.valor||0))}</td>
-        <td style="text-align:center;padding:5px 8px">${ag.tipo==='receber'?'💰 Receber':'💸 Pagar'}</td>
-        <td style="padding:5px 8px"><button onclick="delAgenda(${i})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:11px">🗑️</button></td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
+  const rows=sorted.map(function(ag,i){
+    const dt=new Date(ag.data+'T00:00:00');
+    const diff=Math.ceil((dt-today)/(1000*60*60*24));
+    const urgente=diff<=3&&diff>=0;
+    const atrasado=diff<0;
+    const bg=atrasado?'#fef2f2':urgente?'#fffbeb':'';
+    let badge='';
+    if(atrasado) badge=' <span style="color:#dc2626;font-size:10px">ATRASADO</span>';
+    else if(urgente) badge=' <span style="color:#f59e0b;font-size:10px">'+(diff===0?'HOJE':diff+'d')+'</span>';
+    const valorColor=ag.tipo==='receber'?'#059669':'#dc2626';
+    return '<tr style="border-top:1px solid #f1f5f9;background:'+bg+'">'
+      +'<td style="padding:5px 8px">'+ag.desc+badge+'</td>'
+      +'<td style="text-align:center;padding:5px 8px">'+fmtD(ag.data)+'</td>'
+      +'<td style="text-align:right;padding:5px 8px;font-weight:600;color:'+valorColor+'">'+fmt(parseFloat(ag.valor||0))+'</td>'
+      +'<td style="text-align:center;padding:5px 8px">'+(ag.tipo==='receber'?'💰 Receber':'💸 Pagar')+'</td>'
+      +'<td style="padding:5px 8px"><button onclick="delAgenda('+i+')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:11px">🗑️</button></td>'
+      +'</tr>';
+  }).join('');
+  el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">'
+    +'<thead><tr>'
+    +'<th style="text-align:left;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Descrição</th>'
+    +'<th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Vencimento</th>'
+    +'<th style="text-align:right;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Valor</th>'
+    +'<th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Tipo</th>'
+    +'<th style="padding:5px 8px;border-bottom:1px solid #e2e8f0"></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
 function delAgenda(i){
@@ -3071,10 +3087,4 @@ function buildImportPreview(){
       alert('Nenhum dado carregado. Selecione o arquivo novamente.');
       return;
     }
-    const mode=document.querySelector('input[name="importMode"]:checked')?.value||'single';
-    const cd=parseInt(document.getElementById('colData').value)||0;
-    const cds=parseInt(document.getElementById('colDesc').value)||1;
-    const clinicSel=document.getElementById('importClinicSel').value||'dtm';
-    // Colunas específicas do modo
-    const cv=parseInt(document.getElementById('colValor').value)||2;
-    const ct=document.getElementById('colTipo').value||'_
+    const mode=doc
