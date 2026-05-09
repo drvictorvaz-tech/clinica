@@ -1904,6 +1904,12 @@ function askIA(txt){
   const inp=document.getElementById('chatInput');
   if(inp){inp.value=txt;sendChat();}
 }
+function clearChat(){
+  try{localStorage.removeItem(chatKey());}catch(e){}
+  const box=document.getElementById('chatBox');
+  if(box)box.innerHTML='';
+  addChatMsg('ia','Chat limpo! Como posso ajudar? Use os botões de análise rápida ou faça sua pergunta.');
+}
 async function sendChat(){
   const inp=document.getElementById('chatInput');
   const msg=inp?.value?.trim();if(!msg)return;
