@@ -992,6 +992,8 @@ function userClinic(){if(userProfile?.role==='secretaria_sjc')return'hernia';if(
 const SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
 const SB_SVC  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc4MzUxOSwiZXhwIjoyMDkzMzU5NTE5fQ.8iBhtPYH3wJ9dTzdGZTZekVMak5pC_DDynAoq09Tpq0';
+// ── AUTO-LOGIN: restaura sessão ao abrir ──
+window.addEventListener('DOMContentLoaded', () => { initApp(); });
 async function initApp(){
   try{
     sb=getSB();
@@ -1110,8 +1112,28 @@ async function login(){
   currentUser=data.user;await loadProfile();showAppScreen();
 }
 async function loadProfile(){
-  const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
-  userProfile=error||!data?{role:'secretaria_dtm',nome:currentUser.email,id:currentUser.id}:data;
+  try{
+    const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(data&&!error){
+      userProfile=data;
+    } else {
+      // Perfil não encontrado — tenta criar via service role
+      console.warn('Perfil não encontrado, criando...',error?.message);
+      const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+      const meta=currentUser.user_metadata||{};
+      const role=meta.role||'admin'; // primeiro usuário sempre admin
+      await svc.from('profiles').upsert({
+        id:currentUser.id,email:currentUser.email,
+        nome:meta.nome||currentUser.email.split('@')[0],
+        role,ativo:true
+      },{onConflict:'id'});
+      userProfile={id:currentUser.id,email:currentUser.email,
+        nome:meta.nome||currentUser.email.split('@')[0],role,ativo:true};
+    }
+  }catch(e){
+    console.error('loadProfile error:',e);
+    userProfile={role:'admin',nome:currentUser.email,id:currentUser.id};
+  }
 }
 function buildNav(){
   const nav=document.getElementById('sidebarNav');
@@ -1129,7 +1151,7 @@ function showSection(id){
   const titles={dashboard:'Dashboard',importar:'Importar Planilha',documentos:'Documentos',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
   document.getElementById('pgTitle').textContent=titles[id]||id;
   if(id==='dashboard')renderDash();
-  else if(id==='importar')resetImport();
+  else if(id==='importar'){resetImport();setTimeout(_injetaBannerPlanilhas,200);}
   else if(id==='documentos')loadDocs();
   else if(id==='lancamentos')renderLanc();
   else if(id==='notas')renderNotas();
@@ -3067,8 +3089,510 @@ function autoDetectImportCols(){
   }
 }
 function parseValorBR(raw){
-  // Converte valor no formato brasileiro para float
-  // Ex: "1.500,00" → 1500.0 | "1500.00" → 1500.0 | "R$ 1.500,00" → 1500.0
-  if(!raw) return NaN;
+  if(!raw)return NaN;
   let s=String(raw).replace(/[R$\s]/g,'').trim();
-  if(!s||s=
+  if(!s||s==='-'||s==='')return NaN;
+  // "1.500,00" ou "1500,00" → tem vírgula decimal
+  if(s.includes(',')&&s.includes('.')){
+    // formato BR: ponto=milhar, vírgula=decimal
+    s=s.replace(/\./g,'').replace(',','.');
+  } else if(s.includes(',')){
+    // só vírgula → decimal BR
+    s=s.replace(',','.');
+  }
+  const n=parseFloat(s);
+  return isNaN(n)?NaN:Math.abs(n);
+}
+function normPagamento(raw){
+  const s=(raw||'').toLowerCase().replace(/\s+/g,' ').trim();
+  if(/pix|link/.test(s))return 'pix';
+  if(/dinheiro/.test(s))return 'dinheiro';
+  if(/cr[eé]dito|crdit|credito/.test(s))return 'cartao_credito';
+  if(/d[eé]bito|debit/.test(s))return 'cartao_debito';
+  if(/transfer/i.test(s))return 'transferencia';
+  if(/boleto/.test(s))return 'boleto';
+  return 'pix';
+}
+function buildImportPreview(){
+  const mode=document.querySelector('input[name="importMode"]:checked')?.value||'single';
+  const clinica=(document.getElementById('importClinicSel')||{}).value||'hernia';
+  const catPad=(document.getElementById('importCatSel')||{}).value||'';
+  const iData=parseInt(document.getElementById('colData').value)||0;
+  const iDesc=parseInt(document.getElementById('colDesc').value)||1;
+  let rows=[];
+  if(mode==='dual'){
+    const iRec=parseInt(document.getElementById('colReceita').value)||2;
+    const iDes=parseInt(document.getElementById('colDespesa').value)||3;
+    rows=_importRows.map(r=>{
+      const vRec=parseValorBR(r[iRec]);
+      const vDes=parseValorBR(r[iDes]);
+      const dtRaw=r[iData]||'';
+      const dt=parseDateBR(dtRaw);
+      const desc=String(r[iDesc]||'').trim();
+      const out=[];
+      if(!isNaN(vRec)&&vRec>0)out.push({data:dt,descricao:desc,valor:vRec,tipo:'receita',clinica,categoria:catPad,pagamento:'pix'});
+      if(!isNaN(vDes)&&vDes>0)out.push({data:dt,descricao:desc,valor:vDes,tipo:'despesa',clinica,categoria:catPad,pagamento:'pix'});
+      return out;
+    }).flat();
+  } else {
+    const iVal=parseInt(document.getElementById('colValor').value)||2;
+    const iTipo=document.getElementById('colTipo').value;
+    rows=_importRows.map(r=>{
+      const vRaw=parseValorBR(r[iVal]);
+      if(isNaN(vRaw)||vRaw<=0)return null;
+      let tipo='receita';
+      if(iTipo==='_auto'){tipo=vRaw<0?'despesa':'receita';}
+      else{const tv=String(r[parseInt(iTipo)]||'').toLowerCase();tipo=/(despes|sa[íi]da|d[eé]b)/.test(tv)?'despesa':'receita';}
+      const dtRaw=r[iData]||'';
+      const dt=parseDateBR(dtRaw);
+      const desc=String(r[iDesc]||'').trim();
+      return{data:dt,descricao:desc||'Sem descrição',valor:vRaw,tipo,clinica,categoria:catPad,pagamento:'pix'};
+    }).filter(Boolean);
+  }
+  _importPreview=rows.filter(r=>r.data&&r.valor>0);
+  if(!_importPreview.length){toast('⚠️ Nenhuma linha válida encontrada. Verifique o mapeamento de colunas.','warn');return;}
+  const tbody=document.getElementById('importPreviewBody');
+  if(tbody){
+    tbody.innerHTML=_importPreview.map(r=>`<tr>
+      <td style="white-space:nowrap;font-size:12px">${r.data}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descricao}</td>
+      <td style="text-align:right;font-weight:600;font-size:12px;color:${r.tipo==='receita'?'#059669':'#dc2626'}">${fmtN(r.valor)}</td>
+      <td><span class="badge badge-${r.tipo}">${r.tipo==='receita'?'Receita':'Despesa'}</span></td>
+      <td style="font-size:11px;color:#64748b">${r.categoria||'-'}</td>
+      <td><span class="badge badge-${r.clinica}">${r.clinica==='dtm'?'DTM':'Hérnia'}</span></td>
+    </tr>`).join('');
+  }
+  const rec=_importPreview.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
+  const des=_importPreview.filter(r=>r.tipo==='despesa').reduce((s,r)=>s+r.valor,0);
+  const statsEl=document.getElementById('importStats');
+  if(statsEl)statsEl.textContent=`${_importPreview.length} linhas · R$ ${fmtN(rec)} receitas · R$ ${fmtN(des)} despesas`;
+  document.getElementById('importMapping').style.display='none';
+  document.getElementById('importPreview').style.display='block';
+  document.getElementById('importPreviewTitle').textContent=`📋 Prévia — ${_importPreview.length} lançamentos`;
+  window.scrollTo({top:0,behavior:'smooth'});
+  toast(`📋 ${_importPreview.length} lançamentos prontos para importar`);
+}
+function parseDateBR(raw){
+  if(!raw)return '';
+  const s=String(raw).trim();
+  // ISO: 2025-04-07
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.substring(0,10);
+  // BR: 07/04/2025
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){const y=m[3].length===2?'20'+m[3]:m[3];return`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  // Excel serial date (number)
+  const n=parseInt(s);
+  if(!isNaN(n)&&n>40000&&n<60000){
+    const d=new Date((n-25569)*86400*1000);
+    return d.toISOString().split('T')[0];
+  }
+  // Já é string de data legível
+  try{const d=new Date(s);if(!isNaN(d))return d.toISOString().split('T')[0];}catch(e){}
+  return '';
+}
+async function confirmImport(){
+  if(!_importPreview||!_importPreview.length){toast('⚠️ Nenhum dado para importar.','warn');return;}
+  const btn=document.getElementById('confirmImportBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
+  try{
+    const client=getSvc();
+    const batch=_importPreview.map(r=>({
+      clinic:r.clinica,tipo:r.tipo,categoria:r.categoria||null,
+      descricao:r.descricao,valor:parseFloat(r.valor),
+      data:r.data,pagamento:r.pagamento||'pix',observacao:''
+    }));
+    const CHUNK=50;let ok=0;let fail=0;
+    for(let i=0;i<batch.length;i+=CHUNK){
+      const{error}=await client.from('transactions').insert(batch.slice(i,i+CHUNK));
+      if(error){console.error('import chunk error',error);fail+=Math.min(CHUNK,batch.length-i);}
+      else ok+=Math.min(CHUNK,batch.length-i);
+    }
+    document.getElementById('importPreview').style.display='none';
+    const resDiv=document.getElementById('importResult');
+    const resText=document.getElementById('importResultText');
+    if(resText)resText.textContent=fail===0?`✅ ${ok} lançamentos importados com sucesso!`:`✅ ${ok} importados · ⚠️ ${fail} com erro`;
+    if(resDiv)resDiv.style.display='block';
+    _importPreview=[];_importRows=[];_importHeaders=[];
+    toast(`✅ ${ok} lançamentos importados!`);
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
+  }catch(e){
+    toast('❌ Erro na importação: '+e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
+  }
+}
+function resetImport(){
+  _importPreview=[];_importRows=[];_importHeaders=[];
+  ['importFileName','importMapping','importPreview','importResult','importLoading','importErrMsg']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const da=document.getElementById('importDropArea');
+  if(da)da.style.display='block';
+  const fi=document.getElementById('importFileInput');
+  if(fi)fi.value='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== DADOS PRÉ-CARREGADOS DAS PLANILHAS =====
+const PLANILHAS_DATA=[
+  // === ABRIL 2025 — Hérnia SJC ===
+  // Consultas
+  {data:'2025-04-07',descricao:'Consulta — Rafael Oliveira',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-03',descricao:'Consulta — Delizete Junho',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-04-04',descricao:'Consulta — Dejanira Costa',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-04',descricao:'Consulta — Fernanda Moujaes',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-04',descricao:'Consulta — Derivaldo Oliveira',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-04-07',descricao:'Consulta — Acásio Santos',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-04-07',descricao:'Consulta — Edivaldo Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-04-09',descricao:'Consulta — Gonçalina Morino',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-04-07',descricao:'Consulta — Nair Souza',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-08',descricao:'Consulta — Jean Coutinho',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-08',descricao:'Consulta — Paulo Rocha',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-09',descricao:'Consulta — Cimey Gadelha',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-10',descricao:'Consulta — Sileine Salvador',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-08',descricao:'Consulta — Marisa Gerldo',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-04-08',descricao:'Consulta — Rafael Rocha',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-09',descricao:'Consulta — Valdir Garcia',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-11',descricao:'Consulta — Larissa Maciel',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-10',descricao:'Consulta — Alisson Lino',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-04-11',descricao:'Consulta — Damaris Silva',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-11',descricao:'Consulta — Tereza Manoel',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_credito'},
+  {data:'2025-04-16',descricao:'Consulta — Silei Salvador',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-14',descricao:'Consulta — Thiago Amorim',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-14',descricao:'Consulta — Francieuri Gonçalves',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-04-14',descricao:'Consulta — Elza das Graças',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  // Tratamentos Abril
+  {data:'2025-04-03',descricao:'Tratamento — Delizete Junho',valor:2000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+  {data:'2025-04-04',descricao:'Tratamento — Derivaldo Oliveira',valor:3000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-04-09',descricao:'Tratamento — Gonçalina Morino',valor:3100,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+  // === MAIO 2025 — Consultas ===
+  {data:'2025-05-05',descricao:'Consulta — Edmar Garcia',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-05',descricao:'Consulta — Maria José B. Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-05',descricao:'Consulta — Beatriz Gouveia',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-06',descricao:'Consulta — Sebastião Santos',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-06',descricao:'Consulta — Jose Ricardo Santos',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-06',descricao:'Consulta — Daniela Duarte',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-07',descricao:'Consulta — Daniela Andrade',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-08',descricao:'Consulta — Rita Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-05-09',descricao:'Consulta — Marcos Marcondes Souza',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-09',descricao:'Consulta — Marcelo Galvão',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-12',descricao:'Consulta — Solano',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-12',descricao:'Consulta — Airton Pereira',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-13',descricao:'Consulta — Maria Oliveira',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_credito'},
+  {data:'2025-05-13',descricao:'Consulta — Claudia Rosa',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-16',descricao:'Consulta — Lady Siqueira',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-16',descricao:'Consulta — Iracema Aiabe',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-19',descricao:'Consulta — Valdemar Rosa',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-19',descricao:'Consulta — Maria Andre',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-19',descricao:'Consulta — Mariana Costa',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-19',descricao:'Consulta — Quiteria Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-21',descricao:'Consulta — Anunciada Souza',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-22',descricao:'Consulta — Luzia Silva',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_credito'},
+  {data:'2025-05-23',descricao:'Consulta — Maria Lopes',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-05-26',descricao:'Consulta — Williams Silova',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-26',descricao:'Consulta — Arvanita Maria',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-27',descricao:'Consulta — Maria Aley',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-27',descricao:'Consulta — Maria Gonçalves',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-28',descricao:'Consulta — Robson Priant',valor:300,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-05-29',descricao:'Consulta — Luciano Simões',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-05-29',descricao:'Consulta — Narjefe Carneiro',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-05-29',descricao:'Consulta — Ana Santos',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  // Tratamentos Maio
+  {data:'2025-05-05',descricao:'Tratamento — Edmar Garcia',valor:3200,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-05-06',descricao:'Tratamento (restante) — Delizete Junho',valor:1500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+  {data:'2025-05-07',descricao:'Tratamento (restante) — Marise Geraldo',valor:1650,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+  {data:'2025-05-06',descricao:'Tratamento — José Ricardo dos Santos',valor:3200,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-05-06',descricao:'Tratamento — Daniela Duarte (12x)',valor:3500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-05-08',descricao:'Tratamento — Rita Silva',valor:3100,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-05-13',descricao:'Tratamento — Acácio Santos (10x)',valor:3500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-05-16',descricao:'Tratamento — Lady Siqueira (6x)',valor:3300,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-05-16',descricao:'Tratamento — Iracema Ayabe',valor:3100,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-05-19',descricao:'Tratamento — Valdemar Rosal',valor:3200,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-05-20',descricao:'Tratamento — Marina Costa',valor:3050,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-05-21',descricao:'Tratamento — Quiteria Silva',valor:3000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-05-23',descricao:'Tratamento — Maria Lopes',valor:3200,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-05-23',descricao:'Tratamento — Marlene Teruel (2x)',valor:2000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-05-23',descricao:'Tratamento — Marlene Teruel (restante)',valor:1000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-05-02',descricao:'Tratamento (restante) — Danielo Andrade',valor:800,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  // === JUNHO 2025 — Consultas ===
+  {data:'2025-06-05',descricao:'Consulta — Marilene Oliveira',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-05',descricao:'Consulta — Rodrigo Cardoso',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-05',descricao:'Consulta — Felipe Andrade',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-06',descricao:'Consulta — Israel Rodrigues',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_credito'},
+  {data:'2025-06-06',descricao:'Consulta — Ducia Silva',valor:150,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-09',descricao:'Consulta — Alaide Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-09',descricao:'Consulta — Maria de Jesus',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-09',descricao:'Consulta — Jerry Mota',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-11',descricao:'Consulta — Carta Teise',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-11',descricao:'Consulta — Valdemir Moreira',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_debito'},
+  {data:'2025-06-13',descricao:'Consulta — João Pinto',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-06-13',descricao:'Consulta — Marco Vassovino',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-13',descricao:'Consulta — Eliane Santos',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-16',descricao:'Consulta — Eufenia Alfaia',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-17',descricao:'Consulta — Nidelci Pereira',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-17',descricao:'Consulta — Fatima Matias',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-06-20',descricao:'Consulta — Rita Carriel',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-20',descricao:'Consulta — Gabriel Reis',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Consulta — Isabel D\'Avila',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Consulta — Thiago Alcântara',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Consulta — Sumaida Nori',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Consulta — Roberto Filho',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Consulta — Lucimary Silva',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-06-24',descricao:'Consulta — Magna Assunção',valor:250,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'dinheiro'},
+  {data:'2025-06-25',descricao:'Consulta — Helena Cardoso',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-25',descricao:'Consulta — Alda Rodrigues',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'cartao_credito'},
+  {data:'2025-06-27',descricao:'Consulta — Luzia Santos',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  {data:'2025-06-27',descricao:'Consulta — Vilde Sabino',valor:200,tipo:'receita',clinica:'hernia',categoria:'Consulta',pagamento:'pix'},
+  // Tratamentos Junho
+  {data:'2025-06-02',descricao:'Tratamento — Maria Aley',valor:3005,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-06-05',descricao:'Tratamento — Maria André',valor:3000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-06-05',descricao:'Tratamento — Maria André (restante, 5x)',valor:500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-09',descricao:'Tratamento — Alaide Silva (3x)',valor:3200,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-10',descricao:'Tratamento — Maria de Jesus (6x)',valor:3300,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-11',descricao:'Tratamento — Valdemir Moreira',valor:400,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+  {data:'2025-06-11',descricao:'Tratamento — Valdemir Moreira (restante)',valor:500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-06-13',descricao:'Tratamento — João Pinto',valor:3100,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-06-16',descricao:'Tratamento — Eufenia Alfaia (10x)',valor:3500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-06-23',descricao:'Tratamento — Isabel D\'Avila',valor:3100,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'pix'},
+  {data:'2025-06-23',descricao:'Tratamento — Maria do Socorro (10x)',valor:3500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-23',descricao:'Tratamento — Sumaida (10x)',valor:1750,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-23',descricao:'Tratamento — Sumaida (2ª entrada, 10x)',valor:1750,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-25',descricao:'Tratamento — Alda Rodrigues (10x)',valor:3500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-25',descricao:'Tratamento — Fatima Matias (3x)',valor:1500,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_credito'},
+  {data:'2025-06-25',descricao:'Tratamento — Fatima Matias (restante)',valor:1000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'cartao_debito'},
+  {data:'2025-06-25',descricao:'Tratamento — Fatima Matias (dinheiro)',valor:1000,tipo:'receita',clinica:'hernia',categoria:'Protocolo',pagamento:'dinheiro'},
+];
+
+async function carregarPlanilhas(){
+  if(!sb){toast('⚠️ Conecte ao Supabase primeiro.','warn');return;}
+  const btn=document.getElementById('btnCarregarPlanilhas');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Carregando...';}
+  const total=PLANILHAS_DATA.length;
+  try{
+    const client=getSvc();
+    const CHUNK=50;let ok=0;
+    for(let i=0;i<PLANILHAS_DATA.length;i+=CHUNK){
+      const slice=PLANILHAS_DATA.slice(i,i+CHUNK).map(r=>({
+        clinic:r.clinica,tipo:r.tipo,categoria:r.categoria,
+        descricao:r.descricao,valor:r.valor,data:r.data,pagamento:r.pagamento,observacao:''
+      }));
+      const{error}=await client.from('transactions').insert(slice);
+      if(error)console.error('chunk error',error);
+      else ok+=slice.length;
+    }
+    toast(`✅ ${ok}/${total} lançamentos das planilhas importados!`);
+    if(btn){btn.disabled=false;btn.textContent='✅ Importado!';}
+    setTimeout(()=>showSection('dashboard'),1200);
+  }catch(e){
+    toast('❌ Erro: '+e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='📊 Carregar Planilhas';}
+  }
+}
+
+// ===== DOCUMENTOS =====
+async function loadDocs(){
+  const clinic=(document.getElementById('docFilterClinic')||{}).value||'';
+  const tipo=(document.getElementById('docFilterTipo')||{}).value||'';
+  const tb=document.getElementById('docsTableBody');
+  const empt=document.getElementById('docsEmpty');
+  if(!tb)return;
+  tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px">⏳ Carregando...</td></tr>';
+  try{
+    let q=sb.from('documentos').select('*').order('created_at',{ascending:false});
+    if(clinic)q=q.eq('clinic',clinic);
+    if(tipo)q=q.eq('tipo',tipo);
+    const{data:docs}=await q;
+    if(!docs||!docs.length){
+      tb.innerHTML='';
+      if(empt)empt.style.display='block';
+      return;
+    }
+    if(empt)empt.style.display='none';
+    tb.innerHTML=docs.map(d=>{
+      const dt=new Date(d.created_at).toLocaleDateString('pt-BR');
+      const sz=d.tamanho?Math.round(d.tamanho/1024)+'KB':'—';
+      return`<tr>
+        <td style="font-size:12px;white-space:nowrap">${dt}</td>
+        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'DTM':'Hérnia'}</span></td>
+        <td style="font-size:12px">${d.tipo||'—'}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.descricao||d.nome||'—'}</td>
+        <td style="font-size:11px;color:#64748b">${sz}</td>
+        <td style="display:flex;gap:6px">
+          ${d.url?`<a href="${d.url}" target="_blank" class="btn btn-sm btn-ghost">📥 Ver</a>`:''}
+          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}')">🗑️</button>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+  }catch(e){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">Erro ao carregar documentos</td></tr>';}
+}
+async function delDoc(id){
+  if(!confirm('Remover este documento?'))return;
+  await sb.from('documentos').delete().eq('id',id);
+  loadDocs();toast('🗑️ Documento removido.');
+}
+function handleDocDrop(e){
+  e.preventDefault();
+  const area=document.getElementById('docDropArea');
+  if(area){area.style.borderColor='#94a3b8';area.style.background='#f8fafc';}
+  const f=e.dataTransfer.files[0];
+  if(f)uploadDoc(f);
+}
+function handleDocFile(inp){
+  const f=inp.files[0];
+  if(f)uploadDoc(f);
+}
+async function uploadDoc(fileOrInput){
+  // Aceita tanto um File object (drag-drop) quanto um input element (onchange)
+  const file=(fileOrInput instanceof File)?fileOrInput:(fileOrInput&&fileOrInput.files?fileOrInput.files[0]:null);
+  if(!file){return;}
+  const cl=(document.getElementById('docUpClinic')||{}).value||'hernia';
+  const desc=(document.getElementById('docUpDesc')||{}).value||file.name;
+  const ext=file.name.split('.').pop().toLowerCase();
+  let tipo='outro';
+  if(ext==='pdf')tipo='pdf';
+  else if(['doc','docx'].includes(ext))tipo='word';
+  else if(['xls','xlsx','csv'].includes(ext))tipo='excel';
+  // Mostrar progresso
+  const progEl=document.getElementById('docUploadProgress');
+  const msgEl=document.getElementById('docUploadMsg');
+  if(progEl)progEl.style.display='block';
+  if(msgEl)msgEl.textContent='⏳ Enviando '+file.name+'...';
+  try{
+    const path=`${cl}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const{error:upErr}=await getSvc().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
+    if(upErr)throw upErr;
+    const{data:{publicUrl}}=getSvc().storage.from('documentos').getPublicUrl(path);
+    try{await sb.from('documentos').insert({clinic:cl,tipo,nome:file.name,descricao:desc,url:publicUrl,tamanho:file.size,path});}
+    catch(dbErr){console.warn('Tabela documentos não encontrada - execute o SQL atualizado no Supabase:',dbErr.message);}
+    if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
+    setTimeout(()=>{if(progEl)progEl.style.display='none';},2000);
+    const fi=document.getElementById('docFileInput');if(fi)fi.value='';
+    const descEl=document.getElementById('docUpDesc');if(descEl)descEl.value='';
+    loadDocs();toast('✅ Documento enviado!');
+  }catch(e){
+    if(msgEl){msgEl.textContent='❌ Erro: '+e.message;msgEl.style.color='#dc2626';}
+    setTimeout(()=>{if(progEl)progEl.style.display='none';if(msgEl)msgEl.style.color='';},3000);
+    toast('❌ Erro no upload: '+e.message,'err');
+  }
+}
+
+// ===== IMPORTAÇÃO SECRETARIA =====
+let _secImportRows=[],_secImportHeaders=[],_secImportPreview=[];
+function handleSecImportFile(inp){
+  const f=inp&&inp.files?inp.files[0]:inp;
+  if(!f)return;
+  _secImportRows=[];_secImportHeaders=[];_secImportPreview=[];
+  ['secImportMapping','secImportPreview','secImportResult'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(typeof XLSX==='undefined'){toast('Aguarde, carregando Excel...','warn');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+      if(!rows||rows.length<2){toast('Planilha sem dados','warn');return;}
+      _secImportHeaders=rows[0].map(h=>String(h||''));
+      _secImportRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
+      const opts=_secImportHeaders.map((h,i)=>`<option value="${i}">${h||'Col '+(i+1)}</option>`).join('');
+      ['sColData','sColDesc','sColValor','sColTipo'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el){const prev=el.innerHTML.includes('Auto')?'<option value="_auto">Auto (sinal do valor)</option>':'';el.innerHTML=prev+opts;}
+      });
+      // Auto-detect
+      const hh=_secImportHeaders.map(h=>h.toLowerCase());
+      const find=re=>hh.findIndex(h=>re.test(h));
+      const di=find(/data|date|dia/);const dsi=find(/descri|histor|cliente|nome/);
+      const vi=find(/valor|total|amount/);const ti=find(/tipo|naturez/);
+      const dd=document.getElementById('sColData');if(dd&&di>=0)dd.value=di;
+      const ds=document.getElementById('sColDesc');if(ds&&dsi>=0)ds.value=dsi;
+      const dv=document.getElementById('sColValor');if(dv&&vi>=0)dv.value=vi;
+      const dt2=document.getElementById('sColTipo');if(dt2&&ti>=0)dt2.value=ti;
+      const mm=document.getElementById('secImportMapping');if(mm)mm.style.display='block';
+      toast('📊 '+_secImportRows.length+' linhas lidas!');
+    }catch(err){toast('Erro: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(f);
+}
+function buildSecImportPreview(){
+  if(!_secImportRows.length){toast('Carregue uma planilha primeiro','warn');return;}
+  const clinic=userProfile?.role==='secretaria_sjc'?'hernia':'dtm';
+  const iData=parseInt(document.getElementById('sColData')?.value||0);
+  const iDesc=parseInt(document.getElementById('sColDesc')?.value||1);
+  const iVal=parseInt(document.getElementById('sColValor')?.value||2);
+  const iTipo=document.getElementById('sColTipo')?.value||'_auto';
+  _secImportPreview=_secImportRows.map(r=>{
+    const vRaw=parseValorBR(r[iVal]);
+    if(isNaN(vRaw)||vRaw<=0)return null;
+    let tipo='receita';
+    if(iTipo!=='_auto'){const tv=String(r[parseInt(iTipo)]||'').toLowerCase();tipo=/(despes|sa[íi]da|d[eé]b)/.test(tv)?'despesa':'receita';}
+    const dt=parseDateBR(String(r[iData]||''));
+    if(!dt)return null;
+    return{data:dt,descricao:String(r[iDesc]||'Sem descrição').trim(),valor:vRaw,tipo,clinica:clinic,categoria:'',pagamento:'pix'};
+  }).filter(Boolean);
+  if(!_secImportPreview.length){toast('Nenhuma linha válida. Verifique colunas.','warn');return;}
+  const tb=document.getElementById('secImportBody');
+  if(tb)tb.innerHTML=_secImportPreview.map(r=>`<tr>
+    <td style="white-space:nowrap;font-size:11px">${r.data}</td>
+    <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descricao}</td>
+    <td style="text-align:right;font-weight:600;font-size:11px;color:${r.tipo==='receita'?'#059669':'#dc2626'}">${fmtN(r.valor)}</td>
+    <td><span style="font-size:10px;font-weight:600;color:${r.tipo==='receita'?'#166534':'#991b1b'}">${r.tipo==='receita'?'Rec':'Desp'}</span></td>
+  </tr>`).join('');
+  const tit=document.getElementById('secImportTitle');
+  const sts=document.getElementById('secImportStats');
+  if(tit)tit.textContent='📋 '+_secImportPreview.length+' lançamentos';
+  const tR=_secImportPreview.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
+  const tD=_secImportPreview.filter(r=>r.tipo==='despesa').reduce((s,r)=>s+r.valor,0);
+  if(sts)sts.textContent='R$'+fmtN(tR)+' rec · R$'+fmtN(tD)+' desp';
+  ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block';});
+  document.getElementById('secImportPreview').style.display='block';
+}
+async function confirmSecImport(){
+  if(!_secImportPreview.length){toast('Nada para importar','warn');return;}
+  const btn=document.querySelector('#secImportPreview .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='⏳...';}
+  try{
+    const batch=_secImportPreview.map(r=>({
+      clinic:r.clinica,tipo:r.tipo,categoria:r.categoria||null,
+      descricao:r.descricao,valor:r.valor,data:r.data,pagamento:r.pagamento||'pix',observacao:''
+    }));
+    let ok=0;
+    for(let i=0;i<batch.length;i+=50){
+      const{error}=await getSvc().from('transactions').insert(batch.slice(i,i+50));
+      if(!error)ok+=Math.min(50,batch.length-i);
+    }
+    _secImportPreview=[];
+    ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    const rt=document.getElementById('secImportResultText');if(rt)rt.textContent='✅ '+ok+' lançamentos importados!';
+    const res=document.getElementById('secImportResult');if(res)res.style.display='block';
+    toast('✅ '+ok+' lançamentos importados!');
+    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
+  }catch(e){
+    toast('Erro: '+e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
+  }
+}
+function resetSecImport(){
+  _secImportRows=[];_secImportHeaders=[];_secImportPreview=[];
+  ['secImportMapping','secImportPreview','secImportResult'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const fi=document.getElementById('secImportFile');if(fi)fi.value='';
+  const drop=document.getElementById('secImportDrop');if(drop)drop.style.display='block';
+}
+
+// ===== BANNER PLANILHAS — injetado quando a seção é aberta =====
+function _injetaBannerPlanilhas(){
+  const impSect=document.querySelector('#s-importar');
+  if(!impSect||document.getElementById('btnCarregarPlanilhas'))return;
+  const tRec=PLANILHAS_DATA.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
+  const banner=document.createElement('div');
+  banner.id='bannerPlanilhas';
+  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
+  banner.innerHTML='<div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Planilhas Abr–Jun 2025 prontas para importar</div>'
+    +'<div style="font-size:13px;opacity:.9">'+PLANILHAS_DATA.length+' lançamentos · Dr. Hérnia SJC · Total: R$ '+tRec.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
+    +'<div style="font-size:11px;opacity:.7;margin-top:4px">Abril 2025 (Karina) · Maio 2025 (consultas + tratamentos) · Junho 2025</div>'
+    +'</div>'
+    +'<button id="btnCarregarPlanilhas" class="btn" style="background:white;color:#1d4ed8;font-weight:700;padding:10px 22px;font-size:13px;flex-shrink:0" onclick="carregarPlanilhas()">'
+    +'✅ Importar Tudo com 1 Clique</button>';
+  impSect.insertBefore(banner,impSect.firstChild);
+}
+</script>
+</body>
+</html>
