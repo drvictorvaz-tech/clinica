@@ -453,6 +453,16 @@ tbody tr:last-child td{border-bottom:none}
     <div class="fg" style="flex:0 0 160px"><label style="font-size:11px;font-weight:600">Clínica</label><select id="iaCl" style="width:100%"><option value="">Ambas</option><option value="dtm">🦷 DTM &amp; Sono</option><option value="hernia">⚕️ Dr. Hérnia SJC</option></select></div>
     <div class="fg" style="flex:1;align-self:flex-end"><button class="btn btn-ghost btn-sm" onclick="clearChat()">🗑️ Limpar chat</button></div>
   </div>
+  <div style="padding:8px 0 10px;display:flex;flex-wrap:wrap;gap:6px" class="no-print">
+    <span style="font-size:11px;color:#64748b;align-self:center;margin-right:2px">⚡ Análises rápidas:</span>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Faça uma projeção de faturamento para os próximos 3 meses')">📈 Projeção</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Compare o desempenho entre as duas clínicas')">⚖️ Comparativo</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Analise a sazonalidade e mostre os meses mais fortes e fracos')">📅 Sazonalidade</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Calcule o ponto de equilíbrio das clínicas')">🎯 Equilíbrio</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Analise o mix de serviços e quais geram mais receita')">🔬 Mix serviços</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Se eu aumentar 20% as consultas, qual seria o impacto no lucro?')">💡 Simular cenário</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Faça um resumo estratégico completo das clínicas')">📋 Resumo estratégico</button>
+  </div>
   <div class="chat-wrap"><div class="chat-msgs" id="chatBox">
   </div>
   <div id="chatTyping" style="font-size:11px;color:#94a3b8;padding:0 16px 6px;display:none">🤖 Analisando seus dados...</div>
@@ -1890,6 +1900,10 @@ async function loadChatHistory(){
     else{h.forEach(m=>addChatMsg(m.role,m.text));}
   }catch(e){addChatMsg('ia','Olá! Como posso ajudar?');}
 }
+function askIA(txt){
+  const inp=document.getElementById('chatInput');
+  if(inp){inp.value=txt;sendChat();}
+}
 async function sendChat(){
   const inp=document.getElementById('chatInput');
   const msg=inp?.value?.trim();if(!msg)return;
@@ -1983,11 +1997,107 @@ async function smartFinancialResponse(q){
       dicas.push('📌 Emita NFs de todos os atendimentos particulares para deduções fiscais.');
       return `💡 **Dicas Financeiras**\n\n${dicas.join('\n')}\n\n${ctx}`;
     }
-    return `🤖 **IA Financeira — ${periodoLabel}**\n\n${ctx}\n\nPosso analisar receitas, despesas, margem, NFs, comissões e horas extras.\n\nEx: "Qual foi o faturamento este mês?" ou "Quais são minhas maiores despesas?"`;
+    // ============ PLANEJAMENTO ESTRATÉGICO ============
+
+    if(/proje[cç][aã]o|previs[aã]o|pr[oó]ximo.*m[eê]s|tendencia|crescimento/i.test(q)){
+      const allTx=await loadTx({});
+      const byMonth={};
+      allTx.forEach(t=>{const ym=t.data.substring(0,7);if(!byMonth[ym])byMonth[ym]={r:0,d:0};byMonth[ym][t.tipo==='receita'?'r':'d']+=parseFloat(t.valor);});
+      const months=Object.keys(byMonth).sort();
+      if(months.length<2)return '⚠️ Dados insuficientes para projeção. Importe ao menos 2 meses.';
+      const last3=months.slice(-3);
+      const avgR=last3.reduce((s,m)=>s+(byMonth[m]?.r||0),0)/last3.length;
+      const avgD=last3.reduce((s,m)=>s+(byMonth[m]?.d||0),0)/last3.length;
+      const trend=last3.length>=2?((byMonth[last3[last3.length-1]]?.r||0)-(byMonth[last3[0]]?.r||0))/last3.length:0;
+      const proj1=avgR+trend,proj2=avgR+trend*2,proj3=avgR+trend*3;
+      const hist=last3.map(m=>`• ${m}: Rec ${fmt(byMonth[m]?.r||0)} / Desp ${fmt(byMonth[m]?.d||0)}`).join('\n');
+      return `📈 **Projeção de Faturamento**\n\n**Histórico recente:**\n${hist}\n\n**Média mensal:** ${fmt(avgR)}\n**Tendência:** ${trend>=0?'📈 Alta':'📉 Queda'} de ${fmt(Math.abs(trend))}/mês\n\n**Projeções:**\n• Próximo mês: **${fmt(proj1)}**\n• 2 meses: **${fmt(proj2)}**\n• 3 meses: **${fmt(proj3)}**\n\n💰 Lucro projetado (próx. mês): **${fmt(proj1-avgD)}**\n\n${trend>0?'✅ Tendência positiva! Continue o ritmo.':trend<0?'⚠️ Tendência de queda. Revise sua captação.':'➡️ Faturamento estável.'}`;
+    }
+
+    if(/compar[ae]|versus|vs\.?|dtm.*hern|hern.*dtm|duas.*cl[ií]nica|ambas/i.test(q)){
+      const allTx=await loadTx({});
+      const st={dtm:{r:0,d:0,n:0},hernia:{r:0,d:0,n:0}};
+      allTx.forEach(t=>{const c=t.clinic==='dtm'?'dtm':'hernia';st[c][t.tipo==='receita'?'r':'d']+=parseFloat(t.valor);st[c].n++;});
+      const dL=st.dtm.r-st.dtm.d,dM=st.dtm.r>0?((dL/st.dtm.r)*100).toFixed(1):0;
+      const hL=st.hernia.r-st.hernia.d,hM=st.hernia.r>0?((hL/st.hernia.r)*100).toFixed(1):0;
+      return `⚖️ **Comparativo entre Clínicas**\n\n🦷 **DTM & Sono**\n• Receitas: ${fmt(st.dtm.r)}\n• Despesas: ${fmt(st.dtm.d)}\n• Lucro: **${fmt(dL)}** (margem ${dM}%)\n\n⚕️ **Dr. Hérnia SJC**\n• Receitas: ${fmt(st.hernia.r)}\n• Despesas: ${fmt(st.hernia.d)}\n• Lucro: **${fmt(hL)}** (margem ${hM}%)\n\n🏆 **Melhor resultado:** ${dL>=hL?'DTM & Sono':'Dr. Hérnia SJC'}\n\n💡 ${dL>0&&hL>0?'Ambas lucrativas. Invista na de maior margem.':'Verifique a clínica com resultado negativo.'}`;
+    }
+
+    if(/sazonalidade|m[eê]s mais forte|melhor.*m[eê]s|pior.*m[eê]s|m[eê]s.*fraco/i.test(q)){
+      const allTx=await loadTx({});
+      const byM={};
+      allTx.forEach(t=>{const ym=t.data.substring(0,7);if(!byM[ym])byM[ym]={r:0,d:0};byM[ym][t.tipo==='receita'?'r':'d']+=parseFloat(t.valor);});
+      const months=Object.keys(byM).sort();
+      if(months.length<2)return '⚠️ Importe ao menos 2 meses para análise de sazonalidade.';
+      const sorted=months.map(m=>({m,r:byM[m].r,l:byM[m].r-byM[m].d})).sort((a,b)=>b.r-a.r);
+      const best=sorted[0],worst=sorted[sorted.length-1];
+      const maxR=best.r||1;
+      const hist=sorted.map(s=>{const bar='█'.repeat(Math.round(s.r/maxR*10));return `• ${s.m}: ${bar} ${fmt(s.r)}`;}).join('\n');
+      return `📅 **Sazonalidade**\n\n${hist}\n\n🏆 **Melhor mês:** ${best.m} — ${fmt(best.r)}\n📉 **Mês mais fraco:** ${worst.m} — ${fmt(worst.r)}\nDiferença: ${fmt(best.r-worst.r)}\n\n💡 Nos meses fracos: intensifique campanhas de reativação de pacientes.`;
+    }
+
+    if(/equil[ií]brio|break.?even|custo.*fixo|quantas.*consultas|m[ií]nimo.*faturar/i.test(q)){
+      const allTx=await loadTx({});
+      const des=allTx.filter(t=>t.tipo==='despesa');
+      const rec=allTx.filter(t=>t.tipo==='receita');
+      const mD=[...new Set(des.map(t=>t.data.substring(0,7)))];
+      const mR=[...new Set(rec.map(t=>t.data.substring(0,7)))];
+      const mediaD=mD.length?des.reduce((s,t)=>s+parseFloat(t.valor),0)/mD.length:0;
+      const mediaR=mR.length?rec.reduce((s,t)=>s+parseFloat(t.valor),0)/mR.length:0;
+      const consultas=rec.filter(t=>/consul|atend|trata/i.test(t.descricao||t.categoria||''));
+      const ticket=consultas.length?consultas.reduce((s,t)=>s+parseFloat(t.valor),0)/consultas.length:250;
+      const necAnd=Math.ceil(mediaD/ticket);
+      const deficit=mediaD-mediaR;
+      return `🎯 **Ponto de Equilíbrio**\n\n💸 Despesa média/mês: ${fmt(mediaD)}\n💰 Receita média/mês: ${fmt(mediaR)}\n🎫 Ticket médio: ${fmt(ticket)}\n\n📌 **Precisa de ${necAnd} atendimentos/mês para cobrir os custos**\n\n${mediaR>=mediaD?`✅ Superávit de ${fmt(mediaR-mediaD)}/mês`:`⚠️ Déficit de ${fmt(deficit)}/mês — faltam ~${Math.ceil(deficit/ticket)} atendimentos`}\n\n💡 Aumente o ticket médio ou volume para melhorar o equilíbrio.`;
+    }
+
+    if(/mix|servi[cç]o|mais.*rentav|tratamento.*valor|protocolo.*valor/i.test(q)){
+      const allTx=await loadTx({});
+      const rec=allTx.filter(t=>t.tipo==='receita');
+      const cats={};
+      rec.forEach(t=>{const c=t.categoria||'Outros';cats[c]=(cats[c]||0)+parseFloat(t.valor);});
+      const total=Object.values(cats).reduce((s,v)=>s+v,0)||1;
+      const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+      if(!sorted.length)return '⚠️ Sem dados de receita para analisar.';
+      const lines=sorted.map(([k,v])=>{const p=(v/total*100).toFixed(1);return `• **${k}:** ${fmt(v)} (${p}%)`;}).join('\n');
+      return `🔬 **Mix de Serviços**\n\n${lines}\n\n💰 Total: ${fmt(total)}\n🏆 Maior gerador: ${sorted[0][0]}\n\n💡 Fortaleça o que já funciona e avalie criar pacotes para aumentar o ticket médio.`;
+    }
+
+    if(/simul[ae]|cen[aá]rio|se.*aument[ae]|se.*reduz|impacto.*|e se/i.test(q)){
+      const pctM=ql.match(/(\d+)\s*%/);const pct=pctM?parseInt(pctM[1]):20;
+      const allTx=await loadTx({});
+      const rec=allTx.filter(t=>t.tipo==='receita'),des=allTx.filter(t=>t.tipo==='despesa');
+      const mR=[...new Set(rec.map(t=>t.data.substring(0,7)))];
+      const mD=[...new Set(des.map(t=>t.data.substring(0,7)))];
+      const avgR=mR.length?rec.reduce((s,t)=>s+parseFloat(t.valor),0)/mR.length:0;
+      const avgD=mD.length?des.reduce((s,t)=>s+parseFloat(t.valor),0)/mD.length:0;
+      const novaR=avgR*(1+pct/100);
+      const ganho=(novaR-avgD)-(avgR-avgD);
+      return `💡 **Simulação: +${pct}% nas Receitas**\n\nSituação atual (média/mês):\n• Receitas: ${fmt(avgR)}\n• Despesas: ${fmt(avgD)}\n• Lucro: ${fmt(avgR-avgD)}\n\nCom +${pct}%:\n• Novas receitas: **${fmt(novaR)}**\n• Novo lucro: **${fmt(novaR-avgD)}**\n• Ganho adicional: **+${fmt(ganho)}/mês**\n• **+${fmt(ganho*12)}/ano projetado**\n\n💡 Para isso: adicione ~${Math.ceil(avgR*pct/100/300)} atendimentos/mês ou reajuste preços em ${(pct/2).toFixed(0)}%.`;
+    }
+
+    if(/resumo.*estrat[eé]gic|planejamento|vis[aã]o geral|diagn[oó]stico|panorama/i.test(q)){
+      const allTx=await loadTx({});
+      const rec=allTx.filter(t=>t.tipo==='receita'),des=allTx.filter(t=>t.tipo==='despesa');
+      const totR=rec.reduce((s,t)=>s+parseFloat(t.valor),0),totD=des.reduce((s,t)=>s+parseFloat(t.valor),0);
+      const lucro=totR-totD,mg=totR>0?((lucro/totR)*100).toFixed(1):0;
+      const mR=[...new Set(rec.map(t=>t.data.substring(0,7)))];
+      const avgR=mR.length?totR/mR.length:0;
+      const dR=rec.filter(t=>t.clinic==='dtm').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const hR=rec.filter(t=>t.clinic==='hernia').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const dL=dR-des.filter(t=>t.clinic==='dtm').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const hL=hR-des.filter(t=>t.clinic==='hernia').reduce((s,t)=>s+parseFloat(t.valor),0);
+      const score=lucro<0?25:parseFloat(mg)<10?45:parseFloat(mg)<20?65:parseFloat(mg)<35?80:95;
+      const stars='⭐'.repeat(Math.round(score/20));
+      return `📋 **Resumo Estratégico Completo**\n\n${stars} Score financeiro: **${score}/100**\n\n💰 Receita total: ${fmt(totR)}\n💸 Despesa total: ${fmt(totD)}\n📊 Lucro: **${fmt(lucro)}** (margem ${mg}%)\n📈 Média receita/mês: ${fmt(avgR)}\n\n🏥 Por clínica:\n🦷 DTM: ${fmt(dR)} rec | Lucro ${fmt(dL)}\n⚕️ Hérnia: ${fmt(hR)} rec | Lucro ${fmt(hL)}\n\n🎯 Ações prioritárias:\n${parseFloat(mg)<20?'⚠️ Margem abaixo de 20% — revisar preços/custos\n':'✅ Margem saudável\n'}📌 Implemente metas mensais por clínica\n📌 Monitore sazonalidade para planejar campanhas\n📌 Acompanhe ticket médio e volume de atendimentos`;
+    }
+
+    return `🤖 **IA Financeira — ${periodoLabel}**\n\n${ctx}\n\nUse os botões de análise rápida acima ou pergunte sobre:\n📈 Projeção · ⚖️ Comparativo · 📅 Sazonalidade · 🎯 Equilíbrio · 🔬 Mix de serviços · 💡 Cenários`;
   }catch(e){
     return '⚠️ Não foi possível carregar os dados financeiros. Verifique a conexão.';
   }
 }
+
 
 // ============================================================
 // USUÁRIOS
