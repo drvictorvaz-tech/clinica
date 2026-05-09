@@ -1217,7 +1217,7 @@ function initSelectors(){
 }
 // ===== DATA: PROCEDIMENTOS =====
 async function loadProcedimentos(){
-  const{data}=await sb.from('procedimentos').select('*').eq('ativo',true).order('clinic').order('categoria').order('nome');
+  const{data}=await getSvc().from('procedimentos').select('*').eq('ativo',true).order('clinic').order('categoria').order('nome');
   procedimentos=data||[];
   updProcSelect();
 }
@@ -1281,7 +1281,7 @@ async function saveLanc(){
   const obs=document.getElementById('lObs').value.trim();
   if(!dt||!vl||isNaN(vl)||vl<=0||!ds){toast('Preencha todos os campos!','err');return;}
   loading(true);
-  const{error}=await sb.from('transactions').insert({clinic:cl,tipo:tp,categoria:cat,descricao:ds,valor:vl,data:dt,pagamento:pg,observacao:obs});
+  const{error}=await getSvc().from('transactions').insert({clinic:cl,tipo:tp,categoria:cat,descricao:ds,valor:vl,data:dt,pagamento:pg,observacao:obs});
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
   closeModal('mLanc');
@@ -1305,7 +1305,7 @@ async function saveLanc(){
 }
 async function delTx(id){
   if(!confirm('Remover este lançamento?'))return;
-  const{error}=await sb.from('transactions').delete().eq('id',id);
+  const{error}=await getSvc().from('transactions').delete().eq('id',id);
   if(error){toast('Erro: '+error.message,'err');return;}
   toast('Lançamento removido.');renderLanc();
 }
@@ -1329,7 +1329,7 @@ async function renderDash(){
     document.getElementById('kLm').textContent='Margem: '+mg+'%';
     const nfStart=y?(y+'-'+String(m||1).padStart(2,'0')+'-01'):'2020-01-01';
     const nfEnd=y?(new Date(y,m||12,0).toISOString().split('T')[0]):'2099-12-31';
-    const{data:nfs}=await sb.from('notas_fiscais').select('valor').eq('status','emitida').gte('data',nfStart).lte('data',nfEnd);
+    const{data:nfs}=await getSvc().from('notas_fiscais').select('valor').eq('status','emitida').gte('data',nfStart).lte('data',nfEnd);
     document.getElementById('kN').textContent=(nfs||[]).length;
     document.getElementById('kNv').textContent=fmt((nfs||[]).reduce((s,n)=>s+parseFloat(n.valor),0));
     ['dtm','hernia'].forEach(c=>{
@@ -1566,7 +1566,7 @@ async function renderLanc(){
 // ===== NOTAS FISCAIS =====
 async function renderNotas(){
   const uc=userClinic();
-  let q=sb.from('notas_fiscais').select('*').order('data',{ascending:false});
+  let q=getSvc().from('notas_fiscais').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
   const{data,error}=await q.limit(300);
   const tb=document.getElementById('notasTb');
@@ -1597,19 +1597,19 @@ async function saveNota(){
   const cod=document.getElementById('nCod').value.trim();
   if(!dt||!pac||!cpf||!desc||!vl||isNaN(vl)){toast('Preencha todos os campos!','err');return;}
   // Auto numero
-  const{data:last}=await sb.from('notas_fiscais').select('numero').eq('clinic',cl).order('created_at',{ascending:false}).limit(1);
+  const{data:last}=await getSvc().from('notas_fiscais').select('numero').eq('clinic',cl).order('created_at',{ascending:false}).limit(1);
   const lastNum=last&&last[0]?.numero?parseInt(last[0].numero)||0:0;
   const numero=document.getElementById('nNum').value||String(lastNum+1).padStart(4,'0');
   loading(true);
-  const{error}=await sb.from('notas_fiscais').insert({clinic:cl,numero,paciente:pac,cpf,descricao:desc,valor:vl,iss,codigo:cod||null,data:dt});
+  const{error}=await getSvc().from('notas_fiscais').insert({clinic:cl,numero,paciente:pac,cpf,descricao:desc,valor:vl,iss,codigo:cod||null,data:dt});
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
   closeModal('mNota');toast('✅ NF registrada!');
   document.getElementById('nPac').value='';document.getElementById('nCpf').value='';document.getElementById('nDesc').value='';document.getElementById('nVl').value='';document.getElementById('nNum').value='';
   renderNotas();
 }
-async function cancelNF(id){if(!confirm('Cancelar esta nota?'))return;await sb.from('notas_fiscais').update({status:'cancelada'}).eq('id',id);renderNotas();toast('Nota cancelada.');}
-async function delNF(id){if(!confirm('Remover esta nota?'))return;await sb.from('notas_fiscais').delete().eq('id',id);renderNotas();toast('Nota removida.');}
+async function cancelNF(id){if(!confirm('Cancelar esta nota?'))return;await getSvc().from('notas_fiscais').update({status:'cancelada'}).eq('id',id);renderNotas();toast('Nota cancelada.');}
+async function delNF(id){if(!confirm('Remover esta nota?'))return;await getSvc().from('notas_fiscais').delete().eq('id',id);renderNotas();toast('Nota removida.');}
 function printNF(id,cl,num,dt,pac,cpf,desc,vl,iss,cod){
   const cNome=cl==='dtm'?'Clínica DTM & Sono':'Dr. Hérnia SJC';
   const issVal=parseFloat(vl)*iss/100;const liq=parseFloat(vl)-issVal;
@@ -1960,10 +1960,10 @@ async function saveProc(){
   loading(true);
   let error;
   if(!id){
-    const r=await sb.from('procedimentos').insert({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0,ativo:true});
+    const r=await getSvc().from('procedimentos').insert({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0,ativo:true});
     error=r.error;
   }else{
-    const r=await sb.from('procedimentos').update({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0}).eq('id',id);
+    const r=await getSvc().from('procedimentos').update({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0}).eq('id',id);
     error=r.error;
   }
   loading(false);
@@ -1976,7 +1976,7 @@ async function delProc(){
   if(!id)return;
   if(!confirm('Remover este procedimento da tabela?'))return;
   loading(true);
-  const{error}=await sb.from('procedimentos').update({ativo:false}).eq('id',id);
+  const{error}=await getSvc().from('procedimentos').update({ativo:false}).eq('id',id);
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
   closeModal('mProc');toast('Procedimento removido.');
@@ -2306,7 +2306,7 @@ async function runAudit(){
   div.innerHTML='<div class="empty"><div class="ic">⏳</div><p>Executando auditoria...</p></div>';
   try{
     const tx=await loadTx(filters);
-    const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',new Date(y,m,0).toISOString().split('T')[0]);
+    const{data:nfs}=await getSvc().from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',new Date(y,m,0).toISOString().split('T')[0]);
     const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
@@ -2464,7 +2464,7 @@ async function smartFinancialResponse(q){
       return `💰 **Resultado — ${periodoLabel}**\n\n${status}: **${fmt(lucro)}**\nMargem líquida: **${mg}%**\n\nReceitas: ${fmt(tR)}\nDespesas: ${fmt(tD)}\n\n💡 ${conselho}`;
     }
     if(/comiss[aã]o|comiss[oõ]e/i.test(q)){
-      let qCom=sb.from('comissoes').select('*').order('data',{ascending:false});
+      let qCom=getSvc().from('comissoes').select('*').order('data',{ascending:false});
       if(y&&m){qCom=qCom.gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',y+'-'+String(m).padStart(2,'0')+'-31');}
       else if(y){qCom=qCom.gte('data',y+'-01-01').lte('data',y+'-12-31');}
       else if(m){qCom=qCom.gte('data','2020-'+String(m).padStart(2,'0')+'-01');}
@@ -2479,13 +2479,13 @@ async function smartFinancialResponse(q){
       return `🏆 **Comissões — ${periodoLabel}**\n\n${lista.length} registros\nTotal comissões: **${fmt(pend+pago)}**\n• Pagas: ${fmt(pago)}\n• Pendentes: **${fmt(pend)}**\n\n**Por profissional:**\n${detalhes||'Nenhum dado'}\n\n${pend>0?`⚠️ ${lista.filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}\n\n💡 Acesse a seção **Comissões** para detalhes e marcar como pago.`;
     }
     if(/nota.?fiscal|nf|issqn|iss/i.test(q)){
-      const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
+      const{data:nfs}=await getSvc().from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
       const total=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0),0);
       const iss=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0)*parseFloat(x.iss||2)/100,0);
       return `🧾 **Notas Fiscais — ${periodoLabel}**\n\n${(nfs||[]).length} nota(s) emitida(s)\nValor total: ${fmt(total)}\nISSQN estimado (2%): ${fmt(iss)}\n\n💡 Mantenha as NFs em dia para facilitar a contabilidade.`;
     }
     if(/hora.?extra|funcionari|funcion[aá]rio|anelise|karina|auxiliar|recepcion/i.test(q)){
-      let qHe=sb.from('horas_extras').select('*').order('data',{ascending:false});
+      let qHe=getSvc().from('horas_extras').select('*').order('data',{ascending:false});
       if(y&&m){qHe=qHe.gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',y+'-'+String(m).padStart(2,'0')+'-31');}
       else if(y){qHe=qHe.gte('data',y+'-01-01').lte('data',y+'-12-31');}
       else if(m){qHe=qHe.gte('data','2020-'+String(m).padStart(2,'0')+'-01');}
@@ -2874,7 +2874,7 @@ async function parseAndSaveSecMsg(msg){
   const obsExtra=parcM?' Parcelado '+parcM[1]+'x':'';
   const dt=new Date().toISOString().split('T')[0];
   try{
-    const{error}=await sb.from('transactions').insert({clinic,tipo,categoria,descricao,valor,data:dt,pagamento,observacao:'Via secretária'+obsExtra});
+    const{error}=await getSvc().from('transactions').insert({clinic,tipo,categoria,descricao,valor,data:dt,pagamento,observacao:'Via secretária'+obsExtra});
     if(error)throw error;
     const fv=function(v){return 'R$ '+parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
     const clinicLabel=isSjc?'Dr. Hérnia SJC':'DTM & Sono';
@@ -2900,7 +2900,7 @@ async function loadSecTable(){
   try{
     const m=String(mes).padStart(2,'0');
     const lastDay=new Date(ano,mes,0).toISOString().split('T')[0];
-    const{data:tx}=await sb.from('transactions').select('*').eq('clinic',clinic).gte('data',ano+'-'+m+'-01').lte('data',lastDay).order('data',{ascending:false});
+    const{data:tx}=await getSvc().from('transactions').select('*').eq('clinic',clinic).gte('data',ano+'-'+m+'-01').lte('data',lastDay).order('data',{ascending:false});
     if(!tx||!tx.length){
       tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px">Nenhum lançamento neste período</td></tr>';
       if(sumDiv)sumDiv.innerHTML='';return;
@@ -3499,7 +3499,7 @@ async function uploadDoc(fileOrInput){
       clinic:cl,tipo,nome:file.name,descricao:desc,
       storage_path:storagePath,tamanho:file.size,mime_type:file.type||''
     });
-    if(dbErr)console.warn('Erro ao registrar no banco:',dbErr.message);
+    if(dbErr)throw new Error('Banco: '+dbErr.message);
     if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
     setTimeout(()=>{if(progEl)progEl.style.display='none';},2000);
     const fi=document.getElementById('docFileInput');if(fi)fi.value='';
