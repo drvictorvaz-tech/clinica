@@ -441,11 +441,10 @@ tbody tr:last-child td{border-bottom:none}
 <!-- IA CONSULTORA -->
 <div id="s-ia" class="section pc" style="padding-bottom:0">
   <div class="alert alert-info no-print" style="margin-bottom:12px">🤖 <strong>IA Consultora</strong> — Pergunte sobre suas finanças. Respostas baseadas nos seus dados reais.</div>
-  <div class="chat-wrap"><div class="chat-msgs" id="chatMsgs">
-    <div class="chat-msg ai"><div class="msg-b">Olá Dr. Victor! 👋 Sou sua consultora financeira.<br>Posso analisar receitas, despesas, comparar as clínicas, fluxo de caixa, horas extras e comissões.<br><br>O que gostaria de analisar hoje?</div><div class="msg-t">Consultora IA</div></div>
+  <div class="chat-wrap"><div class="chat-msgs" id="chatBox">
   </div>
   <div id="chatTyping" style="font-size:11px;color:#94a3b8;padding:0 16px 6px;display:none">🤖 Analisando seus dados...</div>
-  <div class="chat-in-wrap"><textarea class="chat-in" id="chatIn" rows="1" placeholder="Pergunte sobre suas finanças..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button class="btn btn-primary" onclick="sendChat()">Enviar</button></div></div>
+  <div class="chat-in-wrap"><textarea class="chat-in" id="chatInput" rows="1" placeholder="Pergunte sobre suas finanças. Ex: Qual foi o faturamento de abril?" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea><button class="btn btn-primary" onclick="sendChat()">➤ Enviar</button></div></div>
 </div>
 
 <!-- CONTABILIDADE -->
@@ -1047,6 +1046,7 @@ function showSection(id){
   else if(id==='procedimentos')renderProcedimentos();
   else if(id==='relatorios')renderRel();
   else if(id==='contabilidade')initContabSelects();
+  else if(id==='ia')loadChatHistory();
   else if(id==='auditoria'){}
   else if(id==='usuarios')renderUsers();
 }
