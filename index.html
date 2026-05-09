@@ -1113,15 +1113,16 @@ async function login(){
 }
 async function loadProfile(){
   try{
-    const{data,error}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+    // Sempre usa service role para garantir leitura do perfil independente de RLS
+    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+    const{data,error}=await svc.from('profiles').select('*').eq('id',currentUser.id).single();
     if(data&&!error){
       userProfile=data;
     } else {
-      // Perfil não encontrado — tenta criar via service role
+      // Perfil não encontrado — cria automaticamente
       console.warn('Perfil não encontrado, criando...',error?.message);
-      const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
       const meta=currentUser.user_metadata||{};
-      const role=meta.role||'admin'; // primeiro usuário sempre admin
+      const role=meta.role||'admin';
       await svc.from('profiles').upsert({
         id:currentUser.id,email:currentUser.email,
         nome:meta.nome||currentUser.email.split('@')[0],
@@ -1132,7 +1133,7 @@ async function loadProfile(){
     }
   }catch(e){
     console.error('loadProfile error:',e);
-    userProfile={role:'admin',nome:currentUser.email,id:currentUser.id};
+    userProfile={role:'admin',nome:currentUser?.email||'',id:currentUser?.id||''};
   }
 }
 function buildNav(){
@@ -2673,14 +2674,13 @@ async function smartFinancialResponse(q){
 // USUÁRIOS
 // ============================================================
 async function renderUsers(){
-  if(!sb||!userProfile)return;
-  if(userProfile.role!=='admin'){return;}
   const tb=document.getElementById('usersTb');
   if(!tb)return;
-  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#64748b">⏳ Carregando...</td></tr>';
+  if(!userProfile){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8">Carregando perfil...</td></tr>';return;}
+  if(userProfile.role!=='admin'){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8">Acesso restrito a administradores.</td></tr>';return;}
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#64748b">⏳ Carregando usuários...</td></tr>';
   try{
-    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
-    const{data:users,error}=await svc.from('profiles').select('*').order('created_at',{ascending:false});
+    const{data:users,error}=await getSvc().from('profiles').select('*').order('created_at',{ascending:true});
     if(error)throw error;
     if(!users||!users.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">Nenhum usuário encontrado.</td></tr>';return;}
     tb.innerHTML=users.map(u=>`<tr>
@@ -2693,7 +2693,7 @@ async function renderUsers(){
         ${u.id!==currentUser?.id?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}')">🗑️ Excluir</button>`:'<span style="font-size:11px;color:#94a3b8">(você)</span>'}
       </td>
     </tr>`).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">Erro: ${e.message}</td></tr>`;}
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">❌ Erro: ${e.message}</td></tr>`;}
 }
 function editUser(id,nome,email,role,ativo){
   document.getElementById('uId').value=id;
@@ -3571,8 +3571,4 @@ function buildSecImportPreview(){
     <td style="white-space:nowrap;font-size:11px">${r.data}</td>
     <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descricao}</td>
     <td style="text-align:right;font-weight:600;font-size:11px;color:${r.tipo==='receita'?'#059669':'#dc2626'}">${fmtN(r.valor)}</td>
-    <td><span style="font-size:10px;font-weight:600;color:${r.tipo==='receita'?'#166534':'#991b1b'}">${r.tipo==='receita'?'Rec':'Desp'}</span></td>
-  </tr>`).join('');
-  const tit=document.getElementById('secImportTitle');
-  const sts=document.getElementById('secImportStats');
-  if(tit)tit.textConten
+    <td><span style="font-size:10px;font-weight:600;color:${r.tipo==='rec
