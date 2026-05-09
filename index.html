@@ -368,6 +368,18 @@ tbody tr:last-child td{border-bottom:none}
     <div class="chart-card"><h3>📈 Receita vs Despesas — 6 Meses</h3><div style="position:relative;height:210px"><canvas id="chEv"></canvas></div></div>
     <div class="chart-card"><h3>🥧 Formas de Recebimento</h3><div style="position:relative;height:210px"><canvas id="chPg"></canvas></div></div>
   </div>
+  <!-- ALERTAS -->
+  <div id="dashAlerts" style="margin-bottom:12px"></div>
+  <!-- COMPARATIVO + METAS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="tcard"><div class="thead2"><h3>📊 Este mês vs Anterior</h3></div><div id="comparativoBody" style="padding:8px 4px;font-size:12px"><div style="color:#94a3b8">Selecione um mês para comparar</div></div></div>
+    <div class="tcard"><div class="thead2"><h3>🎯 Metas do Mês</h3><button class="btn btn-ghost btn-sm" onclick="openMetaModal()">+ Meta</button></div><div id="metasBody" style="padding:4px 0"></div></div>
+  </div>
+  <!-- AGENDA -->
+  <div class="tcard" style="margin-bottom:14px">
+    <div class="thead2"><h3>📅 Agenda de Pagamentos</h3><button class="btn btn-primary btn-sm" onclick="openAgendaModal()">+ Adicionar</button></div>
+    <div id="agendaBody"><div style="color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">Sem compromissos cadastrados</div></div>
+  </div>
   <div class="tcard"><div class="thead2"><h3>📋 Últimos 10 Lançamentos</h3><button class="btn btn-ghost btn-sm" onclick="showSection('lancamentos')">Ver todos →</button></div>
   <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead><tbody id="dashTb"><tr><td colspan="7"><div class="empty"><div class="ic">⏳</div><p>Carregando...</p></div></td></tr></tbody></table></div></div>
 </div>
@@ -829,6 +841,39 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 </div>
+<!-- Meta -->
+<div id="mMeta" class="modal-bg"><div class="modal-box" style="width:400px">
+  <button class="mclose" onclick="closeModal('mMeta')">✕</button>
+  <h3>🎯 Nova Meta</h3>
+  <div style="display:grid;gap:10px;margin-top:14px">
+    <div><label style="font-size:12px;font-weight:600">Descrição</label><input id="metaDesc" placeholder="Ex: Faturamento Hérnia Maio" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"></div>
+    <div><label style="font-size:12px;font-weight:600">Valor alvo (R$)</label><input id="metaValor" type="number" placeholder="10000" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label style="font-size:12px;font-weight:600">Tipo</label><select id="metaTipo" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"><option value="receita">💚 Receita</option><option value="lucro">🔵 Lucro</option></select></div>
+      <div><label style="font-size:12px;font-weight:600">Clínica</label><select id="metaCl" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"><option value="">Ambas</option><option value="dtm">DTM</option><option value="hernia">Hérnia</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveMeta()">✅ Salvar Meta</button>
+  </div>
+</div></div>
+
+<!-- Agenda -->
+<div id="mAgenda" class="modal-bg"><div class="modal-box" style="width:420px">
+  <button class="mclose" onclick="closeModal('mAgenda')">✕</button>
+  <h3>📅 Agenda de Pagamento</h3>
+  <div style="display:grid;gap:10px;margin-top:14px">
+    <div><label style="font-size:12px;font-weight:600">Descrição</label><input id="agDesc" placeholder="Ex: Aluguel consultório" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label style="font-size:12px;font-weight:600">Vencimento</label><input id="agData" type="date" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"></div>
+      <div><label style="font-size:12px;font-weight:600">Valor (R$)</label><input id="agValor" type="number" placeholder="0.00" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label style="font-size:12px;font-weight:600">Tipo</label><select id="agTipo" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"><option value="pagar">💸 A Pagar</option><option value="receber">💰 A Receber</option></select></div>
+      <div><label style="font-size:12px;font-weight:600">Recorrência</label><select id="agRec" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-top:4px"><option value="0">Única vez</option><option value="1">Mensal</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveAgenda()">✅ Salvar</button>
+  </div>
+</div></div>
+
 <!-- Usuário -->
 <div id="mUser" class="modal-bg">
   <div class="modal-box" style="width:440px">
@@ -1244,6 +1289,11 @@ async function renderDash(){
     const recent=[...tx].slice(0,10);
     if(!recent.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="ic">💸</div><h4>Sem lançamentos neste período</h4></div></td></tr>`;return;}
     tb.innerHTML=recent.map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'💚 Rec.':'🔴 Desp.'}</span></td><td>${x.categoria||'-'}</td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.descricao}</td><td>${PG[x.pagamento]||x.pagamento||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('');
+    // New widgets
+    renderAlerts(tR,tD,lc,mg);
+    renderComparativo(m,y,tR,tD);
+    renderMetas(tR,tD,tx);
+    renderAgenda();
     // Charts
     const allTx=await loadTx({});
     const ev=[];const now=new Date();
@@ -2902,6 +2952,167 @@ async function deleteDoc(id,path){
     toast('🗑️ Documento removido.');
   }catch(err){alert('Erro ao remover: '+err.message);}
 }
+
+// ============================================================
+// ALERTAS AUTOMÁTICOS
+// ============================================================
+function renderAlerts(tR,tD,lucro,mg){
+  const el=document.getElementById('dashAlerts');if(!el)return;
+  const alerts=[];
+  if(tR===0&&tD===0){el.innerHTML='';return;}
+  if(lucro<0) alerts.push({c:'#dc2626',bg:'#fef2f2',ic:'❌',msg:`Resultado negativo: <b>${fmt(lucro)}</b> — revise despesas ou aumente receitas`});
+  else if(parseFloat(mg)<15) alerts.push({c:'#d97706',bg:'#fffbeb',ic:'⚠️',msg:`Margem baixa: <b>${mg}%</b> — ideal acima de 20%`});
+  if(tR>0&&tD/tR>0.85) alerts.push({c:'#dc2626',bg:'#fef2f2',ic:'🚨',msg:`Despesas em <b>${(tD/tR*100).toFixed(0)}%</b> da receita — acima do limite saudável (80%)`});
+  if(tR>0&&tD/tR>0.7&&tD/tR<=0.85) alerts.push({c:'#d97706',bg:'#fffbeb',ic:'⚠️',msg:`Despesas em <b>${(tD/tR*100).toFixed(0)}%</b> da receita — fique atento`});
+  if(lucro>0&&parseFloat(mg)>=30) alerts.push({c:'#059669',bg:'#f0fdf4',ic:'✅',msg:`Excelente! Margem de <b>${mg}%</b> — saúde financeira muito boa`});
+  el.innerHTML=alerts.map(a=>`<div style="background:${a.bg};border-left:4px solid ${a.c};border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;color:${a.c};display:flex;gap:8px;align-items:center"><span style="font-size:16px">${a.ic}</span><span>${a.msg}</span></div>`).join('');
+}
+
+// ============================================================
+// COMPARATIVO MENSAL
+// ============================================================
+async function renderComparativo(m,y,tR,tD){
+  const el=document.getElementById('comparativoBody');if(!el)return;
+  if(!m||!y){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:8px">Selecione mês e ano para comparar</div>';return;}
+  try{
+    const pm=m===1?12:m-1,py=m===1?y-1:y;
+    const prev=await loadTx({month:pm,year:py});
+    const pR=prev.filter(t=>t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0);
+    const pD=prev.filter(t=>t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0);
+    const pL=pR-pD,cL=tR-tD;
+    const diffR=pR>0?((tR-pR)/pR*100).toFixed(1):null;
+    const diffD=pD>0?((tD-pD)/pD*100).toFixed(1):null;
+    const diffL=pL!==0?((cL-pL)/Math.abs(pL)*100).toFixed(1):null;
+    const arrow=(v)=>v===null?'—':parseFloat(v)>=0?`<span style="color:#059669">▲${v}%</span>`:`<span style="color:#dc2626">▼${Math.abs(v)}%</span>`;
+    const prevLabel=`${MESES[pm-1]}/${py}`;
+    el.innerHTML=`<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <tr style="color:#64748b"><td style="padding:4px 0"></td><td style="padding:4px 6px;text-align:right">${prevLabel}</td><td style="padding:4px 6px;text-align:right">Atual</td><td style="padding:4px 6px;text-align:right">Var.</td></tr>
+      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#059669">💚 Receita</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pR)}</td><td style="padding:6px;text-align:right;font-weight:600">${fmts(tR)}</td><td style="padding:6px;text-align:right">${arrow(diffR)}</td></tr>
+      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#dc2626">🔴 Despesa</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pD)}</td><td style="padding:6px;text-align:right;font-weight:600">${fmts(tD)}</td><td style="padding:6px;text-align:right">${arrow(diffD)}</td></tr>
+      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#1d4ed8">🔵 Lucro</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pL)}</td><td style="padding:6px;text-align:right;font-weight:600;color:${cL>=0?'#059669':'#dc2626'}">${fmts(cL)}</td><td style="padding:6px;text-align:right">${arrow(diffL)}</td></tr>
+    </table>`;
+  }catch(e){el.innerHTML='<div style="color:#94a3b8;font-size:12px">Erro ao carregar</div>';}
+}
+
+// ============================================================
+// METAS MENSAIS
+// ============================================================
+function metasKey(){return 'metas_'+currentUser?.id;}
+function loadMetas(){try{return JSON.parse(localStorage.getItem(metasKey())||'[]');}catch(e){return[];}}
+function saveMetas(arr){try{localStorage.setItem(metasKey(),JSON.stringify(arr));}catch(e){}}
+function openMetaModal(){
+  document.getElementById('metaDesc').value='';
+  document.getElementById('metaValor').value='';
+  document.getElementById('metaTipo').value='receita';
+  document.getElementById('metaCl').value='';
+  openModal('mMeta');
+}
+function saveMeta(){
+  const desc=document.getElementById('metaDesc').value.trim();
+  const valor=parseFloat(document.getElementById('metaValor').value);
+  const tipo=document.getElementById('metaTipo').value;
+  const cl=document.getElementById('metaCl').value;
+  if(!desc||!valor||isNaN(valor)){toast('Preencha descrição e valor','warn');return;}
+  const metas=loadMetas();
+  metas.push({id:Date.now(),desc,valor,tipo,cl,criadaEm:new Date().toISOString()});
+  saveMetas(metas);
+  closeModal('mMeta');
+  toast('🎯 Meta salva!');
+  renderMetas(null,null,null);
+}
+function delMeta(id){
+  saveMetas(loadMetas().filter(m=>m.id!==id));
+  renderMetas(null,null,null);
+  toast('Meta removida');
+}
+function renderMetas(tR,tD,tx){
+  const el=document.getElementById('metasBody');if(!el)return;
+  const metas=loadMetas();
+  if(!metas.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 4px;text-align:center">Nenhuma meta definida.<br>Clique em "+ Meta" para criar.</div>';return;}
+  el.innerHTML=metas.map(m=>{
+    let atual=0,pct=0;
+    if(tR!==null){
+      if(m.tipo==='receita') atual=tR;
+      else if(m.tipo==='lucro') atual=tR-(tD||0);
+      else if(m.tipo==='atendimentos'&&tx) atual=tx.filter(t=>t.tipo==='receita'&&(!m.cl||t.clinic===m.cl)).length;
+      pct=Math.min(100,Math.round(atual/m.valor*100));
+    }
+    const color=pct>=100?'#059669':pct>=70?'#d97706':'#1d4ed8';
+    return `<div style="padding:8px 4px;border-bottom:1px solid #f1f5f9">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600">${m.desc}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:11px;color:#64748b">${tR!==null?fmt(atual)+' / '+fmt(m.valor):'Meta: '+fmt(m.valor)}</span>
+          <button onclick="delMeta(${m.id})" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:12px">✕</button>
+        </div>
+      </div>
+      <div style="background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden">
+        <div style="width:${pct}%;background:${color};height:100%;border-radius:4px;transition:width .5s"></div>
+      </div>
+      <div style="font-size:10px;color:${color};margin-top:2px;text-align:right">${pct}%${pct>=100?' ✅':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// AGENDA DE PAGAMENTOS
+// ============================================================
+function agendaKey(){return 'agenda_'+currentUser?.id;}
+function loadAgenda(){try{return JSON.parse(localStorage.getItem(agendaKey())||'[]');}catch(e){return[];}}
+function saveAgendaLS(arr){try{localStorage.setItem(agendaKey(),JSON.stringify(arr));}catch(e){}}
+function openAgendaModal(){
+  document.getElementById('agDesc').value='';
+  document.getElementById('agData').value=new Date().toISOString().split('T')[0];
+  document.getElementById('agValor').value='';
+  document.getElementById('agTipo').value='pagar';
+  document.getElementById('agRec').value='0';
+  openModal('mAgenda');
+}
+function saveAgenda(){
+  const desc=document.getElementById('agDesc').value.trim();
+  const data=document.getElementById('agData').value;
+  const valor=parseFloat(document.getElementById('agValor').value);
+  const tipo=document.getElementById('agTipo').value;
+  const rec=parseInt(document.getElementById('agRec').value);
+  if(!desc||!data||!valor||isNaN(valor)){toast('Preencha todos os campos','warn');return;}
+  const agenda=loadAgenda();
+  agenda.push({id:Date.now(),desc,data,valor,tipo,rec,status:'pendente'});
+  saveAgendaLS(agenda);
+  closeModal('mAgenda');
+  toast('📅 Compromisso salvo!');
+  renderAgenda();
+}
+function toggleAgenda(id){
+  const ag=loadAgenda();
+  const item=ag.find(a=>a.id===id);
+  if(item)item.status=item.status==='pago'?'pendente':'pago';
+  saveAgendaLS(ag);renderAgenda();
+}
+function delAgenda(id){
+  saveAgendaLS(loadAgenda().filter(a=>a.id!==id));
+  renderAgenda();toast('Removido');
+}
+function renderAgenda(){
+  const el=document.getElementById('agendaBody');if(!el)return;
+  const agenda=loadAgenda().sort((a,b)=>a.data.localeCompare(b.data));
+  if(!agenda.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">Sem compromissos cadastrados</div>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left">Vencimento</th><th style="padding:8px;text-align:left">Descrição</th><th style="padding:8px;text-align:right">Valor</th><th style="padding:8px;text-align:center">Tipo</th><th style="padding:8px;text-align:center">Status</th><th style="padding:8px"></th></tr></thead>
+    <tbody>${agenda.map(a=>{
+      const venc=a.data<today&&a.status==='pendente';
+      return`<tr style="border-bottom:1px solid #f1f5f9;${a.status==='pago'?'opacity:.5':''}${venc?';background:#fff5f5':''}">
+        <td style="padding:7px 8px;${venc?'color:#dc2626;font-weight:600':''}">${fmtD(a.data)}${venc?' ⚠️':''}</td>
+        <td style="padding:7px 8px">${a.desc}${a.rec?'<span style="font-size:9px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 5px;margin-left:4px">Mensal</span>':''}</td>
+        <td style="padding:7px 8px;text-align:right;font-weight:600;color:${a.tipo==='pagar'?'#dc2626':'#059669'}">${fmt(a.valor)}</td>
+        <td style="padding:7px 8px;text-align:center"><span style="font-size:11px;background:${a.tipo==='pagar'?'#fef2f2':'#f0fdf4'};color:${a.tipo==='pagar'?'#dc2626':'#059669'};padding:2px 8px;border-radius:10px">${a.tipo==='pagar'?'💸 Pagar':'💰 Receber'}</span></td>
+        <td style="padding:7px 8px;text-align:center"><button onclick="toggleAgenda(${a.id})" style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;background:${a.status==='pago'?'#f0fdf4':'white'}">${a.status==='pago'?'✅ Pago':'⏳ Pendente'}</button></td>
+        <td style="padding:7px 8px"><button onclick="delAgenda(${a.id})" style="border:none;background:none;cursor:pointer;color:#94a3b8">🗑️</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
 </script>
 </body>
 </html>
