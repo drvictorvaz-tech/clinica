@@ -463,7 +463,10 @@ tbody tr:last-child td{border-bottom:none}
     <div class="fg" style="flex:0 0 130px"><label style="font-size:11px;font-weight:600">Mês</label><select id="iaMes" style="width:100%"><option value="">Todos</option></select></div>
     <div class="fg" style="flex:0 0 90px"><label style="font-size:11px;font-weight:600">Ano</label><select id="iaAno" style="width:100%"></select></div>
     <div class="fg" style="flex:0 0 160px"><label style="font-size:11px;font-weight:600">Clínica</label><select id="iaCl" style="width:100%"><option value="">Ambas</option><option value="dtm">🦷 DTM &amp; Sono</option><option value="hernia">⚕️ Dr. Hérnia SJC</option></select></div>
-    <div class="fg" style="flex:1;align-self:flex-end"><button class="btn btn-ghost btn-sm" onclick="clearChat()">🗑️ Limpar chat</button></div>
+    <div class="fg" style="flex:1;align-self:flex-end;display:flex;gap:6px">
+      <button class="btn btn-ghost btn-sm" onclick="clearChat()" title="Limpar histórico do chat">🗑️ Limpar chat</button>
+      <button class="btn btn-sm" style="background:#dc2626;color:white;font-size:11px" onclick="deleteChat()" title="Apagar conversa permanentemente">🗑️ Apagar conversa</button>
+    </div>
   </div>
   <div style="padding:8px 0 10px;display:flex;flex-wrap:wrap;gap:6px" class="no-print">
     <span style="font-size:11px;color:#64748b;align-self:center;margin-right:2px">⚡ Análises rápidas:</span>
@@ -475,6 +478,8 @@ tbody tr:last-child td{border-bottom:none}
     <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Se eu aumentar 20% as consultas, qual seria o impacto no lucro?')">💡 Simular cenário</button>
     <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Faça um resumo estratégico completo das clínicas')">📋 Resumo estratégico</button>
     <button class="btn btn-ghost btn-sm" style="font-size:11px;background:#fef9c3" onclick="askIA('Crie a agenda de pagamentos deste mês com base nas minhas despesas')">📅 Gerar agenda</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px;background:#dcfce7" onclick="askIA('Quais são as comissões dos profissionais?')">💸 Comissões</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px;background:#e0f2fe" onclick="askIA('Mostre as horas extras dos funcionários')">⏰ Horas extras</button>
   </div>
   <div class="chat-wrap"><div class="chat-msgs" id="chatBox">
   </div>
@@ -1960,18 +1965,28 @@ function clearChat(){
   try{
     const key=chatKey();
     localStorage.removeItem(key);
-    // Também limpa variações por segurança
     Object.keys(localStorage).filter(k=>k.startsWith('iachat_')).forEach(k=>localStorage.removeItem(k));
   }catch(e){}
-  // Limpa o DOM com dupla estratégia
+  // Limpa DOM
   const box=document.getElementById('chatBox');
-  if(box){
-    while(box.firstChild)box.removeChild(box.firstChild);
-  }
-  // Aguarda o próximo frame para garantir que o DOM foi limpo
+  if(box) box.innerHTML='';
   setTimeout(()=>{
     addChatMsg('ia','Chat limpo! 👋 Como posso ajudar? Use os botões de análise rápida ou faça sua pergunta.');
-  },50);
+  },80);
+}
+function deleteChat(){
+  if(!confirm('Apagar toda a conversa permanentemente?\n\nEsta ação não pode ser desfeita.'))return;
+  // Remove TODAS as chaves de chat do localStorage
+  try{
+    Object.keys(localStorage).filter(k=>k.startsWith('iachat_')).forEach(k=>localStorage.removeItem(k));
+    // Remove também qualquer chave sem prefixo de usuário
+    if(localStorage.getItem('iachat'))localStorage.removeItem('iachat');
+  }catch(e){}
+  const box=document.getElementById('chatBox');
+  if(box) box.innerHTML='';
+  setTimeout(()=>{
+    addChatMsg('ia','Conversa apagada! ✨ Olá, Dr. Victor! Como posso ajudar hoje?');
+  },80);
 }
 async function sendChat(){
   const inp=document.getElementById('chatInput');
@@ -2036,10 +2051,19 @@ async function smartFinancialResponse(q){
       return `💰 **Resultado — ${periodoLabel}**\n\n${status}: **${fmt(lucro)}**\nMargem líquida: **${mg}%**\n\nReceitas: ${fmt(tR)}\nDespesas: ${fmt(tD)}\n\n💡 ${conselho}`;
     }
     if(/comiss[aã]o|comiss[oõ]e/i.test(q)){
-      const{data:coms}=await sb.from('comissoes').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
-      const pend=(coms||[]).filter(x=>x.status==='pendente').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
-      const pago=(coms||[]).filter(x=>x.status==='pago').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
-      return `🏆 **Comissões — ${periodoLabel}**\n\nPendentes: **${fmt(pend)}**\nPagas: ${fmt(pago)}\nTotal: ${fmt(pend+pago)}\n\n${pend>0?`⚠️ Há ${(coms||[]).filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}`;
+      let qCom=sb.from('comissoes').select('*').order('data',{ascending:false});
+      if(y&&m){qCom=qCom.gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',y+'-'+String(m).padStart(2,'0')+'-31');}
+      else if(y){qCom=qCom.gte('data',y+'-01-01').lte('data',y+'-12-31');}
+      else if(m){qCom=qCom.gte('data','2020-'+String(m).padStart(2,'0')+'-01');}
+      if(iaCl)qCom=qCom.eq('clinic',iaCl);
+      const{data:coms}=await qCom;
+      const lista=coms||[];
+      const pend=lista.filter(x=>x.status==='pendente').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
+      const pago=lista.filter(x=>x.status==='pago').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
+      // Agrupar por profissional
+      const porProf={};lista.forEach(x=>{if(!porProf[x.profissional])porProf[x.profissional]={pago:0,pend:0,n:0};porProf[x.profissional][x.status==='pago'?'pago':'pend']+=parseFloat(x.valor_comissao||0);porProf[x.profissional].n++;});
+      const detalhes=Object.entries(porProf).map(([p,v])=>`• ${p}: ${fmt(v.pago+v.pend)} (${v.n} registros${v.pend>0?' — ⚠️ '+fmt(v.pend)+' pendente':''})`).join('\n');
+      return `🏆 **Comissões — ${periodoLabel}**\n\n${lista.length} registros\nTotal comissões: **${fmt(pend+pago)}**\n• Pagas: ${fmt(pago)}\n• Pendentes: **${fmt(pend)}**\n\n**Por profissional:**\n${detalhes||'Nenhum dado'}\n\n${pend>0?`⚠️ ${lista.filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}\n\n💡 Acesse a seção **Comissões** para detalhes e marcar como pago.`;
     }
     if(/nota.?fiscal|nf|issqn|iss/i.test(q)){
       const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
@@ -2047,10 +2071,21 @@ async function smartFinancialResponse(q){
       const iss=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0)*parseFloat(x.iss||2)/100,0);
       return `🧾 **Notas Fiscais — ${periodoLabel}**\n\n${(nfs||[]).length} nota(s) emitida(s)\nValor total: ${fmt(total)}\nISSQN estimado (2%): ${fmt(iss)}\n\n💡 Mantenha as NFs em dia para facilitar a contabilidade.`;
     }
-    if(/hora.?extra|funcionário|fisioterapeuta/i.test(q)){
-      const{data:he}=await sb.from('horas_extras').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
-      const total=(he||[]).reduce((s,x)=>s+parseFloat(x.total||0),0);
-      return `⏰ **Horas Extras — ${periodoLabel}**\n\n${(he||[]).length} registro(s)\nCusto total: ${fmt(total)}\n\n${total>0?`Funcionário(s): ${[...new Set((he||[]).map(x=>x.funcionario))].join(', ')}`:'Nenhum registro de horas extras este mês.'}`;
+    if(/hora.?extra|funcionari|funcion[aá]rio|anelise|karina|auxiliar|recepcion/i.test(q)){
+      let qHe=sb.from('horas_extras').select('*').order('data',{ascending:false});
+      if(y&&m){qHe=qHe.gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',y+'-'+String(m).padStart(2,'0')+'-31');}
+      else if(y){qHe=qHe.gte('data',y+'-01-01').lte('data',y+'-12-31');}
+      else if(m){qHe=qHe.gte('data','2020-'+String(m).padStart(2,'0')+'-01');}
+      if(iaCl)qHe=qHe.eq('clinic',iaCl);
+      const{data:he}=await qHe;
+      const lista=he||[];
+      const totalValor=lista.reduce((s,x)=>s+parseFloat(x.total||0),0);
+      const totalHoras=lista.reduce((s,x)=>s+parseFloat(x.horas||0),0);
+      // Agrupar por funcionário
+      const porFunc={};lista.forEach(x=>{if(!porFunc[x.funcionario])porFunc[x.funcionario]={h:0,v:0,n:0,cargo:x.cargo};porFunc[x.funcionario].h+=parseFloat(x.horas||0);porFunc[x.funcionario].v+=parseFloat(x.total||0);porFunc[x.funcionario].n++;});
+      const detalhes=Object.entries(porFunc).map(([f,v])=>`• ${f} (${v.cargo||'—'}): ${v.h.toFixed(2)}h extras = ${fmt(v.v)} (${v.n} dias)`).join('\n');
+      const hFmt=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h'+String(mm).padStart(2,'0')+'min';};
+      return `⏰ **Horas Extras — ${periodoLabel}**\n\n${lista.length} registro(s) | ${hFmt(totalHoras)} totais\nCusto total: **${fmt(totalValor)}**\n\n**Por funcionário:**\n${detalhes||'Nenhum registro encontrado'}\n\n💡 Acesse a seção **Horas Extras** para registrar ou editar entradas.`;
     }
     if(/auditoria|análise|analise|relatório completo/i.test(q)){
       const ratio=tR>0?tD/tR*100:0;
@@ -3126,48 +3161,4 @@ function openAgendaModal(){
 function saveAgenda(){
   const desc=document.getElementById('agDesc').value.trim();
   const data=document.getElementById('agData').value;
-  const valor=parseFloat(document.getElementById('agValor').value);
-  const tipo=document.getElementById('agTipo').value;
-  const rec=parseInt(document.getElementById('agRec').value);
-  if(!desc||!data||!valor||isNaN(valor)){toast('Preencha todos os campos','warn');return;}
-  const agenda=loadAgenda();
-  agenda.push({id:Date.now(),desc,data,valor,tipo,rec,status:'pendente'});
-  saveAgendaLS(agenda);
-  closeModal('mAgenda');
-  toast('📅 Compromisso salvo!');
-  renderAgenda();
-}
-function toggleAgenda(id){
-  const ag=loadAgenda();
-  const item=ag.find(a=>a.id===id);
-  if(item)item.status=item.status==='pago'?'pendente':'pago';
-  saveAgendaLS(ag);renderAgenda();
-}
-function delAgenda(id){
-  saveAgendaLS(loadAgenda().filter(a=>a.id!==id));
-  renderAgenda();toast('Removido');
-}
-function renderAgenda(){
-  const el=document.getElementById('agendaBody');if(!el)return;
-  const agenda=loadAgenda().sort((a,b)=>a.data.localeCompare(b.data));
-  if(!agenda.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">Sem compromissos cadastrados</div>';return;}
-  const today=new Date().toISOString().split('T')[0];
-  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left">Vencimento</th><th style="padding:8px;text-align:left">Descrição</th><th style="padding:8px;text-align:right">Valor</th><th style="padding:8px;text-align:center">Tipo</th><th style="padding:8px;text-align:center">Status</th><th style="padding:8px"></th></tr></thead>
-    <tbody>${agenda.map(a=>{
-      const venc=a.data<today&&a.status==='pendente';
-      return`<tr style="border-bottom:1px solid #f1f5f9;${a.status==='pago'?'opacity:.5':''}${venc?';background:#fff5f5':''}">
-        <td style="padding:7px 8px;${venc?'color:#dc2626;font-weight:600':''}">${fmtD(a.data)}${venc?' ⚠️':''}</td>
-        <td style="padding:7px 8px">${a.desc}${a.rec?'<span style="font-size:9px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 5px;margin-left:4px">Mensal</span>':''}</td>
-        <td style="padding:7px 8px;text-align:right;font-weight:600;color:${a.tipo==='pagar'?'#dc2626':'#059669'}">${fmt(a.valor)}</td>
-        <td style="padding:7px 8px;text-align:center"><span style="font-size:11px;background:${a.tipo==='pagar'?'#fef2f2':'#f0fdf4'};color:${a.tipo==='pagar'?'#dc2626':'#059669'};padding:2px 8px;border-radius:10px">${a.tipo==='pagar'?'💸 Pagar':'💰 Receber'}</span></td>
-        <td style="padding:7px 8px;text-align:center"><button onclick="toggleAgenda(${a.id})" style="font-size:11px;border:1px solid #d1d5db;border-radius:6px;padding:2px 8px;cursor:pointer;background:${a.status==='pago'?'#f0fdf4':'white'}">${a.status==='pago'?'✅ Pago':'⏳ Pendente'}</button></td>
-        <td style="padding:7px 8px"><button onclick="delAgenda(${a.id})" style="border:none;background:none;cursor:pointer;color:#94a3b8">🗑️</button></td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
-}
-
-</script>
-</body>
-</html>
+  const valor=parseFloat(documen
