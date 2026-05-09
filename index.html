@@ -447,6 +447,12 @@ tbody tr:last-child td{border-bottom:none}
 <!-- IA CONSULTORA -->
 <div id="s-ia" class="section pc" style="padding-bottom:0">
   <div class="alert alert-info no-print" style="margin-bottom:12px">🤖 <strong>IA Consultora</strong> — Pergunte sobre suas finanças. Respostas baseadas nos seus dados reais.</div>
+  <div class="fbar no-print" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
+    <div class="fg" style="flex:0 0 130px"><label style="font-size:11px;font-weight:600">Mês</label><select id="iaMes" style="width:100%"><option value="">Todos</option></select></div>
+    <div class="fg" style="flex:0 0 90px"><label style="font-size:11px;font-weight:600">Ano</label><select id="iaAno" style="width:100%"></select></div>
+    <div class="fg" style="flex:0 0 160px"><label style="font-size:11px;font-weight:600">Clínica</label><select id="iaCl" style="width:100%"><option value="">Ambas</option><option value="dtm">🦷 DTM &amp; Sono</option><option value="hernia">⚕️ Dr. Hérnia SJC</option></select></div>
+    <div class="fg" style="flex:1;align-self:flex-end"><button class="btn btn-ghost btn-sm" onclick="clearChat()">🗑️ Limpar chat</button></div>
+  </div>
   <div class="chat-wrap"><div class="chat-msgs" id="chatBox">
   </div>
   <div id="chatTyping" style="font-size:11px;color:#94a3b8;padding:0 16px 6px;display:none">🤖 Analisando seus dados...</div>
@@ -1080,11 +1086,20 @@ function setupRealtime(){
 // ===== SELECTORS INIT =====
 function initSelectors(){
   const now=new Date();const cy=now.getFullYear();const cm=now.getMonth()+1;
-  ['dMes','rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=cm;});
-  ['dAno','rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=cy;});
+  // Dashboard selectors — default to "Todos" so dados importados aparecem
+  ['dMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Todos</option>';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value='';});
+  ['dAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Todos</option>';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value='';});
+  // Relatório e auditoria — manter mês atual como padrão
+  ['rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=cm;});
+  ['rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=cy;});
   const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value='';}
   ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value=String(cm).padStart(2,'0');});
   const fAn=document.getElementById('fAn');if(fAn){fAn.add(new Option('Todos',''));for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value='';}
+  // IA selectors
+  const iaMes=document.getElementById('iaMes');
+  if(iaMes){MESES.forEach((m,i)=>iaMes.add(new Option(m,String(i+1).padStart(2,'0'))));}
+  const iaAno=document.getElementById('iaAno');
+  if(iaAno){iaAno.add(new Option('Todos',''));for(let y=cy;y>=cy-4;y--)iaAno.add(new Option(y,y));iaAno.value='';}
   document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));});
   // Horas extras auto total
@@ -1183,10 +1198,13 @@ async function delTx(id){
 }
 // ===== RENDER: DASHBOARD =====
 async function renderDash(){
-  const m=parseInt(document.getElementById('dMes')?.value)||new Date().getMonth()+1;
-  const y=parseInt(document.getElementById('dAno')?.value)||new Date().getFullYear();
+  const mRaw=document.getElementById('dMes')?.value||'';
+  const yRaw=document.getElementById('dAno')?.value||'';
+  const m=mRaw?parseInt(mRaw):null;
+  const y=yRaw?parseInt(yRaw):null;
   try{
-    const tx=await loadTx({month:m,year:y});
+    const filters={};if(m)filters.month=m;if(y)filters.year=y;
+    const tx=await loadTx(filters);
     const rec=tx.filter(t=>t.tipo==='receita'),des=tx.filter(t=>t.tipo==='despesa');
     const tR=rec.reduce((s,t)=>s+parseFloat(t.valor),0);
     const tD=des.reduce((s,t)=>s+parseFloat(t.valor),0);
@@ -1196,7 +1214,9 @@ async function renderDash(){
     document.getElementById('kL').textContent=fmt(lc);
     document.getElementById('kL').style.color=lc>=0?'#0ea5e9':'#dc2626';
     document.getElementById('kLm').textContent='Margem: '+mg+'%';
-    const{data:nfs}=await sb.from('notas_fiscais').select('valor').eq('status','emitida').gte('data',y+'-'+String(m).padStart(2,'0')+'-01').lte('data',new Date(y,m,0).toISOString().split('T')[0]);
+    const nfStart=y?(y+'-'+String(m||1).padStart(2,'0')+'-01'):'2020-01-01';
+    const nfEnd=y?(new Date(y,m||12,0).toISOString().split('T')[0]):'2099-12-31';
+    const{data:nfs}=await sb.from('notas_fiscais').select('valor').eq('status','emitida').gte('data',nfStart).lte('data',nfEnd);
     document.getElementById('kN').textContent=(nfs||[]).length;
     document.getElementById('kNv').textContent=fmt((nfs||[]).reduce((s,n)=>s+parseFloat(n.valor),0));
     ['dtm','hernia'].forEach(c=>{
@@ -1883,56 +1903,76 @@ async function sendChat(){
 }
 async function smartFinancialResponse(q){
   const ql=q.toLowerCase();
-  const m=new Date().getMonth()+1,y=new Date().getFullYear();
+  const now=new Date();
+  // Tenta detectar mês na pergunta
+  const MESES_PT={janeiro:1,fevereiro:2,março:3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12,
+    jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
+  let m=parseInt(document.getElementById('iaMes')?.value)||null;
+  let y=parseInt(document.getElementById('iaAno')?.value)||null;
+  let iaCl=document.getElementById('iaCl')?.value||'';
+  // Detectar mês na pergunta do usuário
+  for(const [nome,num] of Object.entries(MESES_PT)){
+    if(ql.includes(nome)){m=num;break;}
+  }
+  // Detectar ano na pergunta (ex: "2025", "2026")
+  const anoMatch=ql.match(/20(2[0-9])/);
+  if(anoMatch)y=parseInt(anoMatch[0]);
+  // Se nenhum período escolhido, usa sem filtro de mês (todos)
+  const mLabel=m?MESES[m-1]:'Todos os meses';
+  const yLabel=y?String(y):'';
+  const periodoLabel=m?(mLabel+(y?'/'+y:'')):(y?String(y):'todos os períodos');
   try{
-    // Coleta dados financeiros recentes
-    const uc=userClinic();
-    const filters={month:m,year:y};if(uc)filters.clinic=uc;
+    const uc=userClinic()||iaCl||null;
+    const filters={};
+    if(m)filters.month=m;
+    if(y)filters.year=y;
+    if(uc)filters.clinic=uc;
+    else if(iaCl)filters.clinic=iaCl;
     const tx=await loadTx(filters);
     const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
     const lucro=tR-tD;
     const mg=tR>0?((lucro/tR)*100).toFixed(1):0;
-    const ctx=`Dados ${MESES[m-1]}/${y}: Receitas ${fmt(tR)}, Despesas ${fmt(tD)}, Lucro ${fmt(lucro)}, Margem ${mg}%, Lançamentos: ${tx.length}`;
+    const ctx=`Dados ${periodoLabel}: Receitas ${fmt(tR)}, Despesas ${fmt(tD)}, Lucro ${fmt(lucro)}, Margem ${mg}%, Lançamentos: ${tx.length}`;
 
     // Análise contextual por palavra-chave
     if(/receita|faturamento|vendas|quanto.*entr/i.test(q)){
       const cats={};rec.forEach(x=>{cats[x.categoria||'Outros']=(cats[x.categoria||'Outros']||0)+parseFloat(x.valor);});
       const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}: ${fmt(v)}`).join(', ');
-      return `📈 **Receitas — ${MESES[m-1]}/${y}**\n\nTotal faturado: **${fmt(tR)}**\n\nPrincipais categorias: ${top||'sem dados'}\n\nTotal de ${rec.length} lançamentos de receita no período.\n\n${tR===0?'⚠️ Nenhuma receita lançada ainda neste mês.':'✅ Dados atualizados até agora.'}`;
+      return `📈 **Receitas — ${periodoLabel}**\n\nTotal faturado: **${fmt(tR)}**\n\nPrincipais categorias: ${top||'sem dados'}\n\nTotal de ${rec.length} lançamentos de receita no período.\n\n${tR===0?'⚠️ Nenhuma receita lançada ainda neste mês.':'✅ Dados atualizados até agora.'}`;
     }
     if(/despesa|custo|gasto|saída/i.test(q)){
       const cats={};des.forEach(x=>{cats[x.categoria||'Outros']=(cats[x.categoria||'Outros']||0)+parseFloat(x.valor);});
       const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}: ${fmt(v)}`).join(', ');
-      return `📉 **Despesas — ${MESES[m-1]}/${y}**\n\nTotal de despesas: **${fmt(tD)}**\n\nPrincipais: ${top||'sem dados'}\n\n${tR>0?`Índice Desp/Rec: ${(tD/tR*100).toFixed(0)}% ${tD/tR>0.8?'⚠️ Atenção — índice elevado!':'✅ Dentro do esperado'}`:''} `;
+      return `📉 **Despesas — ${periodoLabel}**\n\nTotal de despesas: **${fmt(tD)}**\n\nPrincipais: ${top||'sem dados'}\n\n${tR>0?`Índice Desp/Rec: ${(tD/tR*100).toFixed(0)}% ${tD/tR>0.8?'⚠️ Atenção — índice elevado!':'✅ Dentro do esperado'}`:''} `;
     }
     if(/lucro|resultado|margem|saldo/i.test(q)){
       const status=lucro>=0?'✅ Resultado positivo':'❌ Resultado negativo';
       const conselho=parseFloat(mg)<0?'Despesas estão superando receitas. Revise custos imediatamente.':parseFloat(mg)<15?'Margem abaixo do ideal (20%+). Considere aumentar preços ou reduzir custos.':parseFloat(mg)<30?'Margem razoável. Há espaço para melhorias.':'Excelente margem! Continue monitorando.';
-      return `💰 **Resultado — ${MESES[m-1]}/${y}**\n\n${status}: **${fmt(lucro)}**\nMargem líquida: **${mg}%**\n\nReceitas: ${fmt(tR)}\nDespesas: ${fmt(tD)}\n\n💡 ${conselho}`;
+      return `💰 **Resultado — ${periodoLabel}**\n\n${status}: **${fmt(lucro)}**\nMargem líquida: **${mg}%**\n\nReceitas: ${fmt(tR)}\nDespesas: ${fmt(tD)}\n\n💡 ${conselho}`;
     }
     if(/comiss[aã]o|comiss[oõ]e/i.test(q)){
       const{data:coms}=await sb.from('comissoes').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
       const pend=(coms||[]).filter(x=>x.status==='pendente').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
       const pago=(coms||[]).filter(x=>x.status==='pago').reduce((s,x)=>s+parseFloat(x.valor_comissao||0),0);
-      return `🏆 **Comissões — ${MESES[m-1]}/${y}**\n\nPendentes: **${fmt(pend)}**\nPagas: ${fmt(pago)}\nTotal: ${fmt(pend+pago)}\n\n${pend>0?`⚠️ Há ${(coms||[]).filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}`;
+      return `🏆 **Comissões — ${periodoLabel}**\n\nPendentes: **${fmt(pend)}**\nPagas: ${fmt(pago)}\nTotal: ${fmt(pend+pago)}\n\n${pend>0?`⚠️ Há ${(coms||[]).filter(x=>x.status==='pendente').length} comissão(ões) pendente(s) de pagamento.`:'✅ Todas as comissões estão pagas.'}`;
     }
     if(/nota.?fiscal|nf|issqn|iss/i.test(q)){
       const{data:nfs}=await sb.from('notas_fiscais').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
       const total=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0),0);
       const iss=(nfs||[]).reduce((s,x)=>s+parseFloat(x.valor||0)*parseFloat(x.iss||2)/100,0);
-      return `🧾 **Notas Fiscais — ${MESES[m-1]}/${y}**\n\n${(nfs||[]).length} nota(s) emitida(s)\nValor total: ${fmt(total)}\nISSQN estimado (2%): ${fmt(iss)}\n\n💡 Mantenha as NFs em dia para facilitar a contabilidade.`;
+      return `🧾 **Notas Fiscais — ${periodoLabel}**\n\n${(nfs||[]).length} nota(s) emitida(s)\nValor total: ${fmt(total)}\nISSQN estimado (2%): ${fmt(iss)}\n\n💡 Mantenha as NFs em dia para facilitar a contabilidade.`;
     }
     if(/hora.?extra|funcionário|fisioterapeuta/i.test(q)){
       const{data:he}=await sb.from('horas_extras').select('*').gte('data',y+'-'+String(m).padStart(2,'0')+'-01');
       const total=(he||[]).reduce((s,x)=>s+parseFloat(x.total||0),0);
-      return `⏰ **Horas Extras — ${MESES[m-1]}/${y}**\n\n${(he||[]).length} registro(s)\nCusto total: ${fmt(total)}\n\n${total>0?`Funcionário(s): ${[...new Set((he||[]).map(x=>x.funcionario))].join(', ')}`:'Nenhum registro de horas extras este mês.'}`;
+      return `⏰ **Horas Extras — ${periodoLabel}**\n\n${(he||[]).length} registro(s)\nCusto total: ${fmt(total)}\n\n${total>0?`Funcionário(s): ${[...new Set((he||[]).map(x=>x.funcionario))].join(', ')}`:'Nenhum registro de horas extras este mês.'}`;
     }
     if(/auditoria|análise|analise|relatório completo/i.test(q)){
       const ratio=tR>0?tD/tR*100:0;
       const score=lucro<0?30:parseFloat(mg)<15?55:parseFloat(mg)<30?75:90;
-      return `🔍 **Análise Rápida — ${MESES[m-1]}/${y}**\n\nPontuação estimada: **${score}/100**\n\n• Receitas: ${fmt(tR)}\n• Despesas: ${fmt(tD)}\n• Resultado: ${fmt(lucro)}\n• Margem: ${mg}%\n• Índice Desp/Rec: ${ratio.toFixed(0)}%\n\n${score>=80?'✅ Saúde financeira excelente!':score>=60?'⚠️ Atenção a alguns indicadores.':'❌ Situação requer ação imediata.'}\n\nPara detalhes completos, acesse a seção **Auditoria**.`;
+      return `🔍 **Análise Rápida — ${periodoLabel}**\n\nPontuação estimada: **${score}/100**\n\n• Receitas: ${fmt(tR)}\n• Despesas: ${fmt(tD)}\n• Resultado: ${fmt(lucro)}\n• Margem: ${mg}%\n• Índice Desp/Rec: ${ratio.toFixed(0)}%\n\n${score>=80?'✅ Saúde financeira excelente!':score>=60?'⚠️ Atenção a alguns indicadores.':'❌ Situação requer ação imediata.'}\n\nPara detalhes completos, acesse a seção **Auditoria**.`;
     }
     if(/dica|conselho|sugestão|melhorar|otimizar/i.test(q)){
       const dicas=[];
@@ -1943,7 +1983,7 @@ async function smartFinancialResponse(q){
       dicas.push('📌 Emita NFs de todos os atendimentos particulares para deduções fiscais.');
       return `💡 **Dicas Financeiras**\n\n${dicas.join('\n')}\n\n${ctx}`;
     }
-    return `🤖 **IA Financeira — ${MESES[m-1]}/${y}**\n\n${ctx}\n\nPosso analisar receitas, despesas, margem, NFs, comissões e horas extras.\n\nEx: "Qual foi o faturamento este mês?" ou "Quais são minhas maiores despesas?"`;
+    return `🤖 **IA Financeira — ${periodoLabel}**\n\n${ctx}\n\nPosso analisar receitas, despesas, margem, NFs, comissões e horas extras.\n\nEx: "Qual foi o faturamento este mês?" ou "Quais são minhas maiores despesas?"`;
   }catch(e){
     return '⚠️ Não foi possível carregar os dados financeiros. Verifique a conexão.';
   }
@@ -2551,7 +2591,7 @@ async function confirmImport(){
     document.getElementById('importMapping').style.display='none';
     _importPreview=[];
     toast(`✅ ${total} lançamentos importados!`);
-    setTimeout(()=>{showSection('lancamentos');},800);
+    setTimeout(()=>{showSection('dashboard');},800);
   }catch(err){
     alert('Erro ao importar: '+err.message);
     if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
