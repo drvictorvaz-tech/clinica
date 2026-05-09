@@ -542,12 +542,27 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- PASSO 3 — MAPEAMENTO DE COLUNAS -->
 <div id="importMapping" style="display:none;background:white;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px">
-  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+  <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px">
     <span style="background:#1d4ed8;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">2</span>
     Confirme as colunas
     <span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px">— detectadas automaticamente, ajuste se necessário</span>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+  <!-- Modo: coluna única ou separada -->
+  <div style="background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">📊 Formato da planilha:</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;color:#1f2937">
+        <input type="radio" name="importMode" value="single" checked onchange="toggleImportMode('single')">
+        Coluna única de valor (com sinal ou coluna tipo)
+      </label>
+      <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;color:#1f2937">
+        <input type="radio" name="importMode" value="dual" onchange="toggleImportMode('dual')">
+        Colunas separadas: Entradas | Saídas
+      </label>
+    </div>
+  </div>
+  <!-- Colunas fixas: Data e Descrição -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px">
     <div>
       <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📅 Coluna Data *</label>
       <select id="colData" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
@@ -556,6 +571,17 @@ tbody tr:last-child td{border-bottom:none}
       <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">📝 Coluna Descrição *</label>
       <select id="colDesc" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
     </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">🏥 Clínica</label>
+      <select id="importClinicSel" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px">
+        <option value="auto">Minha clínica</option>
+        <option value="dtm">DTM &amp; Sono</option>
+        <option value="hernia">Dr. Hérnia SJC</option>
+      </select>
+    </div>
+  </div>
+  <!-- Modo: coluna única -->
+  <div id="modeSingleCols" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
     <div>
       <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">💰 Coluna Valor *</label>
       <select id="colValor" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
@@ -566,13 +592,16 @@ tbody tr:last-child td{border-bottom:none}
         <option value="_auto">Auto (sinal do valor)</option>
       </select>
     </div>
+  </div>
+  <!-- Modo: colunas separadas -->
+  <div id="modeDualCols" style="display:none;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
     <div>
-      <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">🏥 Clínica</label>
-      <select id="importClinicSel" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px">
-        <option value="auto">Minha clínica</option>
-        <option value="dtm">DTM &amp; Sono</option>
-        <option value="hernia">Dr. Hérnia SJC</option>
-      </select>
+      <label style="font-size:11px;font-weight:600;color:#059669;display:block;margin-bottom:4px">📈 Coluna Entradas (Receitas) *</label>
+      <select id="colReceita" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:600;color:#dc2626;display:block;margin-bottom:4px">📉 Coluna Saídas (Despesas) *</label>
+      <select id="colDespesa" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:12px"></select>
     </div>
   </div>
   <button class="btn btn-primary" onclick="buildImportPreview()" style="padding:10px 24px;font-size:13px">
@@ -2205,7 +2234,7 @@ function processImportFile(file){
       _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
       if(!_importRows.length){alert('Nenhum dado encontrado abaixo do cabeçalho.');resetImportFile();return;}
       const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
-      ['colData','colDesc','colValor'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
+      ['colData','colDesc','colValor','colReceita','colDespesa'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
       document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
       autoDetectImportCols();
       document.getElementById('importFileNameText').textContent=file.name+'  ('+_importRows.length+' linhas encontradas)';
@@ -2225,17 +2254,66 @@ function processImportFile(file){
   };
   reader.readAsArrayBuffer(file);
 }
+function toggleImportMode(mode){
+  const single=document.getElementById('modeSingleCols');
+  const dual=document.getElementById('modeDualCols');
+  if(mode==='dual'){
+    single.style.display='none';
+    dual.style.display='grid';
+  } else {
+    single.style.display='grid';
+    dual.style.display='none';
+  }
+}
 function autoDetectImportCols(){
-  const hh=_importHeaders.map(h=>h.toLowerCase());
+  const hh=_importHeaders.map(h=>h.toLowerCase().trim());
   const find=re=>{const i=hh.findIndex(h=>re.test(h));return i>=0?i:null;};
-  const di=find(/data|date|dt\b|dia|vencim/)||0;
-  const dsi=find(/descri|histor|memo|obs|nome|lanc|detalh|item|compet/)||1;
-  const vi=find(/valor|value|vl\b|vlr|total|montant|amount|quantia/)||2;
+  const di=find(/^data$|^date$|data\b|date\b|dt\b|dia\b|vencim/);
+  const dsi=find(/descri|histor|memo|obs|^nome|lanc|detalh|item|compet/);
+  const vi=find(/^valor$|^value$|\bvlr\b|\bvl\b|total|montant|amount|quantia/);
   const ti=find(/tipo|type|naturez|movim/);
-  document.getElementById('colData').value=di;
-  document.getElementById('colDesc').value=dsi;
-  document.getElementById('colValor').value=vi;
-  if(ti!==null)document.getElementById('colTipo').value=ti;
+  // Detectar modo dual (Entradas/Saídas separadas)
+  const riRec=find(/entrada|receit|cr[eé]d|credit|receiv|ingress|inflow/);
+  const riDes=find(/sa[ií]da|despes|d[eé]b|debit|pagam|pago|outflow|saqu/);
+  document.getElementById('colData').value=di!==null?di:0;
+  document.getElementById('colDesc').value=dsi!==null?dsi:1;
+  // Populate dual selects with same options as single
+  const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
+  document.getElementById('colReceita').innerHTML=opts;
+  document.getElementById('colDespesa').innerHTML=opts;
+  if(riRec!==null&&riDes!==null){
+    // Auto-detectou formato dual
+    document.querySelector('input[name="importMode"][value="dual"]').checked=true;
+    toggleImportMode('dual');
+    document.getElementById('colReceita').value=riRec;
+    document.getElementById('colDespesa').value=riDes;
+    toast('📊 Detectado: colunas separadas de Entradas e Saídas','info');
+  } else {
+    document.querySelector('input[name="importMode"][value="single"]').checked=true;
+    toggleImportMode('single');
+    document.getElementById('colValor').value=vi!==null?vi:2;
+    if(ti!==null)document.getElementById('colTipo').value=ti;
+  }
+}
+function parseValorBR(raw){
+  // Converte valor no formato brasileiro para float
+  // Ex: "1.500,00" → 1500.0 | "1500.00" → 1500.0 | "R$ 1.500,00" → 1500.0
+  if(!raw) return NaN;
+  let s=String(raw).replace(/[R$\s]/g,'').trim();
+  if(!s) return NaN;
+  // Se tem vírgula como separador decimal (formato BR): 1.500,00
+  if(s.includes(',')&&s.includes('.')){
+    // Tanto vírgula quanto ponto: ex "1.500,00" → remover pontos, trocar vírgula
+    s=s.replace(/\./g,'').replace(',','.');
+  } else if(s.includes(',')){
+    // Só vírgula: pode ser separador decimal (BR) ou milhar
+    // Se a vírgula está nos últimos 3 dígitos, é decimal
+    const ci=s.indexOf(',');
+    if(s.length-ci<=3) s=s.replace(',','.');
+    else s=s.replace(',','');
+  }
+  // Remover qualquer ponto que não seja separador decimal (já tratado acima)
+  return parseFloat(s);
 }
 function buildImportPreview(){
   try{
@@ -2244,35 +2322,55 @@ function buildImportPreview(){
       alert('Nenhum dado carregado. Selecione o arquivo novamente.');
       return;
     }
+    const mode=document.querySelector('input[name="importMode"]:checked')?.value||'single';
     const cd=parseInt(document.getElementById('colData').value)||0;
     const cds=parseInt(document.getElementById('colDesc').value)||1;
+    const clinicSel=document.getElementById('importClinicSel').value||'dtm';
+    // Colunas específicas do modo
     const cv=parseInt(document.getElementById('colValor').value)||2;
     const ct=document.getElementById('colTipo').value||'_auto';
-    const clinicSel=document.getElementById('importClinicSel').value||'dtm';
+    const crec=parseInt(document.getElementById('colReceita').value)||2;
+    const cdes=parseInt(document.getElementById('colDespesa').value)||3;
     const tbody=document.getElementById('importPreviewBody');
     if(tbody) tbody.innerHTML='';
     const preview=[];let recT=0,desT=0,skipped=0;
     _importRows.forEach(function(row){
       const rawDate=String(row[cd]||'').trim();
       const desc=String(row[cds]||'').trim();
-      const rawVal=String(row[cv]||'').trim();
-      if(!rawVal&&!desc){skipped++;return;}
-      const cleaned=rawVal.replace(/[R$\s]/g,'').replace(/\.(?=.*,)/g,'').replace(',','.');
-      let valor=parseFloat(cleaned);
-      if(isNaN(valor)||valor===0){skipped++;return;}
-      let tipo='receita';
-      if(ct!=='_auto'){
-        const rt=String(row[parseInt(ct)]||'').toLowerCase();
-        if(/despes|saida|sa[ií]da|debito|d[eé]b|debit/i.test(rt)) tipo='despesa';
-        else if(/receit|entrada|credito|cr[eé]d|credit/i.test(rt)) tipo='receita';
-        else tipo=valor<0?'despesa':'receita';
-      } else {tipo=valor<0?'despesa':'receita';}
-      valor=Math.abs(valor);
+      let valor=0,tipo='receita';
+      if(mode==='dual'){
+        // Modo: colunas separadas de Receita e Despesa
+        const rawRec=String(row[crec]||'').trim();
+        const rawDes=String(row[cdes]||'').trim();
+        const vRec=parseValorBR(rawRec);
+        const vDes=parseValorBR(rawDes);
+        const hasRec=!isNaN(vRec)&&vRec>0;
+        const hasDes=!isNaN(vDes)&&vDes>0;
+        if(!hasRec&&!hasDes){skipped++;return;}
+        if(hasRec){valor=vRec;tipo='receita';}
+        else{valor=vDes;tipo='despesa';}
+        if(!desc&&!rawRec&&!rawDes){skipped++;return;}
+      } else {
+        // Modo: coluna única
+        const rawVal=String(row[cv]||'').trim();
+        if(!rawVal&&!desc){skipped++;return;}
+        valor=parseValorBR(rawVal);
+        if(isNaN(valor)||valor===0){skipped++;return;}
+        if(ct!=='_auto'){
+          const rt=String(row[parseInt(ct)]||'').toLowerCase();
+          if(/despes|saida|sa[ií]da|debito|d[eé]b|debit/i.test(rt)) tipo='despesa';
+          else if(/receit|entrada|credito|cr[eé]d|credit/i.test(rt)) tipo='receita';
+          else tipo=valor<0?'despesa':'receita';
+        } else {tipo=valor<0?'despesa':'receita';}
+        valor=Math.abs(valor);
+      }
+      if(!desc&&valor===0){skipped++;return;}
       let dataISO=today();
       if(rawDate){
         if(/^\d{4}-\d{2}-\d{2}/.test(rawDate)) dataISO=rawDate.substring(0,10);
         else if(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
         else if(/^(\d{1,2})-(\d{1,2})-(\d{4})/.test(rawDate)){const p=rawDate.split('-');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
+        else if(/^(\d{4})\/(\d{2})\/(\d{2})/.test(rawDate)){dataISO=rawDate.substring(0,10).replace(/\//g,'-');}
       }
       const dl=desc.toLowerCase();
       let cat='Outros';
@@ -2293,7 +2391,7 @@ function buildImportPreview(){
         const tr=document.createElement('tr');
         tr.style.borderBottom='1px solid #f1f5f9';
         tr.innerHTML='<td style="padding:8px 12px;font-size:12px">'+fmtD(dataISO)+'</td>'
-          +'<td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+desc+'</td>'
+          +'<td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+desc+'">'+desc+'</td>'
           +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+(tipo==='receita'?'#16a34a':'#dc2626')+'">'+(tipo==='receita'?'+':'-')+' R$ '+valor.toFixed(2).replace('.',',')+'</td>'
           +'<td style="padding:8px 12px;font-size:11px;color:#64748b">'+cat+'</td>'
           +'<td style="padding:8px 12px;font-size:11px">'+clinicLabel+'</td>';
@@ -2301,24 +2399,26 @@ function buildImportPreview(){
       }
     });
     if(!preview.length){
-      alert('Nenhum dado válido encontrado.\n\n'+_importRows.length+' linhas lidas, '+skipped+' puladas.\n\nVerifique se as colunas Valor e Descrição estão corretas.');
+      const modeMsg=mode==='dual'?'Verifique as colunas de Entradas e Saídas.':'Verifique se a coluna Valor está correta.';
+      alert('Nenhum dado válido encontrado.\n\n'+_importRows.length+' linhas lidas, '+skipped+' puladas.\n\n'+modeMsg);
       return;
     }
     _importPreview=preview;
     const sumEl=document.getElementById('importStats');
-    if(sumEl) sumEl.textContent='✅ '+preview.length+' lançamentos | Receitas: R$ '+recT.toFixed(2)+' | Despesas: R$ '+desT.toFixed(2);
-    // Hide mapping, show preview in its place
+    if(sumEl){
+      const saldoClass=recT>=desT?'color:#059669':'color:#dc2626';
+      sumEl.innerHTML='✅ '+preview.length+' lançamentos &nbsp;|&nbsp; <span style="color:#059669">Receitas: R$ '+fmtN(recT)+'</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: R$ '+fmtN(desT)+'</span> &nbsp;|&nbsp; <span style="'+saldoClass+'">Saldo: R$ '+fmtN(recT-desT)+'</span>';
+    }
     document.getElementById('importMapping').style.display='none';
     const previewDiv=document.getElementById('importPreview');
     if(previewDiv) previewDiv.style.display='block';
-    // Scroll to top of main content
     window.scrollTo({top:0,behavior:'smooth'});
     const mainEl=document.getElementById('main');
     if(mainEl) mainEl.scrollTop=0;
     toast('✅ '+preview.length+' lançamentos prontos para importar!');
   }catch(err){
     console.error('buildImportPreview error:',err);
-    alert('Erro ao gerar prévia:\n\n'+err.message+'\n\nTente novamente ou use o console (F12) para mais detalhes.');
+    alert('Erro ao gerar prévia:\n\n'+err.message+'\n\nAbra o console (F12) para detalhes.');
   }
 }
 async function confirmImport(){
@@ -2424,110 +2524,4 @@ async function uploadDocFile(file){
     if(uploadResult.error){
       throw new Error('Storage: '+uploadResult.error.message);
     }
-    bar.style.width='70%';
-    // Step 2: Save metadata to DB
-    msg.textContent='Passo 2/2: Salvando informações...';
-    const insertResult=await svcClient.from('documentos').insert({
-      clinic:clinic,
-      nome:desc,
-      tipo:tipo,
-      tamanho:file.size,
-      storage_path:path,
-      descricao:desc,
-      uploaded_by:currentUser.id
-    });
-    if(insertResult.error){
-      // Storage uploaded but DB failed - still show as success, just log
-      console.warn('DB insert warning:', insertResult.error.message);
-    }
-    bar.style.width='100%';
-    msg.textContent='✅ Documento enviado com sucesso!';
-    toast('📁 '+file.name+' enviado!');
-    setTimeout(()=>{
-      prog.style.display='none';
-      document.getElementById('docDropArea').style.display='block';
-      document.getElementById('docFileInput').value='';
-      document.getElementById('docUpDesc').value='';
-      bar.style.width='0%';
-      loadDocs();
-    },1500);
-  }catch(err){
-    console.error('Upload error:', err);
-    prog.style.display='none';
-    document.getElementById('docDropArea').style.display='block';
-    document.getElementById('docFileInput').value='';
-    bar.style.width='0%';
-    const errMsg=err.message||JSON.stringify(err);
-    toast('❌ Erro: '+errMsg,'err');
-    alert('❌ Erro ao enviar documento:\n\n'+errMsg+'\n\nAbra o console do navegador (F12) para mais detalhes.');
-  }
-}
-async function loadDocs(){
-  const area=document.getElementById('docListArea');
-  if(!area)return;
-  area.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">⏳ Carregando...</div>';
-  const clinicF=document.getElementById('docFilterClinic')?.value||'';
-  const tipoF=document.getElementById('docFilterTipo')?.value||'';
-  try{
-    let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
-    if(clinicF)q=q.eq('clinic',clinicF);
-    if(tipoF)q=q.eq('tipo',tipoF);
-    const{data,error}=await q;
-    if(error)throw error;
-    if(!data||!data.length){
-      area.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">📄</div>Nenhum documento encontrado</div>';
-      return;
-    }
-    const rows=data.map(d=>{
-      const clinicLbl=d.clinic==='dtm'?'🦷 DTM & Sono':'⚕️ Dr. Hérnia SJC';
-      const dt=d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):'';
-      const icon=docFileIcon(d.tipo);
-      const size=docFileSizeStr(d.tamanho||0);
-      return `<tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:10px 12px;font-size:22px;width:40px">${icon}</td>
-        <td style="padding:10px 12px">
-          <div style="font-size:13px;font-weight:600;color:#0f172a">${d.nome||d.nome_arquivo}</div>
-          <div style="font-size:11px;color:#94a3b8">${d.storage_path ? d.storage_path.split('/').pop() : ''}</div>
-        </td>
-        <td style="padding:10px 12px;font-size:12px;color:#64748b">${clinicLbl}</td>
-        <td style="padding:10px 12px;font-size:12px;color:#64748b">${dt}</td>
-        <td style="padding:10px 12px;font-size:11px;color:#94a3b8">${size}</td>
-        <td style="padding:10px 12px">
-          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.storage_path}','${(d.nome||'arquivo').replace(/'/g,'')}')">⬇️ Baixar</button>
-          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.storage_path||'').replace(/'/g,'')}')">🗑️</button>`:''}
-        </td>
-      </tr>`;
-    }).join('');
-    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Clínica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  }catch(err){
-    area.innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px">Erro ao carregar: '+err.message+'</div>';
-    console.error(err);
-  }
-}
-async function downloadDoc(path,filename){
-  try{
-    const{data,error}=await getSvc().storage.from('documentos').createSignedUrl(path,3600);
-    if(error)throw error;
-    const a=document.createElement('a');
-    a.href=data.signedUrl;
-    a.download=filename;
-    a.target='_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }catch(err){
-    alert('Erro ao baixar: '+err.message);
-  }
-}
-async function deleteDoc(id,path){
-  if(!confirm('Remover este documento?'))return;
-  try{
-    if(path){await getSvc().storage.from('documentos').remove([path]);}
-    await getSvc().from('documentos').delete().eq('id',id);
-    loadDocs();
-    toast('🗑️ Documento removido.');
-  }catch(err){alert('Erro ao remover: '+err.message);}
-}
-</script>
-</body>
-</html>
+    bar.style.
