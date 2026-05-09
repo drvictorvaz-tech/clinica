@@ -474,6 +474,7 @@ tbody tr:last-child td{border-bottom:none}
     <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Analise o mix de serviços e quais geram mais receita')">🔬 Mix serviços</button>
     <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Se eu aumentar 20% as consultas, qual seria o impacto no lucro?')">💡 Simular cenário</button>
     <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="askIA('Faça um resumo estratégico completo das clínicas')">📋 Resumo estratégico</button>
+    <button class="btn btn-ghost btn-sm" style="font-size:11px;background:#fef9c3" onclick="askIA('Crie a agenda de pagamentos deste mês com base nas minhas despesas')">📅 Gerar agenda</button>
   </div>
   <div class="chat-wrap"><div class="chat-msgs" id="chatBox">
   </div>
@@ -2158,6 +2159,60 @@ async function smartFinancialResponse(q){
       const score=lucro<0?25:parseFloat(mg)<10?45:parseFloat(mg)<20?65:parseFloat(mg)<35?80:95;
       const stars='⭐'.repeat(Math.round(score/20));
       return `📋 **Resumo Estratégico Completo**\n\n${stars} Score financeiro: **${score}/100**\n\n💰 Receita total: ${fmt(totR)}\n💸 Despesa total: ${fmt(totD)}\n📊 Lucro: **${fmt(lucro)}** (margem ${mg}%)\n📈 Média receita/mês: ${fmt(avgR)}\n\n🏥 Por clínica:\n🦷 DTM: ${fmt(dR)} rec | Lucro ${fmt(dL)}\n⚕️ Hérnia: ${fmt(hR)} rec | Lucro ${fmt(hL)}\n\n🎯 Ações prioritárias:\n${parseFloat(mg)<20?'⚠️ Margem abaixo de 20% — revisar preços/custos\n':'✅ Margem saudável\n'}📌 Implemente metas mensais por clínica\n📌 Monitore sazonalidade para planejar campanhas\n📌 Acompanhe ticket médio e volume de atendimentos`;
+    }
+
+
+    if(/agenda|pagamentos do m[eê]s|contas a pagar|contas.*m[eê]s|crie.*agenda|mont[ae].*agenda|gerar.*agenda/i.test(q)){
+      const allTx=await loadTx({});
+      const des=allTx.filter(t=>t.tipo==='despesa');
+      // Group recurring expenses by description similarity
+      const freq={};
+      des.forEach(t=>{
+        const key=(t.descricao||'').trim().toLowerCase().substring(0,30);
+        if(!freq[key])freq[key]={desc:t.descricao,total:0,count:0,valor:0,cat:t.categoria||'Outros'};
+        freq[key].total+=parseFloat(t.valor);
+        freq[key].count++;
+        freq[key].valor=parseFloat(t.valor);
+      });
+      // Find recurring (appears more than once) or known fixed costs
+      const fixos=Object.values(freq).filter(f=>f.count>=1).sort((a,b)=>b.total-a.total).slice(0,15);
+      if(!fixos.length)return '⚠️ Nenhuma despesa encontrada para gerar a agenda. Importe suas planilhas primeiro.';
+      // Auto-create agenda items
+      const now=new Date();
+      const thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+      const created=[];
+      const existing=[];
+      try{
+        const agKey='agenda_'+currentUser?.id;
+        const ag=JSON.parse(localStorage.getItem(agKey)||'[]');
+        const existingDescs=ag.map(a=>a.desc.toLowerCase());
+        fixos.forEach(f=>{
+          const dayStr=thisMonth+'-10'; // Default to day 10
+          // Assign day based on category
+          let day='10';
+          const dl=f.desc.toLowerCase();
+          if(/aluguel/i.test(dl))day='05';
+          else if(/fgts|inss/i.test(dl))day='07';
+          else if(/folha|sal[aá]rio|adiant/i.test(dl))day='05';
+          else if(/energia|luz|edp/i.test(dl))day='15';
+          else if(/internet|telefon/i.test(dl))day='10';
+          else if(/contabilidade|contador/i.test(dl))day='10';
+          else if(/royalt/i.test(dl))day='07';
+          const dataVenc=thisMonth+'-'+day;
+          const descKey=f.desc.toLowerCase().substring(0,20);
+          if(!existingDescs.some(e=>e.includes(descKey))){
+            ag.push({id:Date.now()+Math.random(),desc:f.desc,data:dataVenc,valor:f.valor,tipo:'pagar',rec:f.count>1?1:0,status:'pendente'});
+            created.push(`• ${f.desc} — ${fmt(f.valor)} — venc. dia ${day}`);
+          } else {
+            existing.push(f.desc);
+          }
+        });
+        localStorage.setItem(agKey,JSON.stringify(ag));
+      }catch(e){return '⚠️ Erro ao criar agenda: '+e.message;}
+      // Re-render agenda
+      if(typeof renderAgenda==='function')renderAgenda();
+      const skipped=existing.length?`\n\n⏭️ Já existiam na agenda: ${existing.slice(0,3).join(', ')}${existing.length>3?'...':''}`:'' ;
+      return `📅 **Agenda de Pagamentos gerada!**\n\n${created.length} item(ns) adicionado(s) à agenda:\n\n${created.join('\n')}${skipped}\n\n✅ Acesse o **Dashboard** para ver a agenda completa, marcar como pago e editar vencimentos.\n\n💡 Os dias de vencimento foram estimados com base na categoria — ajuste conforme sua realidade.`;
     }
 
     return `🤖 **IA Financeira — ${periodoLabel}**\n\n${ctx}\n\nUse os botões de análise rápida acima ou pergunte sobre:\n📈 Projeção · ⚖️ Comparativo · 📅 Sazonalidade · 🎯 Equilíbrio · 🔬 Mix de serviços · 💡 Cenários`;
