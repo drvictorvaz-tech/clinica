@@ -1905,10 +1905,22 @@ function askIA(txt){
   if(inp){inp.value=txt;sendChat();}
 }
 function clearChat(){
-  try{localStorage.removeItem(chatKey());}catch(e){}
+  // Limpa localStorage - todas as chaves de chat
+  try{
+    const key=chatKey();
+    localStorage.removeItem(key);
+    // Também limpa variações por segurança
+    Object.keys(localStorage).filter(k=>k.startsWith('iachat_')).forEach(k=>localStorage.removeItem(k));
+  }catch(e){}
+  // Limpa o DOM com dupla estratégia
   const box=document.getElementById('chatBox');
-  if(box)box.innerHTML='';
-  addChatMsg('ia','Chat limpo! Como posso ajudar? Use os botões de análise rápida ou faça sua pergunta.');
+  if(box){
+    while(box.firstChild)box.removeChild(box.firstChild);
+  }
+  // Aguarda o próximo frame para garantir que o DOM foi limpo
+  setTimeout(()=>{
+    addChatMsg('ia','Chat limpo! 👋 Como posso ajudar? Use os botões de análise rápida ou faça sua pergunta.');
+  },50);
 }
 async function sendChat(){
   const inp=document.getElementById('chatInput');
