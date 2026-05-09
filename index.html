@@ -1223,7 +1223,8 @@ function updCats(){
 }
 // ===== DATA: TRANSACTIONS =====
 async function loadTx(filters={}){
-  let q=sb.from('transactions').select('*').order('data',{ascending:false});
+  // Usa service role para leitura — garante acesso independente de RLS
+  let q=getSvc().from('transactions').select('*').order('data',{ascending:false});
   const uc=userClinic();if(uc)q=q.eq('clinic',uc);
   if(filters.clinic)q=q.eq('clinic',filters.clinic);
   if(filters.tipo)q=q.eq('tipo',filters.tipo);
@@ -1237,9 +1238,12 @@ async function loadTx(filters={}){
     q=q.gte('data','2020-'+String(filters.month).padStart(2,'0')+'-01')
        .lte('data','2099-'+String(filters.month).padStart(2,'0')+'-31');
   }
-  if(filters.search)q=q.or(`descricao.ilike.%${filters.search}%,categoria.ilike.%${filters.search}%`);
-  const{data,error}=await q.limit(500);
-  if(error)throw error;
+  if(filters.search){
+    const s=filters.search.replace(/'/g,"''");
+    q=q.or('descricao.ilike.%'+s+'%,categoria.ilike.%'+s+'%');
+  }
+  const{data,error}=await q.limit(1000);
+  if(error)throw new Error('loadTx: '+error.message);
   return data||[];
 }
 async function saveLanc(){
@@ -1531,7 +1535,7 @@ async function renderLanc(){
     </tr>`).join('');
     const chkAll=document.getElementById('chkAll');if(chkAll)chkAll.checked=false;
     updateSelUI();
-  }catch(e){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">❌</div><h4>Erro ao carregar dados</h4></div></td></tr>`;console.error(e);}
+  }catch(e){tb.innerHTML='<tr><td colspan="8"><div class="empty"><div class="ic">❌</div><h4>Erro ao carregar dados</h4><p style="color:#dc2626;font-size:11px">'+e.message+'</p></div></td></tr>';console.error('renderLanc:',e);}
 }
 </script>
 <script>
@@ -3080,11 +3084,4 @@ function parseValorBR(raw){
   // Remover qualquer ponto que não seja separador decimal (já tratado acima)
   return parseFloat(s);
 }
-function buildImportPreview(){
-  try{
-    toast('⏳ Processando prévia...');
-    if(!_importRows||!_importRows.length){
-      alert('Nenhum dado carregado. Selecione o arquivo novamente.');
-      return;
-    }
-    const mode=doc
+function buildI
