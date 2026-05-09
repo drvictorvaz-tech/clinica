@@ -545,8 +545,10 @@ tbody tr:last-child td{border-bottom:none}
   <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px">
     <span style="background:#1d4ed8;color:white;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">2</span>
     Confirme as colunas
-    <span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px">— detectadas automaticamente, ajuste se necessário</span>
+    <span style="font-size:11px;color:#64748b;font-weight:400;margin-left:4px">— veja sua planilha abaixo e selecione a coluna certa em cada campo</span>
   </div>
+  <!-- Prévia da planilha -->
+  <div id="rawPreviewTable" style="margin-bottom:18px"></div>
   <!-- Modo: coluna única ou separada -->
   <div style="background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:14px">
     <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:8px">📊 Formato da planilha:</div>
@@ -2233,10 +2235,17 @@ function processImportFile(file){
       _importHeaders=rows[0].map(h=>String(h||''));
       _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
       if(!_importRows.length){alert('Nenhum dado encontrado abaixo do cabeçalho.');resetImportFile();return;}
-      const opts=_importHeaders.map((h,i)=>`<option value="${i}">${h||'Coluna '+(i+1)}</option>`).join('');
+      // Build options with example value from first data row
+      const firstRow=_importRows[0]||[];
+      const opts=_importHeaders.map((h,i)=>{
+        const ex=String(firstRow[i]||'').substring(0,18);
+        const label=`Col ${i+1}: ${h||'?'}${ex?' — ex: '+ex:''}`;
+        return`<option value="${i}">${label}</option>`;
+      }).join('');
       ['colData','colDesc','colValor','colReceita','colDespesa'].forEach(id=>{document.getElementById(id).innerHTML=opts;});
-      document.getElementById('colTipo').innerHTML='<option value="_auto">Auto (sinal do valor)</option>'+opts;
+      document.getElementById('colTipo').innerHTML='<option value="_auto">Automático (sinal do valor)</option>'+opts;
       autoDetectImportCols();
+      buildRawPreviewTable();
       document.getElementById('importFileNameText').textContent=file.name+'  ('+_importRows.length+' linhas encontradas)';
       document.getElementById('importFileName').style.display='flex';
       document.getElementById('importMapping').style.display='block';
@@ -2253,6 +2262,17 @@ function processImportFile(file){
     }
   };
   reader.readAsArrayBuffer(file);
+}
+function buildRawPreviewTable(){
+  const el=document.getElementById('rawPreviewTable');
+  if(!el||!_importHeaders.length)return;
+  const sample=_importRows.slice(0,4);
+  const ths=_importHeaders.map((h,i)=>`<th style="padding:7px 10px;background:#f8fafc;font-size:11px;font-weight:700;color:#374151;border:1px solid #e2e8f0;white-space:nowrap"><span style="color:#94a3b8;font-size:9px">COL ${i+1}</span><br>${h||'(vazio)'}</th>`).join('');
+  const trs=sample.map(r=>{
+    const tds=_importHeaders.map((_,i)=>`<td style="padding:6px 10px;font-size:11px;color:#374151;border:1px solid #f1f5f9;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis">${String(r[i]||'').substring(0,30)}</td>`).join('');
+    return`<tr>${tds}</tr>`;
+  }).join('');
+  el.innerHTML=`<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">📋 Prévia da sua planilha (primeiras linhas):</div><div style="overflow-x:auto;border-radius:8px;border:1px solid #e2e8f0"><table style="border-collapse:collapse;width:100%"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div><div style="font-size:11px;color:#94a3b8;margin-top:4px">Use os números das colunas acima para preencher os campos abaixo ↓</div>`;
 }
 function toggleImportMode(mode){
   const single=document.getElementById('modeSingleCols');
@@ -2597,7 +2617,7 @@ async function loadDocs(){
         </td>
       </tr>`;
     }).join('');
-    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Cl\xednica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">A\xe7\xf5es</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Clínica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }catch(err){
     area.innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px">Erro ao carregar: '+err.message+'</div>';
     console.error(err);
@@ -2624,7 +2644,7 @@ async function deleteDoc(id,path){
     if(path){await getSvc().storage.from('documentos').remove([path]);}
     await getSvc().from('documentos').delete().eq('id',id);
     loadDocs();
-    toast('\ud83d\uddd1\ufe0f Documento removido.');
+    toast('🗑️ Documento removido.');
   }catch(err){alert('Erro ao remover: '+err.message);}
 }
 </script>
