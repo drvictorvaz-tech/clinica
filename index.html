@@ -385,8 +385,14 @@ tbody tr:last-child td{border-bottom:none}
       <button class="btn btn-ghost" onclick="window.print()">🖨️</button>
     </div>
   </div>
-  <div class="tcard"><div class="thead2"><h3>💳 Lançamentos</h3><div style="display:flex;gap:5px;align-items:center"><span id="lCount" style="font-size:11px;color:#64748b"></span><button class="btn btn-primary btn-sm" onclick="openModal('mLanc')">+ Novo</button></div></div>
-  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody id="lancTb"></tbody></table></div></div>
+  <div class="tcard"><div class="thead2"><h3>💳 Lançamentos</h3><div style="display:flex;gap:5px;align-items:center"><span id="lCount" style="font-size:11px;color:#64748b"></span>
+    <span id="selCount" style="font-size:11px;color:#dc2626;font-weight:600;display:none"></span>
+    <button id="btnDelSel" class="btn btn-sm" style="background:#dc2626;color:white;display:none" onclick="deleteSelected()">🗑️ Excluir Selecionados</button>
+    <button class="btn btn-sm" style="background:#f1f5f9;color:#374151;display:none" id="btnClearSel" onclick="clearSelection()">✕ Limpar</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal('mLanc')">+ Novo</button></div></div>
+  <div class="twrap"><table><thead><tr>
+    <th style="width:32px"><input type="checkbox" id="chkAll" onchange="toggleAllLanc(this)" title="Selecionar todos"></th>
+    <th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th><th></th></tr></thead><tbody id="lancTb"></tbody></table></div></div>
 </div>
 
 <!-- NOTAS FISCAIS -->
@@ -1239,7 +1245,8 @@ async function renderLanc(){
     const tx=await loadTx(filters);
     document.getElementById('lCount').textContent=tx.length+' registro(s)';
     if(!tx.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">💸</div><h4>Nenhum lançamento encontrado</h4></div></td></tr>`;return;}
-    tb.innerHTML=tx.map(x=>`<tr>
+    tb.innerHTML=tx.map(x=>`<tr id="row-${x.id}">
+      <td style="width:32px"><input type="checkbox" class="lancChk" value="${x.id}" onchange="onLancChk()"></td>
       <td>${fmtD(x.data)}</td>
       <td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
       <td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'💚 Receita':'🔴 Despesa'}</span></td>
@@ -1249,6 +1256,8 @@ async function renderLanc(){
       <td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td>
       <td>${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delTx(${x.id})">🗑️</button>`:''}</td>
     </tr>`).join('');
+    const chkAll=document.getElementById('chkAll');if(chkAll)chkAll.checked=false;
+    updateSelUI();
   }catch(e){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">❌</div><h4>Erro ao carregar dados</h4></div></td></tr>`;console.error(e);}
 }
 </script>
@@ -2015,6 +2024,45 @@ async function saveUser(){
       closeModal('mUser');toast('Perfil atualizado!','ok');renderUsers();
     }catch(e){loading(false);toast('Erro: '+e.message,'err');}
   }
+}
+function onLancChk(){updateSelUI();}
+function toggleAllLanc(chk){
+  document.querySelectorAll('.lancChk').forEach(c=>c.checked=chk.checked);
+  updateSelUI();
+}
+function updateSelUI(){
+  const checked=document.querySelectorAll('.lancChk:checked');
+  const n=checked.length;
+  const sc=document.getElementById('selCount');
+  const bd=document.getElementById('btnDelSel');
+  const bc=document.getElementById('btnClearSel');
+  if(sc)sc.style.display=n?'':'none';
+  if(sc)sc.textContent=n+' selecionado'+(n!==1?'s':'');
+  if(bd)bd.style.display=n?'':'none';
+  if(bc)bc.style.display=n?'':'none';
+  // Highlight rows
+  document.querySelectorAll('.lancChk').forEach(c=>{
+    const row=document.getElementById('row-'+c.value);
+    if(row)row.style.background=c.checked?'#fef2f2':'';
+  });
+}
+function clearSelection(){
+  document.querySelectorAll('.lancChk').forEach(c=>c.checked=false);
+  const chkAll=document.getElementById('chkAll');if(chkAll)chkAll.checked=false;
+  updateSelUI();
+}
+async function deleteSelected(){
+  const ids=[...document.querySelectorAll('.lancChk:checked')].map(c=>parseInt(c.value));
+  if(!ids.length)return;
+  if(!confirm('Excluir '+ids.length+' lançamento'+(ids.length!==1?'s':'')+' selecionado'+(ids.length!==1?'s':''+'?')+'\n\nEsta ação não pode ser desfeita.'))return;
+  loading(true);
+  try{
+    const{error}=await getSvc().from('transactions').delete().in('id',ids);
+    if(error)throw error;
+    loading(false);
+    toast('✅ '+ids.length+' lançamento'+(ids.length!==1?'s':'')+' excluído'+(ids.length!==1?'s':'')+'!');
+    renderLanc();
+  }catch(e){loading(false);toast('Erro: '+e.message,'err');}
 }
 async function deleteUser(id, nome){
   if(!confirm('Tem certeza que deseja EXCLUIR o usuário "'+nome+'"?\n\nEsta ação não pode ser desfeita.')) return;
