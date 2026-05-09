@@ -3424,36 +3424,44 @@ async function loadDocs(){
   if(!tb)return;
   tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px">⏳ Carregando...</td></tr>';
   try{
-    let q=sb.from('documentos').select('*').order('created_at',{ascending:false});
+    let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
     if(clinic)q=q.eq('clinic',clinic);
     if(tipo)q=q.eq('tipo',tipo);
-    const{data:docs}=await q;
+    const{data:docs,error}=await q;
+    if(error)throw error;
     if(!docs||!docs.length){
-      tb.innerHTML='';
+      tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:#94a3b8">Nenhum documento encontrado</td></tr>';
       if(empt)empt.style.display='block';
       return;
     }
     if(empt)empt.style.display='none';
     tb.innerHTML=docs.map(d=>{
       const dt=new Date(d.created_at).toLocaleDateString('pt-BR');
-      const sz=d.tamanho?Math.round(d.tamanho/1024)+'KB':'—';
+      const sz=d.tamanho?d.tamanho>1048576?(d.tamanho/1048576).toFixed(1)+'MB':Math.round(d.tamanho/1024)+'KB':'—';
+      const icone=d.tipo==='pdf'?'📄':d.tipo==='word'?'📝':d.tipo==='excel'?'📊':'📎';
+      // Monta URL pública do bucket (bucket é público)
+      const fileUrl=d.storage_path?`${SB_URL}/storage/v1/object/public/documentos/${d.storage_path}`:(d.url||'');
       return`<tr>
         <td style="font-size:12px;white-space:nowrap">${dt}</td>
-        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'DTM':'Hérnia'}</span></td>
-        <td style="font-size:12px">${d.tipo||'—'}</td>
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.descricao||d.nome||'—'}</td>
+        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+        <td style="font-size:12px">${icone} ${d.tipo?.toUpperCase()||'—'}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.descricao||d.nome||''}">${d.descricao||d.nome||'—'}</td>
         <td style="font-size:11px;color:#64748b">${sz}</td>
-        <td style="display:flex;gap:6px">
-          ${d.url?`<a href="${d.url}" target="_blank" class="btn btn-sm btn-ghost">📥 Ver</a>`:''}
-          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}')">🗑️</button>`:''}
+        <td style="display:flex;gap:6px;align-items:center">
+          ${fileUrl?`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none">📥 Abrir</a>`:'<span style="color:#94a3b8;font-size:11px">sem link</span>'}
+          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${d.storage_path||''}')">🗑️</button>`:''}
         </td>
       </tr>`;
     }).join('');
-  }catch(e){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">Erro ao carregar documentos</td></tr>';}
+  }catch(e){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">❌ Erro ao carregar: ${e.message}</td></tr>`;}
 }
-async function delDoc(id){
-  if(!confirm('Remover este documento?'))return;
-  await sb.from('documentos').delete().eq('id',id);
+async function delDoc(id,storagePath){
+  if(!confirm('Remover este documento permanentemente?'))return;
+  if(storagePath){
+    try{await getSvc().storage.from('documentos').remove([storagePath]);}
+    catch(e){console.warn('Erro ao remover arquivo do storage:',e);}
+  }
+  await getSvc().from('documentos').delete().eq('id',id);
   loadDocs();toast('🗑️ Documento removido.');
 }
 function handleDocDrop(e){
@@ -3484,12 +3492,14 @@ async function uploadDoc(fileOrInput){
   if(progEl)progEl.style.display='block';
   if(msgEl)msgEl.textContent='⏳ Enviando '+file.name+'...';
   try{
-    const path=`${cl}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    const{error:upErr}=await getSvc().storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:false});
+    const storagePath=`${cl}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const{error:upErr}=await getSvc().storage.from('documentos').upload(storagePath,file,{cacheControl:'3600',upsert:false});
     if(upErr)throw upErr;
-    const{data:{publicUrl}}=getSvc().storage.from('documentos').getPublicUrl(path);
-    try{await sb.from('documentos').insert({clinic:cl,tipo,nome:file.name,descricao:desc,url:publicUrl,tamanho:file.size,path});}
-    catch(dbErr){console.warn('Tabela documentos não encontrada - execute o SQL atualizado no Supabase:',dbErr.message);}
+    const{error:dbErr}=await getSvc().from('documentos').insert({
+      clinic:cl,tipo,nome:file.name,descricao:desc,
+      storage_path:storagePath,tamanho:file.size,mime_type:file.type||''
+    });
+    if(dbErr)console.warn('Erro ao registrar no banco:',dbErr.message);
     if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
     setTimeout(()=>{if(progEl)progEl.style.display='none';},2000);
     const fi=document.getElementById('docFileInput');if(fi)fi.value='';
@@ -3565,17 +3575,4 @@ function buildSecImportPreview(){
   </tr>`).join('');
   const tit=document.getElementById('secImportTitle');
   const sts=document.getElementById('secImportStats');
-  if(tit)tit.textContent='📋 '+_secImportPreview.length+' lançamentos';
-  const tR=_secImportPreview.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
-  const tD=_secImportPreview.filter(r=>r.tipo==='despesa').reduce((s,r)=>s+r.valor,0);
-  if(sts)sts.textContent='R$'+fmtN(tR)+' rec · R$'+fmtN(tD)+' desp';
-  ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block';});
-  document.getElementById('secImportPreview').style.display='block';
-}
-async function confirmSecImport(){
-  if(!_secImportPreview.length){toast('Nada para importar','warn');return;}
-  const btn=document.querySelector('#secImportPreview .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='⏳...';}
-  try{
-    const batch=_secImportPreview.map(r=>({
-      clinic:r.clinica,tipo:r.tipo,categoria:r.cate
+  if(tit)tit.textConten
