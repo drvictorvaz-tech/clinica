@@ -3472,8 +3472,12 @@ async function loadDocs(){
 async function delDoc(id,storagePath){
   if(!confirm('Remover este documento permanentemente?'))return;
   if(storagePath){
-    try{await getSvc().storage.from('documentos').remove([storagePath]);}
-    catch(e){console.warn('Erro ao remover arquivo do storage:',e);}
+    try{
+      await fetch(`${SB_URL}/storage/v1/object/documentos/${storagePath}`,{
+        method:'DELETE',
+        headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC}
+      });
+    }catch(e){console.warn('Erro ao remover storage:',e);}
   }
   await getSvc().from('documentos').delete().eq('id',id);
   loadDocs();toast('🗑️ Documento removido.');
@@ -3500,28 +3504,33 @@ async function uploadDoc(fileOrInput){
   if(ext==='pdf')tipo='pdf';
   else if(['doc','docx'].includes(ext))tipo='word';
   else if(['xls','xlsx','csv'].includes(ext))tipo='excel';
-  // Mostrar progresso
   const progEl=document.getElementById('docUploadProgress');
   const msgEl=document.getElementById('docUploadMsg');
   if(progEl)progEl.style.display='block';
-  if(msgEl)msgEl.textContent='⏳ Enviando '+file.name+'...';
+  if(msgEl){msgEl.textContent='⏳ Enviando '+file.name+'...';msgEl.style.color='#374151';}
   try{
     const storagePath=`${cl}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    const{error:upErr}=await getSvc().storage.from('documentos').upload(storagePath,file,{cacheControl:'3600',upsert:false});
-    if(upErr)throw upErr;
+    // Upload via fetch direto (mais confiável que SDK para arquivos no browser)
+    const upResp=await fetch(`${SB_URL}/storage/v1/object/documentos/${storagePath}`,{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC,'Content-Type':file.type||'application/octet-stream','x-upsert':'false','Cache-Control':'3600'},
+      body:file
+    });
+    if(!upResp.ok){const er=await upResp.json().catch(()=>({}));throw new Error(er.error||er.message||'Upload falhou ('+upResp.status+')');}
+    // Salvar registro no banco
     const{error:dbErr}=await getSvc().from('documentos').insert({
       clinic:cl,tipo,nome:file.name,descricao:desc,
       storage_path:storagePath,tamanho:file.size,mime_type:file.type||''
     });
     if(dbErr){if(msgEl){msgEl.textContent='❌ Erro banco: '+dbErr.message;msgEl.style.color='#dc2626';}toast('❌ Erro ao salvar no banco: '+dbErr.message,'err');return;}
     if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
-    setTimeout(()=>{if(progEl)progEl.style.display='none';},2000);
+    setTimeout(()=>{if(progEl)progEl.style.display='none';if(msgEl)msgEl.style.color='';},2000);
     const fi=document.getElementById('docFileInput');if(fi)fi.value='';
     const descEl=document.getElementById('docUpDesc');if(descEl)descEl.value='';
     loadDocs();toast('✅ Documento enviado!');
   }catch(e){
     if(msgEl){msgEl.textContent='❌ Erro: '+e.message;msgEl.style.color='#dc2626';}
-    setTimeout(()=>{if(progEl)progEl.style.display='none';if(msgEl)msgEl.style.color='';},3000);
+    setTimeout(()=>{if(progEl)progEl.style.display='none';if(msgEl)msgEl.style.color='';},4000);
     toast('❌ Erro no upload: '+e.message,'err');
   }
 }
@@ -3563,13 +3572,4 @@ function handleSecImportFile(inp){
   };
   reader.readAsArrayBuffer(f);
 }
-function buildSecImportPreview(){
-  if(!_secImportRows.length){toast('Carregue uma planilha primeiro','warn');return;}
-  const clinic=userProfile?.role==='secretaria_sjc'?'hernia':'dtm';
-  const iData=parseInt(document.getElementById('sColData')?.value||0);
-  const iDesc=parseInt(document.getElementById('sColDesc')?.value||1);
-  const iVal=parseInt(document.getElementById('sColValor')?.value||2);
-  const iTipo=document.getElementById('sColTipo')?.value||'_auto';
-  _secImportPreview=_secImportRows.map(r=>{
-    const vRaw=parseValorBR(r[iVal]);
-    if(isNaN(vRaw)|
+function buildSecImportPreview()
