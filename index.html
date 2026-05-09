@@ -3425,10 +3425,9 @@ async function carregarPlanilhas(){
 async function loadDocs(){
   const clinic=(document.getElementById('docFilterClinic')||{}).value||'';
   const tipo=(document.getElementById('docFilterTipo')||{}).value||'';
-  const tb=document.getElementById('docsTableBody');
-  const empt=document.getElementById('docsEmpty');
-  if(!tb)return;
-  tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px">⏳ Carregando...</td></tr>';
+  const container=document.getElementById('docListArea');
+  if(!container)return;
+  container.innerHTML='<div style="text-align:center;padding:32px;color:#64748b;font-size:13px">⏳ Carregando...</div>';
   try{
     let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
     if(clinic)q=q.eq('clinic',clinic);
@@ -3436,30 +3435,39 @@ async function loadDocs(){
     const{data:docs,error}=await q;
     if(error)throw error;
     if(!docs||!docs.length){
-      tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:#94a3b8">Nenhum documento encontrado</td></tr>';
-      if(empt)empt.style.display='block';
+      container.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">📄</div>Nenhum documento encontrado</div>';
       return;
     }
-    if(empt)empt.style.display='none';
-    tb.innerHTML=docs.map(d=>{
+    const rows=docs.map(d=>{
       const dt=new Date(d.created_at).toLocaleDateString('pt-BR');
       const sz=d.tamanho?d.tamanho>1048576?(d.tamanho/1048576).toFixed(1)+'MB':Math.round(d.tamanho/1024)+'KB':'—';
       const icone=d.tipo==='pdf'?'📄':d.tipo==='word'?'📝':d.tipo==='excel'?'📊':'📎';
-      // Monta URL pública do bucket (bucket é público)
-      const fileUrl=d.storage_path?`${SB_URL}/storage/v1/object/public/documentos/${d.storage_path}`:(d.url||'');
+      const fileUrl=d.storage_path?`${SB_URL}/storage/v1/object/public/documentos/${encodeURIComponent(d.storage_path).replace(/%2F/g,'/')}`:(d.url||'');
+      const sp=(d.storage_path||'').replace(/'/g,"\\'");
       return`<tr>
         <td style="font-size:12px;white-space:nowrap">${dt}</td>
         <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
-        <td style="font-size:12px">${icone} ${d.tipo?.toUpperCase()||'—'}</td>
+        <td style="font-size:12px">${icone} ${(d.tipo||'').toUpperCase()||'—'}</td>
         <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.descricao||d.nome||''}">${d.descricao||d.nome||'—'}</td>
         <td style="font-size:11px;color:#64748b">${sz}</td>
-        <td style="display:flex;gap:6px;align-items:center">
-          ${fileUrl?`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none">📥 Abrir</a>`:'<span style="color:#94a3b8;font-size:11px">sem link</span>'}
-          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${d.storage_path||''}')">🗑️</button>`:''}
+        <td style="white-space:nowrap">
+          ${fileUrl?`<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost" style="text-decoration:none;margin-right:4px">📥 Abrir</a>`:'<span style="color:#94a3b8;font-size:11px">sem link</span>'}
+          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${sp}')">🗑️</button>`:''}
         </td>
       </tr>`;
     }).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">❌ Erro ao carregar: ${e.message}</td></tr>`;}
+    container.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:2px solid #e2e8f0;font-size:11px;color:#64748b;text-transform:uppercase">
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Data</th>
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Clínica</th>
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Tipo</th>
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Descrição</th>
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Tamanho</th>
+        <th style="text-align:left;padding:8px 10px;font-weight:600">Ações</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  }catch(e){container.innerHTML=`<div style="text-align:center;color:#dc2626;padding:16px;font-size:13px">❌ Erro ao carregar: ${e.message}</div>`;}
 }
 async function delDoc(id,storagePath){
   if(!confirm('Remover este documento permanentemente?'))return;
@@ -3564,15 +3572,4 @@ function buildSecImportPreview(){
   const iTipo=document.getElementById('sColTipo')?.value||'_auto';
   _secImportPreview=_secImportRows.map(r=>{
     const vRaw=parseValorBR(r[iVal]);
-    if(isNaN(vRaw)||vRaw<=0)return null;
-    let tipo='receita';
-    if(iTipo!=='_auto'){const tv=String(r[parseInt(iTipo)]||'').toLowerCase();tipo=/(despes|sa[íi]da|d[eé]b)/.test(tv)?'despesa':'receita';}
-    const dt=parseDateBR(String(r[iData]||''));
-    if(!dt)return null;
-    return{data:dt,descricao:String(r[iDesc]||'Sem descrição').trim(),valor:vRaw,tipo,clinica:clinic,categoria:'',pagamento:'pix'};
-  }).filter(Boolean);
-  if(!_secImportPreview.length){toast('Nenhuma linha válida. Verifique colunas.','warn');return;}
-  const tb=document.getElementById('secImportBody');
-  if(tb)tb.innerHTML=_secImportPreview.map(r=>`<tr>
-    <td style="white-space:nowrap;font-size:11px">${r.data}</td>
-    <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;whit
+    if(isNaN(vRaw)|
