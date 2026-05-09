@@ -1658,7 +1658,7 @@ function horasFiltros(){
 async function renderHoras(){
   const uc=userClinic();
   const f=horasFiltros();
-  let q=sb.from('horas_extras').select('*').order('data',{ascending:false});
+  let q=getSvc().from('horas_extras').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
   else if(f.cl)q=q.eq('clinic',f.cl);
   const{data,error}=await q.limit(500);
@@ -1726,7 +1726,7 @@ async function renderHoras(){
   }).join('');
 }
 async function editHora(id){
-  const{data}=await sb.from('horas_extras').select('*').eq('id',id).single();
+  const{data}=await getSvc().from('horas_extras').select('*').eq('id',id).single();
   if(!data)return;
   document.getElementById('hId').value=id;
   document.getElementById('mHoraTitle').textContent='✏️ Editar Horas Extras';
@@ -1753,9 +1753,9 @@ async function saveHora(){
   loading(true);
   let error;
   if(id){
-    ({error}=await sb.from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
+    ({error}=await getSvc().from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
   }else{
-    ({error}=await sb.from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}));
+    ({error}=await getSvc().from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}));
   }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
@@ -1763,7 +1763,7 @@ async function saveHora(){
   toast(id?'✅ Registro atualizado!':'✅ Horas extras registradas!');
   renderHoras();
 }
-async function delHora(id){if(!confirm('Remover este registro?'))return;await sb.from('horas_extras').delete().eq('id',id);renderHoras();toast('✅ Removido.');}
+async function delHora(id){if(!confirm('Remover este registro?'))return;await getSvc().from('horas_extras').delete().eq('id',id);renderHoras();toast('✅ Removido.');}
 function initHoraFiltros(){
   const mes=document.getElementById('fHoraMes');
   if(mes&&mes.options.length<2){MESES.forEach((m,i)=>mes.add(new Option(m,String(i+1).padStart(2,'0'))));};
@@ -1784,7 +1784,7 @@ async function renderComissoes(){
   const fAno=document.getElementById('fComAno')?.value||'';
   const fProf=(document.getElementById('fComProf')?.value||'').toLowerCase().trim();
   const uc=userClinic();
-  let q=sb.from('comissoes').select('*').order('data',{ascending:false});
+  let q=getSvc().from('comissoes').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
   else if(fCl)q=q.eq('clinic',fCl);
   if(fSt)q=q.eq('status',fSt);
@@ -1842,7 +1842,7 @@ async function renderComissoes(){
   </tr>`).join('');
 }
 async function editCom(id){
-  const{data}=await sb.from('comissoes').select('*').eq('id',id).single();
+  const{data}=await getSvc().from('comissoes').select('*').eq('id',id).single();
   if(!data)return;
   document.getElementById('coId').value=id;
   document.getElementById('mComTitle').textContent='✏️ Editar Comissão';
@@ -1872,9 +1872,9 @@ async function saveCom(){
   loading(true);
   let error;
   if(id){
-    ({error}=await sb.from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
+    ({error}=await getSvc().from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
   }else{
-    ({error}=await sb.from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}));
+    ({error}=await getSvc().from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}));
   }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
@@ -1885,8 +1885,8 @@ function calcCom(){
   const pct=parseFloat(document.getElementById('coPct')?.value)||2.5;
   const el=document.getElementById('coVc');if(el)el.value=vp?'R$ '+(vp*pct/100).toFixed(2).replace('.',','):'';
 }
-async function pagaCom(id){if(!confirm('Marcar como pago?'))return;await sb.from('comissoes').update({status:'pago'}).eq('id',id);renderComissoes();toast('✅ Comissão marcada como paga!');}
-async function delCom(id){if(!confirm('Remover esta comissão?'))return;await sb.from('comissoes').delete().eq('id',id);renderComissoes();toast('✅ Removido.');}
+async function pagaCom(id){if(!confirm('Marcar como pago?'))return;await getSvc().from('comissoes').update({status:'pago'}).eq('id',id);renderComissoes();toast('✅ Comissão marcada como paga!');}
+async function delCom(id){if(!confirm('Remover esta comissão?'))return;await getSvc().from('comissoes').delete().eq('id',id);renderComissoes();toast('✅ Removido.');}
 </script>
 <script>
 // ===== PROCEDIMENTOS =====
@@ -2008,27 +2008,55 @@ async function renderRel(){
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
     const lc=tR-tD;const mg=tR>0?((lc/tR)*100).toFixed(1):0;
-    const byC=arr=>{const g={};arr.forEach(x=>{g[x.categoria]=(g[x.categoria]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
+    const byC=arr=>{const g={};arr.forEach(x=>{const cat=x.categoria||'Outros';g[cat]=(g[cat]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
+    const byCCount=arr=>{const g={};arr.forEach(x=>{const cat=x.categoria||'Outros';if(!g[cat])g[cat]={n:0,v:0};g[cat].n++;g[cat].v+=parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1].v-a[1].v);};
+    // Contagem de consultas e protocolos
+    const consultas=rec.filter(x=>/consulta/i.test(x.categoria||x.descricao||''));
+    const protocolos=rec.filter(x=>/protocolo|tratamento|cirurgia/i.test(x.categoria||x.descricao||''));
+    const vConsultas=consultas.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const vProtocolos=protocolos.reduce((s,x)=>s+parseFloat(x.valor),0);
+    const tktMedio=consultas.length?vConsultas/consultas.length:0;
+    const tktProtocolo=protocolos.length?vProtocolos/protocolos.length:0;
     const clLbl=cl==='dtm'?'Clínica DTM & Sono':cl==='hernia'?'Dr. Hérnia SJC':'Ambas as Clínicas';
     div.innerHTML=`
       <div style="margin-bottom:16px"><h2 style="font-size:17px;font-weight:700">📊 Relatório — ${MESES[m-1]} ${y}</h2><p style="color:#64748b;font-size:12px;margin-top:2px">${clLbl}</p></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
-        <div class="kpi g"><div class="lbl">💚 Receitas</div><div class="val">${fmt(tR)}</div><div class="meta">${rec.length} lançamentos</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+        <div class="kpi g"><div class="lbl">💚 Receita Total</div><div class="val">${fmt(tR)}</div><div class="meta">${rec.length} lançamentos</div></div>
         <div class="kpi r"><div class="lbl">🔴 Despesas</div><div class="val">${fmt(tD)}</div><div class="meta">${des.length} lançamentos</div></div>
-        <div class="kpi b"><div class="lbl">${lc>=0?'💙 Lucro':'⚠️ Prejuízo'}</div><div class="val" style="color:${lc>=0?'#0ea5e9':'#dc2626'}">${fmt(lc)}</div><div class="meta">Margem ${mg}%</div></div>
+        <div class="kpi b"><div class="lbl">${lc>=0?'💙 Resultado':'⚠️ Prejuízo'}</div><div class="val" style="color:${lc>=0?'#0ea5e9':'#dc2626'}">${fmt(lc)}</div><div class="meta">Margem ${mg}%</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+        <div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7">
+          <div class="lbl">🩺 Consultas</div><div class="val" style="color:#065f46;font-size:22px">${consultas.length}</div>
+          <div class="meta">Faturado: ${fmt(vConsultas)}</div>
+          <div class="meta">Ticket médio: ${fmt(tktMedio)}</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd">
+          <div class="lbl">📋 Protocolos</div><div class="val" style="color:#1e40af;font-size:22px">${protocolos.length}</div>
+          <div class="meta">Faturado: ${fmt(vProtocolos)}</div>
+          <div class="meta">Ticket médio: ${fmt(tktProtocolo)}</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#fefce8,#fef9c3);border:1px solid #fde047">
+          <div class="lbl">💳 Conversão</div><div class="val" style="color:#92400e;font-size:22px">${consultas.length?((protocolos.length/consultas.length)*100).toFixed(0):0}%</div>
+          <div class="meta">Consultas → Protocolo</div>
+        </div>
+        <div class="kpi" style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:1px solid #e879f9">
+          <div class="lbl">📊 Ticket Geral</div><div class="val" style="color:#6b21a8;font-size:22px">${fmt(rec.length?tR/rec.length:0)}</div>
+          <div class="meta">Média por receita</div>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="tcard"><div class="thead2"><h3>💚 Receitas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
-          ${byC(rec).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tR>0?(v/tR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
-          ${rec.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tR)}</strong></td><td></td></tr>`:''}
+        <div class="tcard"><div class="thead2"><h3>💚 Receitas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Qtd</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byCCount(rec).map(([c,v])=>`<tr><td>${c||'Outros'}</td><td style="text-align:right;color:#64748b">${v.n}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v.v)}</td><td style="text-align:right;color:#64748b">${tR>0?(v.v/tR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${rec.length?`<tr style="background:#f0fdf4"><td><strong>Total</strong></td><td style="text-align:right"><strong>${rec.length}</strong></td><td style="text-align:right"><strong>${fmt(tR)}</strong></td><td></td></tr>`:''}
         </tbody></table></div>
-        <div class="tcard"><div class="thead2"><h3>🔴 Despesas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
-          ${byC(des).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tD>0?(v/tD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
-          ${des.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tD)}</strong></td><td></td></tr>`:''}
+        <div class="tcard"><div class="thead2"><h3>🔴 Despesas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Qtd</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byCCount(des).map(([c,v])=>`<tr><td>${c||'Outros'}</td><td style="text-align:right;color:#64748b">${v.n}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v.v)}</td><td style="text-align:right;color:#64748b">${tD>0?(v.v/tD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${des.length?`<tr style="background:#fef2f2"><td><strong>Total</strong></td><td style="text-align:right"><strong>${des.length}</strong></td><td style="text-align:right"><strong>${fmt(tD)}</strong></td><td></td></tr>`:''}
         </tbody></table></div>
       </div>
       <div class="tcard"><div class="thead2"><h3>📋 Extrato Completo</h3></div><div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead><tbody>
-        ${tx.sort((a,b)=>a.data.localeCompare(b.data)).map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'DTM':'Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'Receita':'Despesa'}</span></td><td>${x.categoria||'-'}</td><td>${x.descricao}</td><td>${PG[x.pagamento]||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:16px;color:#94a3b8">Sem lançamentos</td></tr>'}
+        ${tx.sort((a,b)=>a.data.localeCompare(b.data)).map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'DTM':'Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'Receita':'Despesa'}</span></td><td>${x.categoria||'—'}</td><td>${x.descricao}</td><td>${PG[x.pagamento]||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:16px;color:#94a3b8">Sem lançamentos</td></tr>'}
       </tbody></table></div></div>`;
   }catch(e){div.innerHTML=`<div class="empty"><div class="ic">❌</div><h4>Erro ao gerar relatório</h4></div>`;console.error(e);}
 }
@@ -3550,49 +3578,4 @@ async function confirmSecImport(){
   if(btn){btn.disabled=true;btn.textContent='⏳...';}
   try{
     const batch=_secImportPreview.map(r=>({
-      clinic:r.clinica,tipo:r.tipo,categoria:r.categoria||null,
-      descricao:r.descricao,valor:r.valor,data:r.data,pagamento:r.pagamento||'pix',observacao:''
-    }));
-    let ok=0;
-    for(let i=0;i<batch.length;i+=50){
-      const{error}=await getSvc().from('transactions').insert(batch.slice(i,i+50));
-      if(!error)ok+=Math.min(50,batch.length-i);
-    }
-    _secImportPreview=[];
-    ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-    const rt=document.getElementById('secImportResultText');if(rt)rt.textContent='✅ '+ok+' lançamentos importados!';
-    const res=document.getElementById('secImportResult');if(res)res.style.display='block';
-    toast('✅ '+ok+' lançamentos importados!');
-    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
-  }catch(e){
-    toast('Erro: '+e.message,'err');
-    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
-  }
-}
-function resetSecImport(){
-  _secImportRows=[];_secImportHeaders=[];_secImportPreview=[];
-  ['secImportMapping','secImportPreview','secImportResult'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const fi=document.getElementById('secImportFile');if(fi)fi.value='';
-  const drop=document.getElementById('secImportDrop');if(drop)drop.style.display='block';
-}
-
-// ===== BANNER PLANILHAS — injetado quando a seção é aberta =====
-function _injetaBannerPlanilhas(){
-  const impSect=document.querySelector('#s-importar');
-  if(!impSect||document.getElementById('btnCarregarPlanilhas'))return;
-  const tRec=PLANILHAS_DATA.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
-  const banner=document.createElement('div');
-  banner.id='bannerPlanilhas';
-  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
-  banner.innerHTML='<div>'
-    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Planilhas Abr–Jun 2025 prontas para importar</div>'
-    +'<div style="font-size:13px;opacity:.9">'+PLANILHAS_DATA.length+' lançamentos · Dr. Hérnia SJC · Total: R$ '+tRec.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
-    +'<div style="font-size:11px;opacity:.7;margin-top:4px">Abril 2025 (Karina) · Maio 2025 (consultas + tratamentos) · Junho 2025</div>'
-    +'</div>'
-    +'<button id="btnCarregarPlanilhas" class="btn" style="background:white;color:#1d4ed8;font-weight:700;padding:10px 22px;font-size:13px;flex-shrink:0" onclick="carregarPlanilhas()">'
-    +'✅ Importar Tudo com 1 Clique</button>';
-  impSect.insertBefore(banner,impSect.firstChild);
-}
-</script>
-</body>
-</html>
+      clinic:r.clinica,tipo:r.tipo,categoria:r.cate
