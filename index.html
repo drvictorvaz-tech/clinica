@@ -2269,6 +2269,13 @@ function resetImportFile(){
   if(loadEl) loadEl.style.display='none';
 }
 function processImportFile(file){
+  // Auto-detect clinic from filename
+  const fn=(file.name||'').toLowerCase();
+  const clinicSel=document.getElementById('importClinicSel');
+  if(clinicSel){
+    if(/hern|sjc|doutor/i.test(fn)) clinicSel.value='hernia';
+    else if(/dtm|sono/i.test(fn)) clinicSel.value='dtm';
+  }
   if(typeof XLSX==='undefined'){
     alert('Biblioteca de leitura ainda carregando. Aguarde 3 segundos e tente novamente.');
     resetImportFile();
@@ -2391,7 +2398,9 @@ function parseValorBR(raw){
   // Ex: "1.500,00" → 1500.0 | "1500.00" → 1500.0 | "R$ 1.500,00" → 1500.0
   if(!raw) return NaN;
   let s=String(raw).replace(/[R$\s]/g,'').trim();
-  if(!s) return NaN;
+  if(!s||s==='-') return NaN;
+  // Remove sinal negativo (para colunas de despesa/saldo que vêm como -R$ 600,00)
+  s=s.replace(/^-/,'');
   // Se tem vírgula como separador decimal (formato BR): 1.500,00
   if(s.includes(',')&&s.includes('.')){
     // Tanto vírgula quanto ponto: ex "1.500,00" → remover pontos, trocar vírgula
@@ -2498,7 +2507,8 @@ function buildImportPreview(){
     const sumEl=document.getElementById('importStats');
     if(sumEl){
       const saldoClass=recT>=desT?'color:#059669':'color:#dc2626';
-      sumEl.innerHTML='✅ '+preview.length+' lançamentos &nbsp;|&nbsp; <span style="color:#059669">Receitas: R$ '+fmtN(recT)+'</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: R$ '+fmtN(desT)+'</span> &nbsp;|&nbsp; <span style="'+saldoClass+'">Saldo: R$ '+fmtN(recT-desT)+'</span>';
+      const clinicLbl=clinicSel==='hernia'?'⚕️ Dr. Hérnia':clinicSel==='dtm'?'🦷 DTM & Sono':'🏥 Auto (DTM)';
+      sumEl.innerHTML='✅ '+preview.length+' lançamentos &nbsp;|&nbsp; <b style="color:#1d4ed8">'+clinicLbl+'</b> &nbsp;|&nbsp; <span style="color:#059669">Receitas: R$ '+fmtN(recT)+'</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: R$ '+fmtN(desT)+'</span> &nbsp;|&nbsp; <span style="'+saldoClass+'">Saldo: R$ '+fmtN(recT-desT)+'</span>';
     }
     document.getElementById('importMapping').style.display='none';
     const previewDiv=document.getElementById('importPreview');
@@ -2514,6 +2524,11 @@ function buildImportPreview(){
 }
 async function confirmImport(){
   if(!_importPreview||!_importPreview.length){alert('Nenhum dado para importar.');return;}
+  const cs=document.getElementById('importClinicSel')?.value||'auto';
+  if(cs==='auto'){
+    const ok=confirm('⚠️ ATENÇÃO: Clínica está como "Minha clínica" (automático).\n\nPara Admin isso importa como DTM & Sono.\n\nCancele e selecione a clínica correta, ou confirme para continuar como DTM.');
+    if(!ok)return;
+  }
   const btn=document.getElementById('confirmImportBtn');
   if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
   try{
