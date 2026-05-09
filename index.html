@@ -568,6 +568,7 @@ tbody tr:last-child td{border-bottom:none}
   <!-- Drop zone -->
   <div id="importDropArea"
     style="border:2px dashed #94a3b8;border-radius:12px;padding:36px 20px;text-align:center;background:#f8fafc;transition:all .2s;cursor:pointer"
+    onclick="document.getElementById('importFileInput').click()"
     ondragover="event.preventDefault();this.style.borderColor='#1d4ed8';this.style.background='#eff6ff'"
     ondragleave="this.style.borderColor='#94a3b8';this.style.background='#f8fafc'"
     ondrop="handleImportDrop(event)">
@@ -2906,54 +2907,61 @@ function handleImportDrop(e){
   const f=e.dataTransfer.files[0];
   if(f)processImportFile(f);
 }
+function importShowErr(msg){
+  // Mostra erro dentro da página — não usa alert() (bloqueado pelo Chrome no GitHub Pages)
+  const loadEl=document.getElementById('importLoading');
+  if(loadEl)loadEl.style.display='none';
+  const da=document.getElementById('importDropArea');
+  if(da)da.style.display='block';
+  const fi=document.getElementById('importFileInput');
+  if(fi)fi.value='';
+  // Injeta mensagem de erro no drop area
+  const errId='importErrMsg';
+  document.getElementById(errId)&&document.getElementById(errId).remove();
+  const div=document.createElement('div');
+  div.id=errId;
+  div.style.cssText='background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-top:12px;color:#dc2626;font-size:12px;text-align:left';
+  div.innerHTML='<b>❌ Erro:</b> '+msg+'<br><span style="color:#64748b">Verifique se o arquivo é .xlsx, .xls ou .csv e tente novamente.</span>';
+  const area=document.getElementById('importDropArea');
+  if(area)area.after(div);
+  toast('❌ '+msg,'err');
+}
 function handleImportFile(inp){
   const f=inp.files[0];
   if(!f){return;}
-  if(typeof XLSX==='undefined'){
-    toast('❌ Biblioteca Excel ainda carregando. Aguarde 5s e tente novamente.','err');
-    alert('Biblioteca Excel não carregou. Recarregue a página (Ctrl+Shift+R) e tente novamente.');
-    return;
-  }
-  // Reset all previous state before loading new file
-  _importPreview=[];
-  _importRows=[];
-  _importHeaders=[];
+  document.getElementById('importErrMsg')&&document.getElementById('importErrMsg').remove();
+  _importPreview=[];_importRows=[];_importHeaders=[];
   document.getElementById('importPreview').style.display='none';
   document.getElementById('importResult').style.display='none';
   document.getElementById('importMapping').style.display='none';
   document.getElementById('importDropArea').style.display='none';
   const loadEl=document.getElementById('importLoading');
-  if(loadEl) loadEl.style.display='block';
+  if(loadEl)loadEl.style.display='block';
   toast('📂 Lendo: '+f.name);
-  setTimeout(()=>processImportFile(f),100);
+  // Pequeno delay para o loading aparecer antes do processamento
+  setTimeout(function(){processImportFile(f);},120);
 }
 function resetImportFile(){
-  document.getElementById('importFileInput').value='';
-  document.getElementById('importFileName').style.display='none';
-  document.getElementById('importMapping').style.display='none';
-  document.getElementById('importPreview').style.display='none';
-  document.getElementById('importResult').style.display='none';
-  document.getElementById('importDropArea').style.display='block';
-  const loadEl=document.getElementById('importLoading');
-  if(loadEl) loadEl.style.display='none';
+  const fi=document.getElementById('importFileInput');if(fi)fi.value='';
+  ['importFileName','importMapping','importPreview','importResult','importLoading','importErrMsg']
+    .forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
+  const da=document.getElementById('importDropArea');
+  if(da)da.style.display='block';
 }
 function processImportFile(file){
-  // Auto-detect clinic from filename
   const fn=(file.name||'').toLowerCase();
   const clinicSel=document.getElementById('importClinicSel');
   if(clinicSel){
-    if(/hern|sjc|doutor/i.test(fn)) clinicSel.value='hernia';
-    else if(/dtm|sono/i.test(fn)) clinicSel.value='dtm';
+    if(/hern|sjc|doutor/i.test(fn))clinicSel.value='hernia';
+    else if(/dtm|sono/i.test(fn))clinicSel.value='dtm';
   }
   if(typeof XLSX==='undefined'){
-    alert('Biblioteca de leitura ainda carregando. Aguarde 3 segundos e tente novamente.');
-    resetImportFile();
+    importShowErr('Biblioteca Excel não carregou. Recarregue a página com Ctrl+F5 e tente novamente.');
     return;
   }
   const reader=new FileReader();
   reader.onerror=function(){
-    alert('Erro ao ler o arquivo. Tente novamente.');
-    resetImportFile();
+    importShowErr('Não foi possível ler o arquivo. Verifique se não está corrompido.');
   };
   reader.onload=function(e){
     try{
@@ -2966,22 +2974,22 @@ function processImportFile(file){
       if(isExcelBytes||isExcelExt){
         const data=new Uint8Array(arrBuf);
         const wb=XLSX.read(data,{type:'array',cellDates:true});
-        if(!wb||!wb.SheetNames||!wb.SheetNames.length){alert('Arquivo Excel inválido ou corrompido.');resetImportFile();return;}
+        if(!wb||!wb.SheetNames||!wb.SheetNames.length){importShowErr('Arquivo Excel inválido ou corrompido. Tente salvar como .xlsx novamente.');return;}
         const ws=wb.Sheets[wb.SheetNames[0]];
         rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
       } else {
         const text=new TextDecoder('utf-8').decode(arrBuf);
-        const lines=text.split(/\r?\n/).filter(l=>l.trim());
-        if(!lines.length){alert('Arquivo CSV vazio.');resetImportFile();return;}
+        const lines=text.split(/\r?\n/).filter(function(l){return l.trim();});
+        if(!lines.length){importShowErr('Arquivo CSV vazio.');return;}
         const sep=lines[0].includes(';')?';':lines[0].includes('\t')?'\t':',';
-        rows=lines.map(l=>l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim()));
+        rows=lines.map(function(l){return l.split(sep).map(function(c){return c.replace(/^"|"$/g,'').trim();});});
       }
       const loadEl=document.getElementById('importLoading');
       if(loadEl)loadEl.style.display='none';
-      if(!rows||rows.length<2){alert('Planilha vazia ou sem dados. Verifique o arquivo.');resetImportFile();return;}
-      _importHeaders=rows[0].map(h=>String(h||''));
-      _importRows=rows.slice(1).filter(r=>r.some(c=>String(c).trim()!==''));
-      if(!_importRows.length){alert('Nenhum dado encontrado abaixo do cabeçalho.');resetImportFile();return;}
+      if(!rows||rows.length<2){importShowErr('Planilha sem dados. Verifique se o arquivo tem pelo menos um cabeçalho e uma linha de dados.');return;}
+      _importHeaders=rows[0].map(function(h){return String(h||'');});
+      _importRows=rows.slice(1).filter(function(r){return r.some(function(c){return String(c).trim()!=='';});});
+      if(!_importRows.length){importShowErr('Nenhum dado encontrado abaixo do cabeçalho. Verifique o arquivo.');return;}
       // Build options with example value from first data row
       const firstRow=_importRows[0]||[];
       const opts=_importHeaders.map((h,i)=>{
@@ -3000,12 +3008,8 @@ function processImportFile(file){
       document.getElementById('importResult').style.display='none';
       toast('📊 '+_importRows.length+' linhas lidas de "'+file.name+'"');
     }catch(err){
-      const loadEl=document.getElementById('importLoading');
-      if(loadEl)loadEl.style.display='none';
-      document.getElementById('importDropArea').style.display='block';
-      toast('❌ Erro ao ler arquivo: '+err.message,'err');
-      alert('Erro ao ler o arquivo:\n\n'+err.message+'\n\nTente salvar como .xlsx e tente novamente.');
-      console.error(err);
+      console.error('processImportFile error:',err);
+      importShowErr('Erro ao processar: '+err.message+'. Tente salvar como .xlsx e enviar novamente.');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -3067,21 +3071,4 @@ function parseValorBR(raw){
   // Ex: "1.500,00" → 1500.0 | "1500.00" → 1500.0 | "R$ 1.500,00" → 1500.0
   if(!raw) return NaN;
   let s=String(raw).replace(/[R$\s]/g,'').trim();
-  if(!s||s==='-') return NaN;
-  // Remove sinal negativo (para colunas de despesa/saldo que vêm como -R$ 600,00)
-  s=s.replace(/^-/,'');
-  // Se tem vírgula como separador decimal (formato BR): 1.500,00
-  if(s.includes(',')&&s.includes('.')){
-    // Tanto vírgula quanto ponto: ex "1.500,00" → remover pontos, trocar vírgula
-    s=s.replace(/\./g,'').replace(',','.');
-  } else if(s.includes(',')){
-    // Só vírgula: pode ser separador decimal (BR) ou milhar
-    // Se a vírgula está nos últimos 3 dígitos, é decimal
-    const ci=s.indexOf(',');
-    if(s.length-ci<=3) s=s.replace(',','.');
-    else s=s.replace(',','');
-  }
-  // Remover qualquer ponto que não seja separador decimal (já tratado acima)
-  return parseFloat(s);
-}
-function buildI
+  if(!s||s=
