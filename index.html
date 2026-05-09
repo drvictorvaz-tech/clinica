@@ -127,7 +127,7 @@ tbody tr:last-child td{border-bottom:none}
 .empty h4{font-size:13px;font-weight:600;color:#64748b;margin-bottom:4px}
 /* Alert */
 .alert{border-radius:8px;padding:10px 14px;font-size:12px;margin-bottom:12px;display:flex;gap:8px}
-.alert-warn{background:#fef3c7;color:#92400e}.alert-info{background:#dbeafe;color:#1e40af}
+.alert-warn{background:#fef3c7;color:#92400e}.alert-info{background:#dbeafe;color:#1e40af}.alert-ok{background:#d1fae5;color:#065f46}.alert-err{background:#fee2e2;color:#991b1b}
 /* Chat */
 .chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px);background:white;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
 .chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
@@ -1333,6 +1333,158 @@ async function renderDash(){
     if(c2)charts.pg=new Chart(c2,{type:'doughnut',data:{labels:pgl.length?pgl:['Sem dados'],datasets:[{data:pgv.length?pgv:[1],backgroundColor:['#3b82f6','#059669','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#84cc16']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
   }catch(e){console.error(e);toast('Erro ao carregar dashboard','err');}
 }
+// ===== DASHBOARD WIDGETS =====
+function metasKey(){return 'metas_'+(currentUser?.id||'default');}
+function agendaKey(){return 'agenda_'+(currentUser?.id||'default');}
+function loadMetas(){try{return JSON.parse(localStorage.getItem(metasKey())||'[]');}catch(e){return[];}}
+function loadAgenda(){try{return JSON.parse(localStorage.getItem(agendaKey())||'[]');}catch(e){return[];}}
+
+function renderAlerts(tR,tD,lc,mg){
+  const el=document.getElementById('dashAlerts');
+  if(!el)return;
+  const alerts=[];
+  if(tR===0&&tD===0){el.innerHTML='';return;}
+  if(lc<0){alerts.push({cls:'alert-err',icon:'🔴',msg:'Resultado negativo este mês! Despesas superaram a receita em '+fmt(Math.abs(lc))+'.'});}
+  else if(tR>0&&(tD/tR)>0.85){alerts.push({cls:'alert-warn',icon:'⚠️',msg:'Atenção: Despesas representam '+((tD/tR)*100).toFixed(0)+'% da receita. Margem reduzida!'});}
+  else if(parseFloat(mg)>=40){alerts.push({cls:'alert-ok',icon:'✅',msg:'Excelente! Margem de '+mg+'% — resultado muito positivo neste período.'});}
+  if(tR>0&&lc>0&&parseFloat(mg)<20){alerts.push({cls:'alert-warn',icon:'📊',msg:'Margem de '+mg+'% — considere revisar despesas para melhorar a rentabilidade.'});}
+  el.innerHTML=alerts.map(a=>`<div class="alert ${a.cls}" style="margin-bottom:6px">${a.icon} ${a.msg}</div>`).join('');
+}
+
+async function renderComparativo(m,y,tR,tD){
+  const el=document.getElementById('comparativoBody');
+  if(!el)return;
+  if(!m||!y){el.innerHTML='<div style="color:#94a3b8;font-size:12px">Selecione um mês para comparar</div>';return;}
+  const pm=m===1?12:m-1,py=m===1?y-1:y;
+  const pStart=py+'-'+String(pm).padStart(2,'0')+'-01';
+  const pEnd=new Date(py,pm,0).toISOString().split('T')[0];
+  try{
+    const{data:ptx}=await getSvc().from('transactions').select('tipo,valor').gte('data',pStart).lte('data',pEnd);
+    const ptx2=ptx||[];
+    const pR=ptx2.filter(t=>t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0);
+    const pD=ptx2.filter(t=>t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0);
+    const pL=pR-pD;const cL=tR-tD;
+    const arrow=(a,b)=>{if(b===0)return'';const d=a-b;return d>0?`<span style="color:#059669">▲ ${((d/Math.abs(b))*100).toFixed(0)}%</span>`:`<span style="color:#dc2626">▼ ${((Math.abs(d)/Math.abs(b))*100).toFixed(0)}%</span>`;};
+    const mn=MESES[m-1],pm2=MESES[pm-1];
+    el.innerHTML=`<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:4px 6px;color:#64748b"></th><th style="text-align:right;padding:4px 6px;color:#64748b">${pm2}/${py}</th><th style="text-align:right;padding:4px 6px;color:#64748b">${mn}/${y}</th><th style="text-align:right;padding:4px 6px;color:#64748b">Var</th></tr></thead>
+      <tbody>
+        <tr style="border-top:1px solid #f1f5f9"><td style="padding:5px 6px">💚 Receita</td><td style="text-align:right;padding:5px 6px">${fmt(pR)}</td><td style="text-align:right;padding:5px 6px">${fmt(tR)}</td><td style="text-align:right;padding:5px 6px">${arrow(tR,pR)}</td></tr>
+        <tr style="border-top:1px solid #f1f5f9"><td style="padding:5px 6px">🔴 Despesas</td><td style="text-align:right;padding:5px 6px">${fmt(pD)}</td><td style="text-align:right;padding:5px 6px">${fmt(tD)}</td><td style="text-align:right;padding:5px 6px">${arrow(tD,pD)}</td></tr>
+        <tr style="border-top:1px solid #e2e8f0;font-weight:700"><td style="padding:5px 6px">🔵 Resultado</td><td style="text-align:right;padding:5px 6px;color:${pL>=0?'#059669':'#dc2626'}">${fmt(pL)}</td><td style="text-align:right;padding:5px 6px;color:${cL>=0?'#059669':'#dc2626'}">${fmt(cL)}</td><td style="text-align:right;padding:5px 6px">${arrow(cL,pL)}</td></tr>
+      </tbody></table>`;
+  }catch(e){el.innerHTML='<div style="color:#94a3b8;font-size:12px">Erro ao carregar comparativo</div>';}
+}
+
+function renderMetas(tR,tD,tx){
+  const el=document.getElementById('metasBody');
+  if(!el)return;
+  const metas=loadMetas();
+  if(!metas.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:8px 0;text-align:center">Nenhuma meta cadastrada</div>';return;}
+  el.innerHTML=metas.map((mt,i)=>{
+    let atual=0;
+    if(mt.tipo==='receita'){atual=mt.cl?tx.filter(t=>t.tipo==='receita'&&t.clinic===mt.cl).reduce((s,t)=>s+parseFloat(t.valor),0):tR;}
+    else{const cl=mt.cl;atual=cl?(tx.filter(t=>t.clinic===cl&&t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0)-tx.filter(t=>t.clinic===cl&&t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0)):(tR-tD);}
+    const pct=mt.valor>0?Math.min(100,(atual/mt.valor)*100):0;
+    const ok=pct>=100;
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="font-weight:600">${mt.desc}</span>
+        <span style="color:${ok?'#059669':'#64748b'}">${fmt(atual)} / ${fmt(mt.valor)}${ok?' ✅':''}</span>
+      </div>
+      <div style="background:#f1f5f9;border-radius:20px;height:8px;overflow:hidden">
+        <div style="height:100%;width:${pct.toFixed(0)}%;background:${ok?'#059669':'#3b82f6'};border-radius:20px;transition:width .4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;margin-top:2px">
+        <span>${pct.toFixed(0)}% atingido</span>
+        <button onclick="delMeta(${i})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:10px;padding:0">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function delMeta(i){
+  const metas=loadMetas();metas.splice(i,1);
+  localStorage.setItem(metasKey(),JSON.stringify(metas));
+  renderDash();
+}
+
+function renderAgenda(){
+  const el=document.getElementById('agendaBody');
+  if(!el)return;
+  const items=loadAgenda();
+  if(!items.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 0;text-align:center">Sem compromissos cadastrados</div>';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const sorted=[...items].sort((a,b)=>new Date(a.data)-new Date(b.data));
+  el.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">
+    <thead><tr><th style="text-align:left;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Descrição</th><th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Vencimento</th><th style="text-align:right;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Valor</th><th style="text-align:center;padding:5px 8px;color:#64748b;border-bottom:1px solid #e2e8f0">Tipo</th><th style="padding:5px 8px;border-bottom:1px solid #e2e8f0"></th></tr></thead>
+    <tbody>${sorted.map((ag,i)=>{
+      const dt=new Date(ag.data+'T00:00:00');
+      const diff=Math.ceil((dt-today)/(1000*60*60*24));
+      const urgente=diff<=3&&diff>=0;const atrasado=diff<0;
+      const bg=atrasado?'#fef2f2':urgente?'#fffbeb':'';
+      return`<tr style="border-top:1px solid #f1f5f9;background:${bg}">
+        <td style="padding:5px 8px">${ag.desc}${atrasado?' <span style="color:#dc2626;font-size:10px">ATRASADO</span>':urgente?` <span style="color:#f59e0b;font-size:10px">${diff===0?'HOJE':diff+'d'}</span>':''}</td>
+        <td style="text-align:center;padding:5px 8px">${fmtD(ag.data)}</td>
+        <td style="text-align:right;padding:5px 8px;font-weight:600;color:${ag.tipo==='receber'?'#059669':'#dc2626'}">${fmt(parseFloat(ag.valor||0))}</td>
+        <td style="text-align:center;padding:5px 8px">${ag.tipo==='receber'?'💰 Receber':'💸 Pagar'}</td>
+        <td style="padding:5px 8px"><button onclick="delAgenda(${i})" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:11px">🗑️</button></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function delAgenda(i){
+  const items=loadAgenda();items.splice(i,1);
+  localStorage.setItem(agendaKey(),JSON.stringify(items));
+  renderAgenda();
+}
+
+function openMetaModal(){
+  document.getElementById('metaDesc').value='';
+  document.getElementById('metaValor').value='';
+  document.getElementById('metaTipo').value='receita';
+  document.getElementById('metaCl').value='';
+  openModal('mMeta');
+}
+
+function saveMeta(){
+  const desc=document.getElementById('metaDesc').value.trim();
+  const valor=parseFloat(document.getElementById('metaValor').value)||0;
+  const tipo=document.getElementById('metaTipo').value;
+  const cl=document.getElementById('metaCl').value;
+  if(!desc||!valor){toast('Preencha descrição e valor','err');return;}
+  const metas=loadMetas();
+  metas.push({desc,valor,tipo,cl});
+  localStorage.setItem(metasKey(),JSON.stringify(metas));
+  closeModal('mMeta');
+  toast('Meta salva! 🎯');
+  renderDash();
+}
+
+function openAgendaModal(){
+  document.getElementById('agDesc').value='';
+  document.getElementById('agData').value='';
+  document.getElementById('agValor').value='';
+  document.getElementById('agTipo').value='pagar';
+  document.getElementById('agRec').value='0';
+  openModal('mAgenda');
+}
+
+function saveAgenda(){
+  const desc=document.getElementById('agDesc').value.trim();
+  const data=document.getElementById('agData').value;
+  const valor=parseFloat(document.getElementById('agValor').value)||0;
+  const tipo=document.getElementById('agTipo').value;
+  const rec=document.getElementById('agRec').value;
+  if(!desc||!data){toast('Preencha descrição e data','err');return;}
+  const items=loadAgenda();
+  items.push({desc,data,valor,tipo,rec});
+  localStorage.setItem(agendaKey(),JSON.stringify(items));
+  closeModal('mAgenda');
+  toast('Compromisso salvo! 📅');
+  renderAgenda();
+}
+
 // ===== RENDER: LANÇAMENTOS =====
 async function renderLanc(){
   const fCl=document.getElementById('fCl')?.value||'';
@@ -2925,203 +3077,4 @@ function buildImportPreview(){
     const clinicSel=document.getElementById('importClinicSel').value||'dtm';
     // Colunas específicas do modo
     const cv=parseInt(document.getElementById('colValor').value)||2;
-    const ct=document.getElementById('colTipo').value||'_auto';
-    const crec=parseInt(document.getElementById('colReceita').value)||2;
-    const cdes=parseInt(document.getElementById('colDespesa').value)||3;
-    const tbody=document.getElementById('importPreviewBody');
-    if(tbody) tbody.innerHTML='';
-    const preview=[];let recT=0,desT=0,skipped=0;
-    _importRows.forEach(function(row){
-      const rawDate=String(row[cd]||'').trim();
-      const desc=String(row[cds]||'').trim();
-      let valor=0,tipo='receita';
-      if(mode==='dual'){
-        // Modo: colunas separadas de Receita e Despesa
-        const rawRec=String(row[crec]||'').trim();
-        const rawDes=String(row[cdes]||'').trim();
-        const vRec=parseValorBR(rawRec);
-        const vDes=parseValorBR(rawDes);
-        const hasRec=!isNaN(vRec)&&vRec>0;
-        const hasDes=!isNaN(vDes)&&vDes>0;
-        if(!hasRec&&!hasDes){skipped++;return;}
-        if(hasRec){valor=vRec;tipo='receita';}
-        else{valor=vDes;tipo='despesa';}
-        if(!desc&&!rawRec&&!rawDes){skipped++;return;}
-      } else {
-        // Modo: coluna única
-        const rawVal=String(row[cv]||'').trim();
-        if(!rawVal&&!desc){skipped++;return;}
-        valor=parseValorBR(rawVal);
-        if(isNaN(valor)||valor===0){skipped++;return;}
-        if(ct!=='_auto'){
-          const rt=String(row[parseInt(ct)]||'').toLowerCase();
-          if(/despes|saida|sa[ií]da|debito|d[eé]b|debit/i.test(rt)) tipo='despesa';
-          else if(/receit|entrada|credito|cr[eé]d|credit/i.test(rt)) tipo='receita';
-          else tipo=valor<0?'despesa':'receita';
-        } else {tipo=valor<0?'despesa':'receita';}
-        valor=Math.abs(valor);
-      }
-      if(!desc&&valor===0){skipped++;return;}
-      let dataISO=today();
-      if(rawDate){
-        if(/^\d{4}-\d{2}-\d{2}/.test(rawDate)) dataISO=rawDate.substring(0,10);
-        else if(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.test(rawDate)){const p=rawDate.split('/');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
-        else if(/^(\d{1,2})-(\d{1,2})-(\d{4})/.test(rawDate)){const p=rawDate.split('-');dataISO=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');}
-        else if(/^(\d{4})\/(\d{2})\/(\d{2})/.test(rawDate)){dataISO=rawDate.substring(0,10).replace(/\//g,'-');}
-      }
-      const dl=desc.toLowerCase();
-      let cat='Outros';
-      if(/aluguel/i.test(dl)) cat='Aluguel';
-      else if(/funcio|sal[aá]rio|folha/i.test(dl)) cat='Pessoal';
-      else if(/consul/i.test(dl)) cat='Consulta';
-      else if(/protocolo/i.test(dl)) cat='Protocolo';
-      else if(/material|insumo/i.test(dl)) cat='Material';
-      else if(/imposto|taxa|tribut/i.test(dl)) cat='Impostos';
-      else if(/luz|energia|[aá]gua|internet|telefon/i.test(dl)) cat='Utilidades';
-      else if(/market|publici|anuncio|tr[aá]fego/i.test(dl)) cat='Marketing';
-      else if(tipo==='receita') cat='Receita';
-      const c=(clinicSel==='auto')?userClinic()||'dtm':clinicSel;
-      if(tipo==='receita') recT+=valor; else desT+=valor;
-      preview.push({dataISO,desc:desc||'(sem descrição)',valor,tipo,cat,clinic:c});
-      if(tbody){
-        const clinicLabel=c==='dtm'?'🦷 DTM':'⚕️ Hérnia';
-        const tr=document.createElement('tr');
-        tr.style.borderBottom='1px solid #f1f5f9';
-        tr.innerHTML='<td style="padding:8px 12px;font-size:12px">'+fmtD(dataISO)+'</td>'
-          +'<td style="padding:8px 12px;font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+desc+'">'+desc+'</td>'
-          +'<td style="padding:8px 12px;font-size:12px;font-weight:600;color:'+(tipo==='receita'?'#16a34a':'#dc2626')+'">'+(tipo==='receita'?'+':'-')+' R$ '+valor.toFixed(2).replace('.',',')+'</td>'
-          +'<td style="padding:8px 12px;font-size:11px;color:#64748b">'+cat+'</td>'
-          +'<td style="padding:8px 12px;font-size:11px">'+clinicLabel+'</td>';
-        tbody.appendChild(tr);
-      }
-    });
-    if(!preview.length){
-      const modeMsg=mode==='dual'?'Verifique as colunas de Entradas e Saídas.':'Verifique se a coluna Valor está correta.';
-      alert('Nenhum dado válido encontrado.\n\n'+_importRows.length+' linhas lidas, '+skipped+' puladas.\n\n'+modeMsg);
-      return;
-    }
-    _importPreview=preview;
-    const sumEl=document.getElementById('importStats');
-    if(sumEl){
-      const saldoClass=recT>=desT?'color:#059669':'color:#dc2626';
-      const clinicLbl=clinicSel==='hernia'?'⚕️ Dr. Hérnia':clinicSel==='dtm'?'🦷 DTM & Sono':'🏥 Auto (DTM)';
-      sumEl.innerHTML='✅ '+preview.length+' lançamentos &nbsp;|&nbsp; <b style="color:#1d4ed8">'+clinicLbl+'</b> &nbsp;|&nbsp; <span style="color:#059669">Receitas: R$ '+fmtN(recT)+'</span> &nbsp;|&nbsp; <span style="color:#dc2626">Despesas: R$ '+fmtN(desT)+'</span> &nbsp;|&nbsp; <span style="'+saldoClass+'">Saldo: R$ '+fmtN(recT-desT)+'</span>';
-    }
-    document.getElementById('importMapping').style.display='none';
-    const previewDiv=document.getElementById('importPreview');
-    if(previewDiv) previewDiv.style.display='block';
-    window.scrollTo({top:0,behavior:'smooth'});
-    const mainEl=document.getElementById('main');
-    if(mainEl) mainEl.scrollTop=0;
-    toast('✅ '+preview.length+' lançamentos prontos para importar!');
-  }catch(err){
-    console.error('buildImportPreview error:',err);
-    alert('Erro ao gerar prévia:\n\n'+err.message+'\n\nAbra o console (F12) para detalhes.');
-  }
-}
-async function confirmImport(){
-  if(!_importPreview||!_importPreview.length){alert('Nenhum dado para importar.');return;}
-  const cs=document.getElementById('importClinicSel')?.value||'auto';
-  if(cs==='auto'){
-    const ok=confirm('⚠️ ATENÇÃO: Clínica está como "Minha clínica" (automático).\n\nPara Admin isso importa como DTM & Sono.\n\nCancele e selecione a clínica correta, ou confirme para continuar como DTM.');
-    if(!ok)return;
-  }
-  const btn=document.getElementById('confirmImportBtn');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Importando...';}
-  try{
-    const rows=_importPreview.map(r=>({
-      clinic:r.clinic||'dtm',tipo:r.tipo,categoria:r.cat,
-      descricao:r.desc,valor:r.valor,data:r.dataISO,
-      pagamento:'pix',created_by:currentUser.id
-    }));
-    const chunkSize=50;
-    let total=0;
-    for(let i=0;i<rows.length;i+=chunkSize){
-      const chunk=rows.slice(i,i+chunkSize);
-      const {error}=await getSvc().from('transactions').insert(chunk);
-      if(error)throw error;
-      total+=chunk.length;
-    }
-    document.getElementById('importResult').style.display='block';
-    document.getElementById('importResultText').textContent=`✅ ${total} lançamentos importados com sucesso!`;
-    document.getElementById('importPreview').style.display='none';
-    document.getElementById('importMapping').style.display='none';
-    _importPreview=[];
-    toast(`✅ ${total} lançamentos importados!`);
-    setTimeout(()=>{showSection('dashboard');},800);
-  }catch(err){
-    alert('Erro ao importar: '+err.message);
-    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
-  }
-}
-function resetImport(){
-  _importPreview=[];
-  _importRows=[];
-  _importHeaders=[];
-  const fi=document.getElementById('importFileInput');
-  if(fi) fi.value='';
-  const els=['importFileName','importMapping','importPreview','importResult','importLoading'];
-  els.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
-  const da=document.getElementById('importDropArea');
-  if(da) da.style.display='block';
-  const btn=document.getElementById('confirmImportBtn');
-  if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
-}
-
-// ===== DOCUMENTOS =====
-function docFileType(name){
-  const ext=(name||'').split('.').pop().toLowerCase();
-  if(ext==='pdf')return'pdf';
-  if(['doc','docx','odt'].includes(ext))return'word';
-  if(['xls','xlsx','ods','csv'].includes(ext))return'excel';
-  return'outro';
-}
-function docFileIcon(tipo){
-  if(tipo==='pdf')return'📕';
-  if(tipo==='word')return'📘';
-  if(tipo==='excel')return'📗';
-  return'📄';
-}
-function docFileSizeStr(bytes){
-  if(bytes<1024)return bytes+'B';
-  if(bytes<1048576)return(bytes/1024).toFixed(1)+'KB';
-  return(bytes/1048576).toFixed(1)+'MB';
-}
-function handleDocDrop(e){
-  e.preventDefault();
-  const area=document.getElementById('docDropArea');
-  area.style.borderColor='#94a3b8';area.style.background='#f8fafc';
-  const f=e.dataTransfer.files[0];
-  if(f){
-    document.getElementById('docFileInput').files;
-    uploadDocFile(f);
-  }
-}
-function uploadDoc(inp){
-  const f=inp.files[0];
-  if(!f)return;
-  uploadDocFile(f);
-}
-async function uploadDocFile(file){
-  const maxSize=20*1024*1024;
-  if(file.size>maxSize){alert('Arquivo muito grande. Máximo: 20MB.');return;}
-  if(!currentUser){alert('Você precisa estar logado para enviar documentos.');return;}
-  const clinic=document.getElementById('docUpClinic').value;
-  const desc=(document.getElementById('docUpDesc').value||'').trim()||file.name;
-  const tipo=docFileType(file.name);
-  const ts=Date.now();
-  const safeName=file.name.replace(/[^a-zA-Z0-9._\-]/g,'_');
-  const path=clinic+'/'+ts+'_'+safeName;
-  const prog=document.getElementById('docUploadProgress');
-  const msg=document.getElementById('docUploadMsg');
-  const bar=document.getElementById('docUploadBar');
-  prog.style.display='block';
-  document.getElementById('docDropArea').style.display='none';
-  msg.textContent='Enviando '+file.name+'...';
-  bar.style.width='20%';
-  try{
-    // Step 1: Upload to storage
-    msg.textContent='Passo 1/2: Enviando arquivo para o servidor...';
-    bar.style.width='40%';
-    const svcClient=getSvc();
-    const uploadResult=await svcClient.storage.from('documentos').upload
+    const ct=document.getElementById('colTipo').value||'_
