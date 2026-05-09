@@ -416,19 +416,35 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- HORAS EXTRAS -->
 <div id="s-horas" class="section pc">
-  <div class="tcard"><div class="thead2"><h3>⏱️ Horas Extras — Fisioterapeuta</h3><button class="btn btn-primary btn-sm" onclick="openModal('mHora')">+ Registrar</button></div>
-  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Funcionário</th><th>Cargo</th><th>Horas</th><th style="text-align:right">Valor/h</th><th style="text-align:right">Total</th><th></th></tr></thead><tbody id="horasTb"></tbody></table></div></div>
+  <!-- Filtros -->
+  <div class="fbar no-print" style="margin-bottom:10px">
+    <div class="fg" style="flex:0 0 140px"><label>Clínica</label><select id="fHoraCl" onchange="renderHoras()"><option value="">Todas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
+    <div class="fg" style="flex:0 0 140px"><label>Funcionário</label><input id="fHoraFunc" placeholder="Filtrar..." oninput="renderHoras()" style="height:32px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"></div>
+    <div class="fg" style="flex:0 0 120px"><label>Mês</label><select id="fHoraMes" onchange="renderHoras()"><option value="">Todos</option></select></div>
+    <div class="fg" style="flex:0 0 90px"><label>Ano</label><select id="fHoraAno" onchange="renderHoras()"><option value="">Todos</option></select></div>
+    <div class="fg" style="align-self:flex-end"><button class="btn btn-primary btn-sm" onclick="openModal('mHora');document.getElementById('hId').value='';document.getElementById('mHoraTitle').textContent='⏱️ Registrar Horas Extras'">+ Registrar</button></div>
+  </div>
+  <!-- Resumo banco de horas -->
+  <div id="horasResumo" style="margin-bottom:12px"></div>
+  <!-- Tabela -->
+  <div class="tcard"><div class="thead2"><h3>⏱️ Horas Extras</h3></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Funcionário</th><th>Cargo</th><th style="text-align:center">Horas</th><th style="text-align:right">Valor/h</th><th style="text-align:right">Total</th><th>Descrição</th><th></th></tr></thead><tbody id="horasTb"></tbody></table></div></div>
 </div>
 
 <!-- COMISSÕES -->
 <div id="s-comissoes" class="section pc">
-  <div class="fbar no-print">
+  <div class="fbar no-print" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
     <div class="fg" style="flex:0 0 130px"><label>Clínica</label><select id="fComCl" onchange="renderComissoes()"><option value="">Todas</option><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div>
     <div class="fg" style="flex:0 0 110px"><label>Status</label><select id="fComSt" onchange="renderComissoes()"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
     <div class="fg" style="flex:0 0 130px"><label>Mês</label><select id="fComMs" onchange="renderComissoes()"><option value="">Todos</option></select></div>
+    <div class="fg" style="flex:0 0 90px"><label>Ano</label><select id="fComAno" onchange="renderComissoes()"><option value="">Todos</option></select></div>
+    <div class="fg" style="flex:0 0 150px"><label>Profissional</label><input id="fComProf" placeholder="Filtrar..." oninput="renderComissoes()" style="height:32px;padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"></div>
+    <div class="fg" style="align-self:flex-end"><button class="btn btn-primary btn-sm" onclick="openModal('mCom');document.getElementById('coId').value='';document.getElementById('mComTitle').textContent='💸 Nova Comissão'">+ Nova</button></div>
   </div>
-  <div class="tcard"><div class="thead2"><h3>💸 Comissões (2,5% sobre Protocolos)</h3><div style="display:flex;gap:5px"><span id="comTotal" style="font-size:11px;color:#64748b;align-self:center"></span><button class="btn btn-primary btn-sm" onclick="openModal('mCom')">+ Nova</button></div></div>
-  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Profissional</th><th>Protocolo</th><th style="text-align:right">Valor Protocolo</th><th style="text-align:right">% Com.</th><th style="text-align:right">Comissão</th><th>Status</th><th>Ações</th></tr></thead><tbody id="comTb"></tbody></table></div></div>
+  <!-- Resumo por profissional -->
+  <div id="comResumo" style="margin-bottom:12px"></div>
+  <div class="tcard"><div class="thead2"><h3>💸 Comissões</h3><span id="comTotal" style="font-size:11px;color:#64748b;align-self:center"></span></div>
+  <div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Profissional</th><th>Protocolo/Serviço</th><th style="text-align:right">Valor</th><th style="text-align:right">%</th><th style="text-align:right">Comissão</th><th>Status</th><th>Obs</th><th>Ações</th></tr></thead><tbody id="comTb"></tbody></table></div></div>
 </div>
 
 <!-- PROCEDIMENTOS -->
@@ -799,11 +815,12 @@ tbody tr:last-child td{border-bottom:none}
 <div id="mHora" class="modal-bg">
   <div class="modal-box">
     <button class="mclose" onclick="closeModal('mHora')">✕</button>
-    <h3>⏱️ Registrar Horas Extras</h3>
-    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="hCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="hDt"></div></div>
-    <div class="frow c2"><div class="fg"><label>Funcionário *</label><input id="hFunc" placeholder="Nome do funcionário"></div><div class="fg"><label>Cargo</label><input id="hCargo" value="Fisioterapeuta"></div></div>
-    <div class="frow c3"><div class="fg"><label>Horas Extras *</label><input type="number" id="hHrs" placeholder="Ex: 2.5" step="0.5" min="0.5"></div><div class="fg"><label>Valor por Hora (R$) *</label><input type="number" id="hVh" placeholder="0.00" step="0.01"></div><div class="fg"><label>Total (calculado)</label><input id="hTot" readonly style="background:#f8fafc;font-weight:600;color:#059669"></div></div>
-    <div class="frow c1"><div class="fg"><label>Descrição</label><input id="hDs" placeholder="Motivo das horas extras..."></div></div>
+    <h3 id="mHoraTitle">⏱️ Registrar Horas Extras</h3>
+    <input type="hidden" id="hId">
+    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="hCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia" selected>Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="hDt"></div></div>
+    <div class="frow c2"><div class="fg"><label>Funcionário *</label><input id="hFunc" placeholder="Nome do funcionário"></div><div class="fg"><label>Cargo</label><input id="hCargo" value="Auxiliar"></div></div>
+    <div class="frow c3"><div class="fg"><label>Horas Extras *</label><input type="number" id="hHrs" placeholder="Ex: 2.5" step="0.01" min="0" oninput="calcHoraTotal()"></div><div class="fg"><label>Valor por Hora (R$) *</label><input type="number" id="hVh" placeholder="0.00" step="0.01" oninput="calcHoraTotal()"></div><div class="fg"><label>Total (calculado)</label><input id="hTot" readonly style="background:#f0fdf4;font-weight:700;color:#059669;border:1px solid #bbf7d0"></div></div>
+    <div class="frow c1"><div class="fg"><label>Descrição / Observação</label><input id="hDs" placeholder="Ex: Dia 01/04 - entrada 8h saída 18h"></div></div>
     <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mHora')">Cancelar</button><button class="btn btn-primary" onclick="saveHora()">💾 Salvar</button></div>
   </div>
 </div>
@@ -811,11 +828,12 @@ tbody tr:last-child td{border-bottom:none}
 <div id="mCom" class="modal-bg">
   <div class="modal-box">
     <button class="mclose" onclick="closeModal('mCom')">✕</button>
-    <h3>💸 Registrar Comissão</h3>
-    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="coCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia">Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="coDt"></div></div>
+    <h3 id="mComTitle">💸 Registrar Comissão</h3>
+    <input type="hidden" id="coId">
+    <div class="frow c2"><div class="fg"><label>Clínica *</label><select id="coCl"><option value="dtm">DTM &amp; Sono</option><option value="hernia" selected>Dr. Hérnia SJC</option></select></div><div class="fg"><label>Data *</label><input type="date" id="coDt"></div></div>
     <div class="frow c2"><div class="fg"><label>Profissional *</label><input id="coProf" placeholder="Nome do profissional"></div><div class="fg"><label>Protocolo / Serviço *</label><input id="coProt" placeholder="Nome do protocolo vendido"></div></div>
-    <div class="frow c3"><div class="fg"><label>Valor do Protocolo (R$) *</label><input type="number" id="coVp" placeholder="0.00" step="0.01" oninput="calcCom()"></div><div class="fg"><label>% Comissão</label><input type="number" id="coPct" value="2.5" step="0.1" oninput="calcCom()"></div><div class="fg"><label>Valor da Comissão</label><input id="coVc" readonly style="background:#f8fafc;font-weight:600;color:#059669"></div></div>
-    <div class="frow c1"><div class="fg"><label>Observação</label><input id="coObs" placeholder="..."></div></div>
+    <div class="frow c3"><div class="fg"><label>Valor do Protocolo (R$) *</label><input type="number" id="coVp" placeholder="0.00" step="0.01" oninput="calcCom()"></div><div class="fg"><label>% Comissão</label><input type="number" id="coPct" value="2.5" step="0.1" oninput="calcCom()"></div><div class="fg"><label>Valor da Comissão</label><input id="coVc" readonly style="background:#f0fdf4;font-weight:700;color:#059669;border:1px solid #bbf7d0"></div></div>
+    <div class="frow c2"><div class="fg"><label>Observação</label><input id="coObs" placeholder="..."></div><div class="fg"><label>Status</label><select id="coSt"><option value="pendente">⏳ Pendente</option><option value="pago">✅ Pago</option></select></div></div>
     <div class="factions"><button class="btn btn-ghost" onclick="closeModal('mCom')">Cancelar</button><button class="btn btn-primary" onclick="saveCom()">💾 Salvar</button></div>
   </div>
 </div>
@@ -1114,10 +1132,10 @@ function showSection(id){
   else if(id==='documentos')loadDocs();
   else if(id==='lancamentos')renderLanc();
   else if(id==='notas')renderNotas();
-  else if(id==='horas')renderHoras();
-  else if(id==='comissoes')renderComissoes();
+  else if(id==='horas'){initHoraFiltros();renderHoras();}
+  else if(id==='comissoes'){initComFiltros();renderComissoes();}
   else if(id==='procedimentos')renderProcedimentos();
-  else if(id==='relatorios')renderRel();
+  else if(id==='relatorios'){renderRel();}
   else if(id==='contabilidade')initContabSelects();
   else if(id==='ia')loadChatHistory();
   else if(id==='auditoria'){}
@@ -1150,9 +1168,10 @@ function initSelectors(){
   // Dashboard selectors — default to "Todos" so dados importados aparecem
   ['dMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Todos</option>';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value='';});
   ['dAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='<option value="">Todos</option>';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value='';});
-  // Relatório e auditoria — manter mês atual como padrão
-  ['rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=cm;});
-  ['rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=cy;});
+  // Relatório e auditoria — padrão: mês anterior (onde provavelmente há dados)
+  const pm=cm===1?12:cm-1;const py=cm===1?cy-1:cy;
+  ['rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=pm;});
+  ['rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=py;});
   const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value='';}
   ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value=String(cm).padStart(2,'0');});
   const fAn=document.getElementById('fAn');if(fAn){fAn.add(new Option('Todos',''));for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value='';}
@@ -1427,71 +1446,224 @@ function printNF(id,cl,num,dt,pac,cpf,desc,vl,iss,cod){
   document.body.classList.add('pnf');window.print();document.body.classList.remove('pnf');
 }
 // ===== HORAS EXTRAS =====
+function calcHoraTotal(){
+  const h=parseFloat(document.getElementById('hHrs')?.value)||0;
+  const v=parseFloat(document.getElementById('hVh')?.value)||0;
+  const tot=document.getElementById('hTot');
+  if(tot)tot.value=h&&v?'R$ '+(h*v).toFixed(2).replace('.',','):'';
+}
+function horasFiltros(){
+  return{
+    cl:document.getElementById('fHoraCl')?.value||'',
+    func:(document.getElementById('fHoraFunc')?.value||'').toLowerCase().trim(),
+    mes:document.getElementById('fHoraMes')?.value||'',
+    ano:document.getElementById('fHoraAno')?.value||''
+  };
+}
 async function renderHoras(){
   const uc=userClinic();
+  const f=horasFiltros();
   let q=sb.from('horas_extras').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
-  const{data,error}=await q.limit(200);
+  else if(f.cl)q=q.eq('clinic',f.cl);
+  const{data,error}=await q.limit(500);
   const tb=document.getElementById('horasTb');
-  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ic">⏱️</div><h4>${error?'Erro':'Nenhuma hora extra registrada'}</h4></div></td></tr>`;return;}
-  tb.innerHTML=data.map(h=>`<tr>
-    <td>${fmtD(h.data)}</td>
-    <td><span class="badge badge-${h.clinic}">${h.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
-    <td>${h.funcionario}</td><td>${h.cargo||'-'}</td>
-    <td style="text-align:center;font-weight:600">${h.horas}h</td>
-    <td style="text-align:right">${fmt(parseFloat(h.valor_hora||0))}</td>
-    <td style="text-align:right;font-weight:600;color:#1d4ed8">${fmt(parseFloat(h.total||0))}</td>
-    <td>${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delHora(${h.id})">🗑️</button>`:''}</td>
-  </tr>`).join('');
+  if(error){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">⚠️</div><h4>Erro ao carregar</h4></div></td></tr>`;return;}
+  let rows=(data||[]);
+  // Filtros client-side
+  if(f.func)rows=rows.filter(r=>r.funcionario?.toLowerCase().includes(f.func));
+  if(f.mes)rows=rows.filter(r=>r.data&&r.data.substring(5,7)===f.mes);
+  if(f.ano)rows=rows.filter(r=>r.data&&r.data.substring(0,4)===f.ano);
+  // Calcular resumo por funcionário
+  const porFunc={};
+  rows.forEach(h=>{
+    const fn=h.funcionario||'?';
+    if(!porFunc[fn])porFunc[fn]={h:0,v:0,vh:0,n:0};
+    porFunc[fn].h+=parseFloat(h.horas||0);
+    porFunc[fn].v+=parseFloat(h.total||0);
+    porFunc[fn].vh=parseFloat(h.valor_hora||0);
+    porFunc[fn].n++;
+  });
+  const totalH=Object.values(porFunc).reduce((s,x)=>s+x.h,0);
+  const totalV=Object.values(porFunc).reduce((s,x)=>s+x.v,0);
+  // Renderizar resumo
+  const res=document.getElementById('horasResumo');
+  if(res){
+    const hFmt=h=>{const hh=Math.floor(h);const mm=Math.round((h-hh)*60);return hh+'h'+String(mm).padStart(2,'0')+'min';};
+    const funcCards=Object.entries(porFunc).map(([fn,v])=>{
+      const key='hDesc_'+fn.replace(/\s/g,'_');
+      const descSaved=parseFloat(localStorage.getItem(key)||0);
+      const liq=Math.max(0,v.h-descSaved);
+      const vliq=liq*v.vh;
+      return `<div class="tcard" style="flex:1;min-width:220px;border-left:4px solid #1d4ed8">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">👤 ${fn}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+          <div style="background:#f8fafc;padding:7px;border-radius:6px"><div style="color:#64748b">Total extras</div><div style="font-weight:700;font-size:16px">${hFmt(v.h)}</div></div>
+          <div style="background:#fff7ed;padding:7px;border-radius:6px">
+            <div style="color:#64748b">(-) Desconto</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <input type="number" step="0.25" min="0" value="${descSaved}" style="width:60px;font-size:13px;font-weight:700;color:#d97706;border:1px solid #fed7aa;border-radius:4px;padding:2px 4px" onchange="localStorage.setItem('${key}',this.value);renderHoras()" title="Horas a descontar (banco de horas)">
+              <span style="color:#64748b;font-size:11px">h</span>
+            </div>
+          </div>
+          <div style="background:#f0fdf4;padding:7px;border-radius:6px"><div style="color:#64748b">(=) Horas a pagar</div><div style="font-weight:700;font-size:16px;color:#059669">${hFmt(liq)}</div></div>
+          <div style="background:#eff6ff;padding:7px;border-radius:6px"><div style="color:#64748b">Valor a pagar</div><div style="font-weight:700;font-size:16px;color:#1d4ed8">${fmt(vliq)}</div></div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:6px">${v.n} registros · Valor/h: ${fmt(v.vh)}</div>
+      </div>`;
+    }).join('');
+    res.innerHTML=funcCards?`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:4px">${funcCards}</div>`:'';
+  }
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">⏱️</div><h4>Nenhuma hora extra encontrada</h4></div></td></tr>`;return;}
+  tb.innerHTML=rows.map(h=>{
+    const hh=parseFloat(h.horas||0);
+    const hStr=()=>{const hf=Math.floor(hh);const mf=Math.round((hh-hf)*60);return hf+'h'+String(mf).padStart(2,'0')+'min';};
+    return `<tr>
+      <td>${fmtD(h.data)}</td>
+      <td><span class="badge badge-${h.clinic}">${h.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+      <td>${h.funcionario}</td><td style="color:#64748b;font-size:12px">${h.cargo||'-'}</td>
+      <td style="text-align:center;font-weight:600">${hStr()}</td>
+      <td style="text-align:right;color:#64748b">${fmt(parseFloat(h.valor_hora||0))}</td>
+      <td style="text-align:right;font-weight:700;color:#1d4ed8">${fmt(parseFloat(h.total||0))}</td>
+      <td style="font-size:11px;color:#64748b;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${h.descricao||''}">${h.descricao||'-'}</td>
+      <td style="white-space:nowrap">${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editHora(${h.id})" title="Editar">✏️</button><button class="btn btn-ghost btn-sm" onclick="delHora(${h.id})" title="Excluir">🗑️</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+async function editHora(id){
+  const{data}=await sb.from('horas_extras').select('*').eq('id',id).single();
+  if(!data)return;
+  document.getElementById('hId').value=id;
+  document.getElementById('mHoraTitle').textContent='✏️ Editar Horas Extras';
+  document.getElementById('hCl').value=data.clinic||'hernia';
+  document.getElementById('hDt').value=data.data||'';
+  document.getElementById('hFunc').value=data.funcionario||'';
+  document.getElementById('hCargo').value=data.cargo||'Auxiliar';
+  document.getElementById('hHrs').value=data.horas||'';
+  document.getElementById('hVh').value=data.valor_hora||'';
+  document.getElementById('hDs').value=data.descricao||'';
+  calcHoraTotal();
+  openModal('mHora');
 }
 async function saveHora(){
+  const id=document.getElementById('hId').value;
   const cl=document.getElementById('hCl').value;
   const dt=document.getElementById('hDt').value;
   const func=document.getElementById('hFunc').value.trim();
-  const cargo=document.getElementById('hCargo').value.trim()||'Fisioterapeuta';
+  const cargo=document.getElementById('hCargo').value.trim()||'Auxiliar';
   const hrs=parseFloat(document.getElementById('hHrs').value);
   const vh=parseFloat(document.getElementById('hVh').value);
   const ds=document.getElementById('hDs').value.trim();
-  if(!dt||!func||!hrs||!vh){toast('Preencha todos os campos!','err');return;}
+  if(!dt||!func||!hrs||!vh){toast('Preencha todos os campos obrigatórios!','err');return;}
   loading(true);
-  const{error}=await sb.from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds});
+  let error;
+  if(id){
+    ({error}=await sb.from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
+  }else{
+    ({error}=await sb.from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}));
+  }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mHora');toast('✅ Horas extras registradas!');renderHoras();
+  closeModal('mHora');
+  toast(id?'✅ Registro atualizado!':'✅ Horas extras registradas!');
+  renderHoras();
 }
-async function delHora(id){if(!confirm('Remover?'))return;await sb.from('horas_extras').delete().eq('id',id);renderHoras();toast('Removido.');}
+async function delHora(id){if(!confirm('Remover este registro?'))return;await sb.from('horas_extras').delete().eq('id',id);renderHoras();toast('✅ Removido.');}
+function initHoraFiltros(){
+  const mes=document.getElementById('fHoraMes');
+  if(mes&&mes.options.length<2){MESES.forEach((m,i)=>mes.add(new Option(m,String(i+1).padStart(2,'0'))));};
+  const ano=document.getElementById('fHoraAno');
+  if(ano&&ano.options.length<2){const cy=new Date().getFullYear();for(let y=cy;y>=cy-4;y--)ano.add(new Option(y,y));};
+}
 // ===== COMISSÕES =====
+function initComFiltros(){
+  const mes=document.getElementById('fComMs');
+  if(mes&&mes.options.length<2){MESES.forEach((m,i)=>mes.add(new Option(m,String(i+1).padStart(2,'0'))));};
+  const ano=document.getElementById('fComAno');
+  if(ano&&ano.options.length<2){const cy=new Date().getFullYear();for(let y=cy;y>=cy-4;y--)ano.add(new Option(y,y));};
+}
 async function renderComissoes(){
   const fCl=document.getElementById('fComCl')?.value||'';
   const fSt=document.getElementById('fComSt')?.value||'';
   const fMs=document.getElementById('fComMs')?.value||'';
+  const fAno=document.getElementById('fComAno')?.value||'';
+  const fProf=(document.getElementById('fComProf')?.value||'').toLowerCase().trim();
   const uc=userClinic();
   let q=sb.from('comissoes').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
-  if(fCl)q=q.eq('clinic',fCl);
+  else if(fCl)q=q.eq('clinic',fCl);
   if(fSt)q=q.eq('status',fSt);
-  const{data,error}=await q.limit(300);
+  const{data,error}=await q.limit(500);
   const tb=document.getElementById('comTb');
   let rows=data||[];
   if(fMs)rows=rows.filter(r=>r.data&&r.data.substring(5,7)===fMs);
+  if(fAno)rows=rows.filter(r=>r.data&&r.data.substring(0,4)===fAno);
+  if(fProf)rows=rows.filter(r=>r.profissional?.toLowerCase().includes(fProf));
+  // Totais
   const totalPend=rows.filter(r=>r.status==='pendente').reduce((s,r)=>s+parseFloat(r.valor_comissao||0),0);
-  document.getElementById('comTotal').textContent='Pendente: '+fmt(totalPend);
-  if(error||!rows.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">💸</div><h4>${error?'Erro':'Nenhuma comissão registrada'}</h4></div></td></tr>`;return;}
+  const totalPago=rows.filter(r=>r.status==='pago').reduce((s,r)=>s+parseFloat(r.valor_comissao||0),0);
+  const totalGeral=totalPend+totalPago;
+  document.getElementById('comTotal').textContent=`Total: ${fmt(totalGeral)} | Pago: ${fmt(totalPago)} | Pendente: ${fmt(totalPend)}`;
+  // Resumo por profissional
+  const porProf={};
+  rows.forEach(r=>{
+    const p=r.profissional||'?';
+    if(!porProf[p])porProf[p]={pago:0,pend:0,proto:0,n:0};
+    const vc=parseFloat(r.valor_comissao||0);
+    const vp=parseFloat(r.valor_protocolo||0);
+    if(r.status==='pago')porProf[p].pago+=vc;else porProf[p].pend+=vc;
+    porProf[p].proto+=vp;porProf[p].n++;
+  });
+  const res=document.getElementById('comResumo');
+  if(res){
+    const cards=Object.entries(porProf).map(([p,v])=>`
+      <div class="tcard" style="flex:1;min-width:200px;border-left:4px solid #d97706">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">👤 ${p}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+          <div style="background:#f8fafc;padding:7px;border-radius:6px"><div style="color:#64748b">Protocolos</div><div style="font-weight:700;font-size:15px">${fmt(v.proto)}</div></div>
+          <div style="background:#fefce8;padding:7px;border-radius:6px"><div style="color:#64748b">Comissão total</div><div style="font-weight:700;font-size:15px;color:#d97706">${fmt(v.pago+v.pend)}</div></div>
+          <div style="background:#f0fdf4;padding:7px;border-radius:6px"><div style="color:#64748b">✅ Pago</div><div style="font-weight:700;color:#059669">${fmt(v.pago)}</div></div>
+          <div style="background:${v.pend>0?'#fff7ed':'#f8fafc'};padding:7px;border-radius:6px"><div style="color:#64748b">${v.pend>0?'⚠️ ':''}Pendente</div><div style="font-weight:700;color:${v.pend>0?'#d97706':'#64748b'}">${fmt(v.pend)}</div></div>
+        </div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:6px">${v.n} registros</div>
+      </div>`).join('');
+    res.innerHTML=cards?`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:4px">${cards}</div>`:'';
+  }
+  if(error||!rows.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ic">💸</div><h4>${error?'Erro ao carregar':'Nenhuma comissão encontrada'}</h4></div></td></tr>`;return;}
   tb.innerHTML=rows.map(c=>`<tr>
     <td>${fmtD(c.data)}</td>
     <td><span class="badge badge-${c.clinic}">${c.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
-    <td>${c.profissional}</td><td>${c.protocolo}</td>
+    <td style="font-weight:600">${c.profissional}</td>
+    <td style="font-size:11px;color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.protocolo||''}">${c.protocolo||'-'}</td>
     <td style="text-align:right">${fmt(parseFloat(c.valor_protocolo||0))}</td>
-    <td style="text-align:center">${c.percentual||2.5}%</td>
-    <td style="text-align:right;font-weight:600;color:#d97706">${fmt(parseFloat(c.valor_comissao||0))}</td>
+    <td style="text-align:center;color:#64748b">${c.percentual||2.5}%</td>
+    <td style="text-align:right;font-weight:700;color:#d97706">${fmt(parseFloat(c.valor_comissao||0))}</td>
     <td><span class="badge badge-${c.status}">${c.status==='pendente'?'⏳ Pendente':'✅ Pago'}</span></td>
+    <td style="font-size:11px;color:#94a3b8;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.observacao||''}">${c.observacao||'-'}</td>
     <td style="white-space:nowrap">
-      ${c.status==='pendente'&&canEdit()?`<button class="btn btn-success btn-sm" onclick="pagaCom(${c.id})">💰 Pagar</button>`:''} 
-      ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="delCom(${c.id})">🗑️</button>`:''}
+      ${c.status==='pendente'&&canEdit()?`<button class="btn btn-success btn-sm" onclick="pagaCom(${c.id})" title="Marcar como pago">💰</button>`:''}
+      ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editCom(${c.id})" title="Editar">✏️</button><button class="btn btn-ghost btn-sm" onclick="delCom(${c.id})" title="Excluir">🗑️</button>`:''}
     </td>
   </tr>`).join('');
 }
+async function editCom(id){
+  const{data}=await sb.from('comissoes').select('*').eq('id',id).single();
+  if(!data)return;
+  document.getElementById('coId').value=id;
+  document.getElementById('mComTitle').textContent='✏️ Editar Comissão';
+  document.getElementById('coCl').value=data.clinic||'hernia';
+  document.getElementById('coDt').value=data.data||'';
+  document.getElementById('coProf').value=data.profissional||'';
+  document.getElementById('coProt').value=data.protocolo||'';
+  document.getElementById('coVp').value=data.valor_protocolo||'';
+  document.getElementById('coPct').value=data.percentual||2.5;
+  document.getElementById('coObs').value=data.observacao||'';
+  document.getElementById('coSt').value=data.status||'pendente';
+  calcCom();
+  openModal('mCom');
+}
 async function saveCom(){
+  const id=document.getElementById('coId').value;
   const cl=document.getElementById('coCl').value;
   const dt=document.getElementById('coDt').value;
   const prof=document.getElementById('coProf').value.trim();
@@ -1499,21 +1671,27 @@ async function saveCom(){
   const vp=parseFloat(document.getElementById('coVp').value);
   const pct=parseFloat(document.getElementById('coPct').value)||2.5;
   const obs=document.getElementById('coObs').value.trim();
-  if(!dt||!prof||!prot||!vp){toast('Preencha todos os campos!','err');return;}
+  const st=document.getElementById('coSt')?.value||'pendente';
+  if(!dt||!prof||!prot||!vp){toast('Preencha todos os campos obrigatórios!','err');return;}
   const vc=vp*pct/100;
   loading(true);
-  const{error}=await sb.from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs});
+  let error;
+  if(id){
+    ({error}=await sb.from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
+  }else{
+    ({error}=await sb.from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}));
+  }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mCom');toast('✅ Comissão registrada!');renderComissoes();
+  closeModal('mCom');toast(id?'✅ Comissão atualizada!':'✅ Comissão registrada!');renderComissoes();
 }
 function calcCom(){
   const vp=parseFloat(document.getElementById('coVp')?.value)||0;
   const pct=parseFloat(document.getElementById('coPct')?.value)||2.5;
-  const el=document.getElementById('coVc');if(el)el.value=fmt(vp*pct/100);
+  const el=document.getElementById('coVc');if(el)el.value=vp?'R$ '+(vp*pct/100).toFixed(2).replace('.',','):'';
 }
 async function pagaCom(id){if(!confirm('Marcar como pago?'))return;await sb.from('comissoes').update({status:'pago'}).eq('id',id);renderComissoes();toast('✅ Comissão marcada como paga!');}
-async function delCom(id){if(!confirm('Remover?'))return;await sb.from('comissoes').delete().eq('id',id);renderComissoes();toast('Removido.');}
+async function delCom(id){if(!confirm('Remover esta comissão?'))return;await sb.from('comissoes').delete().eq('id',id);renderComissoes();toast('✅ Removido.');}
 </script>
 <script>
 // ===== PROCEDIMENTOS =====
@@ -1620,6 +1798,17 @@ async function renderRel(){
   div.innerHTML='<div class="empty"><div class="ic">⏳</div><p>Gerando relatório...</p></div>';
   try{
     const tx=await loadTx(filters);
+    if(!tx.length){
+      div.innerHTML=`<div style="text-align:center;padding:40px;background:#f8fafc;border-radius:12px;border:2px dashed #e2e8f0">
+        <div style="font-size:40px;margin-bottom:12px">📭</div>
+        <h3 style="color:#475569;margin-bottom:8px">Nenhum lançamento em ${MESES[m-1]}/${y}</h3>
+        <p style="color:#94a3b8;font-size:13px">Selecione outro mês/ano ou importe dados para este período.</p>
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rMes').value=${m===1?12:m-1};document.getElementById('rAno').value=${m===1?y-1:y};renderRel()">← Mês anterior</button>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('importar')">📥 Importar planilha</button>
+        </div>
+      </div>`;return;
+    }
     const rec=tx.filter(x=>x.tipo==='receita'),des=tx.filter(x=>x.tipo==='despesa');
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
@@ -2935,230 +3124,4 @@ async function uploadDocFile(file){
     msg.textContent='Passo 1/2: Enviando arquivo para o servidor...';
     bar.style.width='40%';
     const svcClient=getSvc();
-    const uploadResult=await svcClient.storage.from('documentos').upload(path,file,{cacheControl:'3600',upsert:true});
-    if(uploadResult.error){
-      throw new Error('Storage: '+uploadResult.error.message);
-    }
-    bar.style.width='70%';
-    // Step 2: Save metadata to DB
-    msg.textContent='Passo 2/2: Salvando informações...';
-    const insertResult=await svcClient.from('documentos').insert({
-      clinic:clinic,
-      nome:desc,
-      tipo:tipo,
-      tamanho:file.size,
-      storage_path:path,
-      descricao:desc,
-      uploaded_by:currentUser.id
-    });
-    if(insertResult.error){
-      console.warn('DB insert warning:', insertResult.error.message);
-    }
-    bar.style.width='100%';
-    msg.textContent='✅ Documento enviado com sucesso!';
-    toast('📁 '+file.name+' enviado!');
-    setTimeout(()=>{
-      prog.style.display='none';
-      document.getElementById('docDropArea').style.display='block';
-      document.getElementById('docFileInput').value='';
-      document.getElementById('docUpDesc').value='';
-      bar.style.width='0%';
-      loadDocs();
-    },1500);
-  }catch(err){
-    console.error('Upload error:', err);
-    prog.style.display='none';
-    document.getElementById('docDropArea').style.display='block';
-    document.getElementById('docFileInput').value='';
-    bar.style.width='0%';
-    const errMsg=err.message||JSON.stringify(err);
-    toast('\u274c Erro: '+errMsg,'err');
-    alert('\u274c Erro ao enviar documento:\n\n'+errMsg+'\n\nAbra o console do navegador (F12) para mais detalhes.');
-  }
-}
-async function loadDocs(){
-  const area=document.getElementById('docListArea');
-  if(!area)return;
-  area.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">\u23f3 Carregando...</div>';
-  const clinicF=document.getElementById('docFilterClinic')?.value||'';
-  const tipoF=document.getElementById('docFilterTipo')?.value||'';
-  try{
-    let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
-    if(clinicF)q=q.eq('clinic',clinicF);
-    if(tipoF)q=q.eq('tipo',tipoF);
-    const{data,error}=await q;
-    if(error)throw error;
-    if(!data||!data.length){
-      area.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">\ud83d\udcc4</div>Nenhum documento encontrado</div>';
-      return;
-    }
-    const rows=data.map(d=>{
-      const clinicLbl=d.clinic==='dtm'?'\ud83e\uddb7 DTM & Sono':'\u2695\ufe0f Dr. H\xe9rnia SJC';
-      const dt=d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):'';
-      const icon=docFileIcon(d.tipo);
-      const size=docFileSizeStr(d.tamanho||0);
-      return `<tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:10px 12px;font-size:22px;width:40px">${icon}</td>
-        <td style="padding:10px 12px">
-          <div style="font-size:13px;font-weight:600;color:#0f172a">${d.nome||d.nome_arquivo||'Documento'}</div>
-          <div style="font-size:11px;color:#94a3b8">${d.storage_path ? d.storage_path.split('/').pop() : ''}</div>
-        </td>
-        <td style="padding:10px 12px;font-size:12px;color:#64748b">${clinicLbl}</td>
-        <td style="padding:10px 12px;font-size:12px;color:#64748b">${dt}</td>
-        <td style="padding:10px 12px;font-size:11px;color:#94a3b8">${size}</td>
-        <td style="padding:10px 12px">
-          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.storage_path}','${(d.nome||'arquivo').replace(/'/g,'')}')">\u2b07\ufe0f Baixar</button>
-          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.storage_path||'').replace(/'/g,'')}')">\ud83d\uddd1\ufe0f</button>`:''}
-        </td>
-      </tr>`;
-    }).join('');
-    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Clínica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Ações</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-  }catch(err){
-    area.innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px">Erro ao carregar: '+err.message+'</div>';
-    console.error(err);
-  }
-}
-async function downloadDoc(path,filename){
-  try{
-    const{data,error}=await getSvc().storage.from('documentos').createSignedUrl(path,3600);
-    if(error)throw error;
-    const a=document.createElement('a');
-    a.href=data.signedUrl;
-    a.download=filename;
-    a.target='_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }catch(err){
-    alert('Erro ao baixar: '+err.message);
-  }
-}
-async function deleteDoc(id,path){
-  if(!confirm('Remover este documento?'))return;
-  try{
-    if(path){await getSvc().storage.from('documentos').remove([path]);}
-    await getSvc().from('documentos').delete().eq('id',id);
-    loadDocs();
-    toast('🗑️ Documento removido.');
-  }catch(err){alert('Erro ao remover: '+err.message);}
-}
-
-// ============================================================
-// ALERTAS AUTOMÁTICOS
-// ============================================================
-function renderAlerts(tR,tD,lucro,mg){
-  const el=document.getElementById('dashAlerts');if(!el)return;
-  const alerts=[];
-  if(tR===0&&tD===0){el.innerHTML='';return;}
-  if(lucro<0) alerts.push({c:'#dc2626',bg:'#fef2f2',ic:'❌',msg:`Resultado negativo: <b>${fmt(lucro)}</b> — revise despesas ou aumente receitas`});
-  else if(parseFloat(mg)<15) alerts.push({c:'#d97706',bg:'#fffbeb',ic:'⚠️',msg:`Margem baixa: <b>${mg}%</b> — ideal acima de 20%`});
-  if(tR>0&&tD/tR>0.85) alerts.push({c:'#dc2626',bg:'#fef2f2',ic:'🚨',msg:`Despesas em <b>${(tD/tR*100).toFixed(0)}%</b> da receita — acima do limite saudável (80%)`});
-  if(tR>0&&tD/tR>0.7&&tD/tR<=0.85) alerts.push({c:'#d97706',bg:'#fffbeb',ic:'⚠️',msg:`Despesas em <b>${(tD/tR*100).toFixed(0)}%</b> da receita — fique atento`});
-  if(lucro>0&&parseFloat(mg)>=30) alerts.push({c:'#059669',bg:'#f0fdf4',ic:'✅',msg:`Excelente! Margem de <b>${mg}%</b> — saúde financeira muito boa`});
-  el.innerHTML=alerts.map(a=>`<div style="background:${a.bg};border-left:4px solid ${a.c};border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;color:${a.c};display:flex;gap:8px;align-items:center"><span style="font-size:16px">${a.ic}</span><span>${a.msg}</span></div>`).join('');
-}
-
-// ============================================================
-// COMPARATIVO MENSAL
-// ============================================================
-async function renderComparativo(m,y,tR,tD){
-  const el=document.getElementById('comparativoBody');if(!el)return;
-  if(!m||!y){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:8px">Selecione mês e ano para comparar</div>';return;}
-  try{
-    const pm=m===1?12:m-1,py=m===1?y-1:y;
-    const prev=await loadTx({month:pm,year:py});
-    const pR=prev.filter(t=>t.tipo==='receita').reduce((s,t)=>s+parseFloat(t.valor),0);
-    const pD=prev.filter(t=>t.tipo==='despesa').reduce((s,t)=>s+parseFloat(t.valor),0);
-    const pL=pR-pD,cL=tR-tD;
-    const diffR=pR>0?((tR-pR)/pR*100).toFixed(1):null;
-    const diffD=pD>0?((tD-pD)/pD*100).toFixed(1):null;
-    const diffL=pL!==0?((cL-pL)/Math.abs(pL)*100).toFixed(1):null;
-    const arrow=(v)=>v===null?'—':parseFloat(v)>=0?`<span style="color:#059669">▲${v}%</span>`:`<span style="color:#dc2626">▼${Math.abs(v)}%</span>`;
-    const prevLabel=`${MESES[pm-1]}/${py}`;
-    el.innerHTML=`<table style="width:100%;font-size:12px;border-collapse:collapse">
-      <tr style="color:#64748b"><td style="padding:4px 0"></td><td style="padding:4px 6px;text-align:right">${prevLabel}</td><td style="padding:4px 6px;text-align:right">Atual</td><td style="padding:4px 6px;text-align:right">Var.</td></tr>
-      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#059669">💚 Receita</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pR)}</td><td style="padding:6px;text-align:right;font-weight:600">${fmts(tR)}</td><td style="padding:6px;text-align:right">${arrow(diffR)}</td></tr>
-      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#dc2626">🔴 Despesa</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pD)}</td><td style="padding:6px;text-align:right;font-weight:600">${fmts(tD)}</td><td style="padding:6px;text-align:right">${arrow(diffD)}</td></tr>
-      <tr style="border-top:1px solid #f1f5f9"><td style="padding:6px 0;font-weight:600;color:#1d4ed8">🔵 Lucro</td><td style="padding:6px;text-align:right;color:#64748b">${fmts(pL)}</td><td style="padding:6px;text-align:right;font-weight:600;color:${cL>=0?'#059669':'#dc2626'}">${fmts(cL)}</td><td style="padding:6px;text-align:right">${arrow(diffL)}</td></tr>
-    </table>`;
-  }catch(e){el.innerHTML='<div style="color:#94a3b8;font-size:12px">Erro ao carregar</div>';}
-}
-
-// ============================================================
-// METAS MENSAIS
-// ============================================================
-function metasKey(){return 'metas_'+currentUser?.id;}
-function loadMetas(){try{return JSON.parse(localStorage.getItem(metasKey())||'[]');}catch(e){return[];}}
-function saveMetas(arr){try{localStorage.setItem(metasKey(),JSON.stringify(arr));}catch(e){}}
-function openMetaModal(){
-  document.getElementById('metaDesc').value='';
-  document.getElementById('metaValor').value='';
-  document.getElementById('metaTipo').value='receita';
-  document.getElementById('metaCl').value='';
-  openModal('mMeta');
-}
-function saveMeta(){
-  const desc=document.getElementById('metaDesc').value.trim();
-  const valor=parseFloat(document.getElementById('metaValor').value);
-  const tipo=document.getElementById('metaTipo').value;
-  const cl=document.getElementById('metaCl').value;
-  if(!desc||!valor||isNaN(valor)){toast('Preencha descrição e valor','warn');return;}
-  const metas=loadMetas();
-  metas.push({id:Date.now(),desc,valor,tipo,cl,criadaEm:new Date().toISOString()});
-  saveMetas(metas);
-  closeModal('mMeta');
-  toast('🎯 Meta salva!');
-  renderMetas(null,null,null);
-}
-function delMeta(id){
-  saveMetas(loadMetas().filter(m=>m.id!==id));
-  renderMetas(null,null,null);
-  toast('Meta removida');
-}
-function renderMetas(tR,tD,tx){
-  const el=document.getElementById('metasBody');if(!el)return;
-  const metas=loadMetas();
-  if(!metas.length){el.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:10px 4px;text-align:center">Nenhuma meta definida.<br>Clique em "+ Meta" para criar.</div>';return;}
-  el.innerHTML=metas.map(m=>{
-    let atual=0,pct=0;
-    if(tR!==null){
-      if(m.tipo==='receita') atual=tR;
-      else if(m.tipo==='lucro') atual=tR-(tD||0);
-      else if(m.tipo==='atendimentos'&&tx) atual=tx.filter(t=>t.tipo==='receita'&&(!m.cl||t.clinic===m.cl)).length;
-      pct=Math.min(100,Math.round(atual/m.valor*100));
-    }
-    const color=pct>=100?'#059669':pct>=70?'#d97706':'#1d4ed8';
-    return `<div style="padding:8px 4px;border-bottom:1px solid #f1f5f9">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:12px;font-weight:600">${m.desc}</span>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span style="font-size:11px;color:#64748b">${tR!==null?fmt(atual)+' / '+fmt(m.valor):'Meta: '+fmt(m.valor)}</span>
-          <button onclick="delMeta(${m.id})" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:12px">✕</button>
-        </div>
-      </div>
-      <div style="background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden">
-        <div style="width:${pct}%;background:${color};height:100%;border-radius:4px;transition:width .5s"></div>
-      </div>
-      <div style="font-size:10px;color:${color};margin-top:2px;text-align:right">${pct}%${pct>=100?' ✅':''}</div>
-    </div>`;
-  }).join('');
-}
-
-// ============================================================
-// AGENDA DE PAGAMENTOS
-// ============================================================
-function agendaKey(){return 'agenda_'+currentUser?.id;}
-function loadAgenda(){try{return JSON.parse(localStorage.getItem(agendaKey())||'[]');}catch(e){return[];}}
-function saveAgendaLS(arr){try{localStorage.setItem(agendaKey(),JSON.stringify(arr));}catch(e){}}
-function openAgendaModal(){
-  document.getElementById('agDesc').value='';
-  document.getElementById('agData').value=new Date().toISOString().split('T')[0];
-  document.getElementById('agValor').value='';
-  document.getElementById('agTipo').value='pagar';
-  document.getElementById('agRec').value='0';
-  openModal('mAgenda');
-}
-function saveAgenda(){
-  const desc=document.getElementById('agDesc').value.trim();
-  const data=document.getElementById('agData').value;
-  const valor=parseFloat(documen
+    const uploadResult=await svcClient.storage.from('documentos').upload
