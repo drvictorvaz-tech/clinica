@@ -965,7 +965,7 @@ const CATS={
 // ===== STATE =====
 let sb=null, currentUser=null, userProfile=null, procedimentos=[], charts={};
 function getSB(){
-  if(!sb) sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+  if(!sb) sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
   return sb;
 }
 let _svc=null;
@@ -1176,13 +1176,19 @@ function initAppState(){
   setupRealtime();
 }
 function setupRealtime(){
-  if(!sb)return;
-  sb.channel('db-rt').on('postgres_changes',{event:'*',schema:'public',table:'transactions'},()=>{
-    const ac=document.querySelector('.nb.active');
-    const sid=ac?.dataset?.s;
-    if(sid==='dashboard')renderDash();
-    else if(sid==='lancamentos')renderLanc();
-  }).subscribe();
+  try{
+    if(!sb)return;
+    sb.channel('db-rt').on('postgres_changes',{event:'*',schema:'public',table:'transactions'},()=>{
+      try{
+        const ac=document.querySelector('.nb.active');
+        const sid=ac?.dataset?.s;
+        if(sid==='dashboard')renderDash();
+        else if(sid==='lancamentos')renderLanc();
+      }catch(e){console.warn('Realtime callback error:',e);}
+    }).subscribe((status,err)=>{
+      if(err)console.warn('Realtime subscribe error:',err);
+    });
+  }catch(e){console.warn('Realtime não disponível:',e);}
 }
 </script>
 <script>
@@ -3569,6 +3575,4 @@ function buildSecImportPreview(){
   const tb=document.getElementById('secImportBody');
   if(tb)tb.innerHTML=_secImportPreview.map(r=>`<tr>
     <td style="white-space:nowrap;font-size:11px">${r.data}</td>
-    <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descricao}</td>
-    <td style="text-align:right;font-weight:600;font-size:11px;color:${r.tipo==='receita'?'#059669':'#dc2626'}">${fmtN(r.valor)}</td>
-    <td><span style="font-size:10px;font-weight:600;color:${r.tipo==='rec
+    <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;whit
