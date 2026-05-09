@@ -3499,7 +3499,7 @@ async function uploadDoc(fileOrInput){
       clinic:cl,tipo,nome:file.name,descricao:desc,
       storage_path:storagePath,tamanho:file.size,mime_type:file.type||''
     });
-    if(dbErr)throw new Error('Banco: '+dbErr.message);
+    if(dbErr){if(msgEl){msgEl.textContent='❌ Erro banco: '+dbErr.message;msgEl.style.color='#dc2626';}toast('❌ Erro ao salvar no banco: '+dbErr.message,'err');return;}
     if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
     setTimeout(()=>{if(progEl)progEl.style.display='none';},2000);
     const fi=document.getElementById('docFileInput');if(fi)fi.value='';
