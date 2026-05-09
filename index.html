@@ -1959,7 +1959,10 @@ async function renderUsers(){
       <td style="color:#64748b;font-size:12px">${u.email||'—'}</td>
       <td><span class="badge badge-${u.role==='admin'?'red':u.role==='contabilidade'?'blue':'green'}">${ROLE_LABELS[u.role]||u.role}</span></td>
       <td><span style="color:${u.ativo?'#059669':'#dc2626'};font-weight:600">${u.ativo?'✅ Ativo':'❌ Inativo'}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}','${u.email||''}','${u.role}',${u.ativo})">✏️ Editar</button></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}','${u.email||''}','${u.role}',${u.ativo})">✏️ Editar</button>
+        ${u.id!==currentUser?.id?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}')">🗑️ Excluir</button>`:'<span style="font-size:11px;color:#94a3b8">(você)</span>'}
+      </td>
     </tr>`).join('');
   }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">Erro: ${e.message}</td></tr>`;}
 }
@@ -2011,6 +2014,26 @@ async function saveUser(){
       loading(false);if(error)throw error;
       closeModal('mUser');toast('Perfil atualizado!','ok');renderUsers();
     }catch(e){loading(false);toast('Erro: '+e.message,'err');}
+  }
+}
+async function deleteUser(id, nome){
+  if(!confirm('Tem certeza que deseja EXCLUIR o usuário "'+nome+'"?\n\nEsta ação não pode ser desfeita.')) return;
+  loading(true);
+  try{
+    // Delete from auth
+    const r=await fetch(SB_URL+'/auth/v1/admin/users/'+id,{
+      method:'DELETE',
+      headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC}
+    });
+    // Delete from profiles (may already cascade)
+    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+    await svc.from('profiles').delete().eq('id',id);
+    loading(false);
+    toast('✅ Usuário '+nome+' excluído!');
+    renderUsers();
+  }catch(e){
+    loading(false);
+    toast('Erro ao excluir: '+e.message,'err');
   }
 }
 async function logout(){
