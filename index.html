@@ -1076,9 +1076,9 @@ function initSelectors(){
   const now=new Date();const cy=now.getFullYear();const cm=now.getMonth()+1;
   ['dMes','rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=cm;});
   ['dAno','rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=cy;});
-  const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value=String(cm).padStart(2,'0');}
+  const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value='';}
   ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value=String(cm).padStart(2,'0');});
-  const fAn=document.getElementById('fAn');if(fAn){for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value=cy;}
+  const fAn=document.getElementById('fAn');if(fAn){fAn.add(new Option('Todos',''));for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value='';}
   document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));});
   // Horas extras auto total
@@ -2465,6 +2465,7 @@ async function confirmImport(){
     document.getElementById('importMapping').style.display='none';
     _importPreview=[];
     toast(`✅ ${total} lançamentos importados!`);
+    setTimeout(()=>{showSection('lancamentos');},800);
   }catch(err){
     alert('Erro ao importar: '+err.message);
     if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Importação';}
