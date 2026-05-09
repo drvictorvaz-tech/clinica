@@ -2524,4 +2524,109 @@ async function uploadDocFile(file){
     if(uploadResult.error){
       throw new Error('Storage: '+uploadResult.error.message);
     }
-    bar.style.
+    bar.style.width='70%';
+    // Step 2: Save metadata to DB
+    msg.textContent='Passo 2/2: Salvando informações...';
+    const insertResult=await svcClient.from('documentos').insert({
+      clinic:clinic,
+      nome:desc,
+      tipo:tipo,
+      tamanho:file.size,
+      storage_path:path,
+      descricao:desc,
+      uploaded_by:currentUser.id
+    });
+    if(insertResult.error){
+      console.warn('DB insert warning:', insertResult.error.message);
+    }
+    bar.style.width='100%';
+    msg.textContent='✅ Documento enviado com sucesso!';
+    toast('📁 '+file.name+' enviado!');
+    setTimeout(()=>{
+      prog.style.display='none';
+      document.getElementById('docDropArea').style.display='block';
+      document.getElementById('docFileInput').value='';
+      document.getElementById('docUpDesc').value='';
+      bar.style.width='0%';
+      loadDocs();
+    },1500);
+  }catch(err){
+    console.error('Upload error:', err);
+    prog.style.display='none';
+    document.getElementById('docDropArea').style.display='block';
+    document.getElementById('docFileInput').value='';
+    bar.style.width='0%';
+    const errMsg=err.message||JSON.stringify(err);
+    toast('\u274c Erro: '+errMsg,'err');
+    alert('\u274c Erro ao enviar documento:\n\n'+errMsg+'\n\nAbra o console do navegador (F12) para mais detalhes.');
+  }
+}
+async function loadDocs(){
+  const area=document.getElementById('docListArea');
+  if(!area)return;
+  area.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px">\u23f3 Carregando...</div>';
+  const clinicF=document.getElementById('docFilterClinic')?.value||'';
+  const tipoF=document.getElementById('docFilterTipo')?.value||'';
+  try{
+    let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
+    if(clinicF)q=q.eq('clinic',clinicF);
+    if(tipoF)q=q.eq('tipo',tipoF);
+    const{data,error}=await q;
+    if(error)throw error;
+    if(!data||!data.length){
+      area.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">\ud83d\udcc4</div>Nenhum documento encontrado</div>';
+      return;
+    }
+    const rows=data.map(d=>{
+      const clinicLbl=d.clinic==='dtm'?'\ud83e\uddb7 DTM & Sono':'\u2695\ufe0f Dr. H\xe9rnia SJC';
+      const dt=d.created_at?new Date(d.created_at).toLocaleDateString('pt-BR'):'';
+      const icon=docFileIcon(d.tipo);
+      const size=docFileSizeStr(d.tamanho||0);
+      return `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:10px 12px;font-size:22px;width:40px">${icon}</td>
+        <td style="padding:10px 12px">
+          <div style="font-size:13px;font-weight:600;color:#0f172a">${d.nome||d.nome_arquivo||'Documento'}</div>
+          <div style="font-size:11px;color:#94a3b8">${d.storage_path ? d.storage_path.split('/').pop() : ''}</div>
+        </td>
+        <td style="padding:10px 12px;font-size:12px;color:#64748b">${clinicLbl}</td>
+        <td style="padding:10px 12px;font-size:12px;color:#64748b">${dt}</td>
+        <td style="padding:10px 12px;font-size:11px;color:#94a3b8">${size}</td>
+        <td style="padding:10px 12px">
+          <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${d.storage_path}','${(d.nome||'arquivo').replace(/'/g,'')}')">\u2b07\ufe0f Baixar</button>
+          ${canEdit()?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteDoc('${d.id}','${(d.storage_path||'').replace(/'/g,'')}')">\ud83d\uddd1\ufe0f</button>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+    area.innerHTML=`<div class="twrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tipo</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Nome</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Cl\xednica</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Data</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">Tamanho</th><th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#64748b">A\xe7\xf5es</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }catch(err){
+    area.innerHTML='<div style="color:#dc2626;padding:20px;font-size:13px">Erro ao carregar: '+err.message+'</div>';
+    console.error(err);
+  }
+}
+async function downloadDoc(path,filename){
+  try{
+    const{data,error}=await getSvc().storage.from('documentos').createSignedUrl(path,3600);
+    if(error)throw error;
+    const a=document.createElement('a');
+    a.href=data.signedUrl;
+    a.download=filename;
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(err){
+    alert('Erro ao baixar: '+err.message);
+  }
+}
+async function deleteDoc(id,path){
+  if(!confirm('Remover este documento?'))return;
+  try{
+    if(path){await getSvc().storage.from('documentos').remove([path]);}
+    await getSvc().from('documentos').delete().eq('id',id);
+    loadDocs();
+    toast('\ud83d\uddd1\ufe0f Documento removido.');
+  }catch(err){alert('Erro ao remover: '+err.message);}
+}
+</script>
+</body>
+</html>
