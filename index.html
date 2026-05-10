@@ -1759,19 +1759,21 @@ async function saveHora(){
   const hrs=parseFloat(document.getElementById('hHrs').value);
   const vh=parseFloat(document.getElementById('hVh').value);
   const ds=document.getElementById('hDs').value.trim();
-  if(!dt||!func||!hrs||!vh){toast('Preencha todos os campos obrigatórios!','err');return;}
+  if(!dt||!func||!hrs||!vh){toast('Preencha todos os campos obrigatórios! Data, Funcionário, Horas e Valor/h são necessários.','err');return;}
   loading(true);
-  let error;
-  if(id){
-    ({error}=await getSvc().from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
-  }else{
-    ({error}=await getSvc().from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds,created_by:currentUser?.id||null}));
-  }
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mHora');
-  toast(id?'✅ Registro atualizado!':'✅ Horas extras registradas!');
-  renderHoras();
+  try{
+    let error;
+    if(id){
+      ({error}=await getSvc().from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
+    }else{
+      ({error}=await getSvc().from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds,created_by:currentUser?.id||null}));
+    }
+    loading(false);
+    if(error){toast('❌ Erro ao salvar: '+error.message,'err');return;}
+    closeModal('mHora');
+    toast(id?'✅ Registro atualizado!':'✅ Horas extras registradas!');
+    renderHoras();
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('saveHora:',e);}
 }
 async function delHora(id){if(!confirm('Remover este registro?'))return;await getSvc().from('horas_extras').delete().eq('id',id);renderHoras();toast('✅ Removido.');}
 function initHoraFiltros(){
@@ -1881,18 +1883,20 @@ async function saveCom(){
   const pct=parseFloat(document.getElementById('coPct').value)||2.5;
   const obs=document.getElementById('coObs').value.trim();
   const st=document.getElementById('coSt')?.value||'pendente';
-  if(!dt||!prof||!prot||!vp){toast('Preencha todos os campos obrigatórios!','err');return;}
+  if(!dt||!prof||!prot||!vp){toast('Preencha todos os campos obrigatórios! Data, Profissional, Protocolo e Valor são necessários.','err');return;}
   const vc=vp*pct/100;
   loading(true);
-  let error;
-  if(id){
-    ({error}=await getSvc().from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
-  }else{
-    ({error}=await getSvc().from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st,created_by:currentUser?.id||null}));
-  }
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mCom');toast(id?'✅ Comissão atualizada!':'✅ Comissão registrada!');renderComissoes();
+  try{
+    let error;
+    if(id){
+      ({error}=await getSvc().from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
+    }else{
+      ({error}=await getSvc().from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st,created_by:currentUser?.id||null}));
+    }
+    loading(false);
+    if(error){toast('❌ Erro ao salvar: '+error.message,'err');return;}
+    closeModal('mCom');toast(id?'✅ Comissão atualizada!':'✅ Comissão registrada!');renderComissoes();
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('saveCom:',e);}
 }
 function calcCom(){
   const vp=parseFloat(document.getElementById('coVp')?.value)||0;
