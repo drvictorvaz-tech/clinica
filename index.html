@@ -1113,16 +1113,15 @@ async function login(){
 }
 async function loadProfile(){
   try{
-    // Sempre usa service role para garantir leitura do perfil independente de RLS
-    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
-    const{data,error}=await svc.from('profiles').select('*').eq('id',currentUser.id).single();
+    const{data,error}=await getSvc().from('profiles').select('*').eq('id',currentUser.id).single();
     if(data&&!error){
       userProfile=data;
     } else {
-      // Perfil não encontrado — cria automaticamente
+      // Perfil não encontrado — tenta criar via service role
       console.warn('Perfil não encontrado, criando...',error?.message);
+      const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
       const meta=currentUser.user_metadata||{};
-      const role=meta.role||'admin';
+      const role=meta.role||'admin'; // primeiro usuário sempre admin
       await svc.from('profiles').upsert({
         id:currentUser.id,email:currentUser.email,
         nome:meta.nome||currentUser.email.split('@')[0],
@@ -1133,7 +1132,7 @@ async function loadProfile(){
     }
   }catch(e){
     console.error('loadProfile error:',e);
-    userProfile={role:'admin',nome:currentUser?.email||'',id:currentUser?.id||''};
+    userProfile={role:'admin',nome:currentUser.email,id:currentUser.id};
   }
 }
 function buildNav(){
@@ -2015,55 +2014,27 @@ async function renderRel(){
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
     const lc=tR-tD;const mg=tR>0?((lc/tR)*100).toFixed(1):0;
-    const byC=arr=>{const g={};arr.forEach(x=>{const cat=x.categoria||'Outros';g[cat]=(g[cat]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
-    const byCCount=arr=>{const g={};arr.forEach(x=>{const cat=x.categoria||'Outros';if(!g[cat])g[cat]={n:0,v:0};g[cat].n++;g[cat].v+=parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1].v-a[1].v);};
-    // Contagem de consultas e protocolos
-    const consultas=rec.filter(x=>/consulta/i.test(x.categoria||x.descricao||''));
-    const protocolos=rec.filter(x=>/protocolo|tratamento|cirurgia/i.test(x.categoria||x.descricao||''));
-    const vConsultas=consultas.reduce((s,x)=>s+parseFloat(x.valor),0);
-    const vProtocolos=protocolos.reduce((s,x)=>s+parseFloat(x.valor),0);
-    const tktMedio=consultas.length?vConsultas/consultas.length:0;
-    const tktProtocolo=protocolos.length?vProtocolos/protocolos.length:0;
+    const byC=arr=>{const g={};arr.forEach(x=>{g[x.categoria]=(g[x.categoria]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
     const clLbl=cl==='dtm'?'Clínica DTM & Sono':cl==='hernia'?'Dr. Hérnia SJC':'Ambas as Clínicas';
     div.innerHTML=`
       <div style="margin-bottom:16px"><h2 style="font-size:17px;font-weight:700">📊 Relatório — ${MESES[m-1]} ${y}</h2><p style="color:#64748b;font-size:12px;margin-top:2px">${clLbl}</p></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
-        <div class="kpi g"><div class="lbl">💚 Receita Total</div><div class="val">${fmt(tR)}</div><div class="meta">${rec.length} lançamentos</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+        <div class="kpi g"><div class="lbl">💚 Receitas</div><div class="val">${fmt(tR)}</div><div class="meta">${rec.length} lançamentos</div></div>
         <div class="kpi r"><div class="lbl">🔴 Despesas</div><div class="val">${fmt(tD)}</div><div class="meta">${des.length} lançamentos</div></div>
-        <div class="kpi b"><div class="lbl">${lc>=0?'💙 Resultado':'⚠️ Prejuízo'}</div><div class="val" style="color:${lc>=0?'#0ea5e9':'#dc2626'}">${fmt(lc)}</div><div class="meta">Margem ${mg}%</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-        <div class="kpi" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #6ee7b7">
-          <div class="lbl">🩺 Consultas</div><div class="val" style="color:#065f46;font-size:22px">${consultas.length}</div>
-          <div class="meta">Faturado: ${fmt(vConsultas)}</div>
-          <div class="meta">Ticket médio: ${fmt(tktMedio)}</div>
-        </div>
-        <div class="kpi" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd">
-          <div class="lbl">📋 Protocolos</div><div class="val" style="color:#1e40af;font-size:22px">${protocolos.length}</div>
-          <div class="meta">Faturado: ${fmt(vProtocolos)}</div>
-          <div class="meta">Ticket médio: ${fmt(tktProtocolo)}</div>
-        </div>
-        <div class="kpi" style="background:linear-gradient(135deg,#fefce8,#fef9c3);border:1px solid #fde047">
-          <div class="lbl">💳 Conversão</div><div class="val" style="color:#92400e;font-size:22px">${consultas.length?((protocolos.length/consultas.length)*100).toFixed(0):0}%</div>
-          <div class="meta">Consultas → Protocolo</div>
-        </div>
-        <div class="kpi" style="background:linear-gradient(135deg,#fdf4ff,#fae8ff);border:1px solid #e879f9">
-          <div class="lbl">📊 Ticket Geral</div><div class="val" style="color:#6b21a8;font-size:22px">${fmt(rec.length?tR/rec.length:0)}</div>
-          <div class="meta">Média por receita</div>
-        </div>
+        <div class="kpi b"><div class="lbl">${lc>=0?'💙 Lucro':'⚠️ Prejuízo'}</div><div class="val" style="color:${lc>=0?'#0ea5e9':'#dc2626'}">${fmt(lc)}</div><div class="meta">Margem ${mg}%</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="tcard"><div class="thead2"><h3>💚 Receitas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Qtd</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
-          ${byCCount(rec).map(([c,v])=>`<tr><td>${c||'Outros'}</td><td style="text-align:right;color:#64748b">${v.n}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v.v)}</td><td style="text-align:right;color:#64748b">${tR>0?(v.v/tR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
-          ${rec.length?`<tr style="background:#f0fdf4"><td><strong>Total</strong></td><td style="text-align:right"><strong>${rec.length}</strong></td><td style="text-align:right"><strong>${fmt(tR)}</strong></td><td></td></tr>`:''}
+        <div class="tcard"><div class="thead2"><h3>💚 Receitas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byC(rec).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#059669;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tR>0?(v/tR*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${rec.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tR)}</strong></td><td></td></tr>`:''}
         </tbody></table></div>
-        <div class="tcard"><div class="thead2"><h3>🔴 Despesas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Qtd</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
-          ${byCCount(des).map(([c,v])=>`<tr><td>${c||'Outros'}</td><td style="text-align:right;color:#64748b">${v.n}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v.v)}</td><td style="text-align:right;color:#64748b">${tD>0?(v.v/tD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
-          ${des.length?`<tr style="background:#fef2f2"><td><strong>Total</strong></td><td style="text-align:right"><strong>${des.length}</strong></td><td style="text-align:right"><strong>${fmt(tD)}</strong></td><td></td></tr>`:''}
+        <div class="tcard"><div class="thead2"><h3>🔴 Despesas por Categoria</h3></div><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>
+          ${byC(des).map(([c,v])=>`<tr><td>${c}</td><td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v)}</td><td style="text-align:right;color:#64748b">${tD>0?(v/tD*100).toFixed(1):0}%</td></tr>`).join('')||'<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:12px">Sem dados</td></tr>'}
+          ${des.length?`<tr style="background:#f8fafc"><td><strong>Total</strong></td><td style="text-align:right"><strong>${fmt(tD)}</strong></td><td></td></tr>`:''}
         </tbody></table></div>
       </div>
       <div class="tcard"><div class="thead2"><h3>📋 Extrato Completo</h3></div><div class="twrap"><table><thead><tr><th>Data</th><th>Clínica</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr></thead><tbody>
-        ${tx.sort((a,b)=>a.data.localeCompare(b.data)).map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'DTM':'Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'Receita':'Despesa'}</span></td><td>${x.categoria||'—'}</td><td>${x.descricao}</td><td>${PG[x.pagamento]||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:16px;color:#94a3b8">Sem lançamentos</td></tr>'}
+        ${tx.sort((a,b)=>a.data.localeCompare(b.data)).map(x=>`<tr><td>${fmtD(x.data)}</td><td><span class="badge badge-${x.clinic}">${x.clinic==='dtm'?'DTM':'Hérnia'}</span></td><td><span class="badge badge-${x.tipo}">${x.tipo==='receita'?'Receita':'Despesa'}</span></td><td>${x.categoria||'-'}</td><td>${x.descricao}</td><td>${PG[x.pagamento]||'-'}</td><td style="text-align:right;font-weight:600;color:${x.tipo==='receita'?'#059669':'#dc2626'}">${fmt(parseFloat(x.valor))}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:16px;color:#94a3b8">Sem lançamentos</td></tr>'}
       </tbody></table></div></div>`;
   }catch(e){div.innerHTML=`<div class="empty"><div class="ic">❌</div><h4>Erro ao gerar relatório</h4></div>`;console.error(e);}
 }
@@ -2680,13 +2651,14 @@ async function smartFinancialResponse(q){
 // USUÁRIOS
 // ============================================================
 async function renderUsers(){
+  if(!sb||!userProfile)return;
+  if(userProfile.role!=='admin'){return;}
   const tb=document.getElementById('usersTb');
   if(!tb)return;
-  if(!userProfile){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8">Carregando perfil...</td></tr>';return;}
-  if(userProfile.role!=='admin'){tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8">Acesso restrito a administradores.</td></tr>';return;}
-  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#64748b">⏳ Carregando usuários...</td></tr>';
+  tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:16px;color:#64748b">⏳ Carregando...</td></tr>';
   try{
-    const{data:users,error}=await getSvc().from('profiles').select('*').order('created_at',{ascending:true});
+    const svc=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false}});
+    const{data:users,error}=await svc.from('profiles').select('*').order('created_at',{ascending:false});
     if(error)throw error;
     if(!users||!users.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">Nenhum usuário encontrado.</td></tr>';return;}
     tb.innerHTML=users.map(u=>`<tr>
@@ -2699,7 +2671,7 @@ async function renderUsers(){
         ${u.id!==currentUser?.id?`<button class="btn btn-ghost btn-sm" style="color:#dc2626" onclick="deleteUser('${u.id}','${(u.nome||'').replace(/'/g,"\\'")}')">🗑️ Excluir</button>`:'<span style="font-size:11px;color:#94a3b8">(você)</span>'}
       </td>
     </tr>`).join('');
-  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">❌ Erro: ${e.message}</td></tr>`;}
+  }catch(e){tb.innerHTML=`<tr><td colspan="5" style="text-align:center;color:#dc2626;padding:16px">Erro: ${e.message}</td></tr>`;}
 }
 function editUser(id,nome,email,role,ativo){
   document.getElementById('uId').value=id;
@@ -3432,52 +3404,38 @@ async function loadDocs(){
     let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
     if(clinic)q=q.eq('clinic',clinic);
     if(tipo)q=q.eq('tipo',tipo);
-    const{data:docs,error}=await q;
-    if(error)throw error;
+    const{data:docs}=await q;
     if(!docs||!docs.length){
-      container.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:32px;margin-bottom:8px">📄</div>Nenhum documento encontrado</div>';
+      tb.innerHTML='';
+      if(empt)empt.style.display='block';
       return;
     }
-    const rows=docs.map(d=>{
+    if(empt)empt.style.display='none';
+    tb.innerHTML=docs.map(d=>{
       const dt=new Date(d.created_at).toLocaleDateString('pt-BR');
-      const sz=d.tamanho?d.tamanho>1048576?(d.tamanho/1048576).toFixed(1)+'MB':Math.round(d.tamanho/1024)+'KB':'—';
-      const icone=d.tipo==='pdf'?'📄':d.tipo==='word'?'📝':d.tipo==='excel'?'📊':'📎';
-      const fileUrl=d.storage_path?`${SB_URL}/storage/v1/object/public/documentos/${encodeURIComponent(d.storage_path).replace(/%2F/g,'/')}`:(d.url||'');
-      const sp=(d.storage_path||'').replace(/'/g,"\\'");
+      const sz=d.tamanho?Math.round(d.tamanho/1024)+'KB':'—';
       return`<tr>
         <td style="font-size:12px;white-space:nowrap">${dt}</td>
-        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
-        <td style="font-size:12px">${icone} ${(d.tipo||'').toUpperCase()||'—'}</td>
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.descricao||d.nome||''}">${d.descricao||d.nome||'—'}</td>
+        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'DTM':'Hérnia'}</span></td>
+        <td style="font-size:12px">${d.tipo||'—'}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.descricao||d.nome||'—'}</td>
         <td style="font-size:11px;color:#64748b">${sz}</td>
-        <td style="white-space:nowrap">
-          ${fileUrl?`<a href="${fileUrl}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost" style="text-decoration:none;margin-right:4px">📥 Abrir</a>`:'<span style="color:#94a3b8;font-size:11px">sem link</span>'}
-          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${sp}')">🗑️</button>`:''}
+        <td style="display:flex;gap:6px">
+          ${d.url?`<a href="${d.url}" target="_blank" class="btn btn-sm btn-ghost">📥 Ver</a>`:''}
+          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${(d.storage_path||'').replace(/'/g,\"\\\'\")}')">🗑️</button>`:''}
         </td>
       </tr>`;
     }).join('');
-    container.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr style="border-bottom:2px solid #e2e8f0;font-size:11px;color:#64748b;text-transform:uppercase">
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Data</th>
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Clínica</th>
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Tipo</th>
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Descrição</th>
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Tamanho</th>
-        <th style="text-align:left;padding:8px 10px;font-weight:600">Ações</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
-  }catch(e){container.innerHTML=`<div style="text-align:center;color:#dc2626;padding:16px;font-size:13px">❌ Erro ao carregar: ${e.message}</div>`;}
+  }catch(e){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">Erro ao carregar documentos</td></tr>';}
 }
 async function delDoc(id,storagePath){
   if(!confirm('Remover este documento permanentemente?'))return;
   if(storagePath){
     try{
       await fetch(`${SB_URL}/storage/v1/object/documentos/${storagePath}`,{
-        method:'DELETE',
-        headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC}
+        method:'DELETE',headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC}
       });
-    }catch(e){console.warn('Erro ao remover storage:',e);}
+    }catch(e){console.warn('Erro ao remover do storage:',e);}
   }
   await getSvc().from('documentos').delete().eq('id',id);
   loadDocs();toast('🗑️ Documento removido.');
@@ -3494,7 +3452,6 @@ function handleDocFile(inp){
   if(f)uploadDoc(f);
 }
 async function uploadDoc(fileOrInput){
-  // Aceita tanto um File object (drag-drop) quanto um input element (onchange)
   const file=(fileOrInput instanceof File)?fileOrInput:(fileOrInput&&fileOrInput.files?fileOrInput.files[0]:null);
   if(!file){return;}
   const cl=(document.getElementById('docUpClinic')||{}).value||'hernia';
@@ -3510,19 +3467,19 @@ async function uploadDoc(fileOrInput){
   if(msgEl){msgEl.textContent='⏳ Enviando '+file.name+'...';msgEl.style.color='#374151';}
   try{
     const storagePath=`${cl}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    // Upload via fetch direto (mais confiável que SDK para arquivos no browser)
+    // Upload direto via fetch — sem SDK (mais confiável no browser)
     const upResp=await fetch(`${SB_URL}/storage/v1/object/documentos/${storagePath}`,{
       method:'POST',
-      headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC,'Content-Type':file.type||'application/octet-stream','x-upsert':'false','Cache-Control':'3600'},
+      headers:{'Authorization':'Bearer '+SB_SVC,'apikey':SB_SVC,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},
       body:file
     });
-    if(!upResp.ok){const er=await upResp.json().catch(()=>({}));throw new Error(er.error||er.message||'Upload falhou ('+upResp.status+')');}
-    // Salvar registro no banco
+    if(!upResp.ok){const er=await upResp.json().catch(()=>({}));throw new Error(er.error||er.message||'Upload falhou (HTTP '+upResp.status+')');}
+    // Salvar metadados no banco com colunas corretas
     const{error:dbErr}=await getSvc().from('documentos').insert({
       clinic:cl,tipo,nome:file.name,descricao:desc,
       storage_path:storagePath,tamanho:file.size,mime_type:file.type||''
     });
-    if(dbErr){if(msgEl){msgEl.textContent='❌ Erro banco: '+dbErr.message;msgEl.style.color='#dc2626';}toast('❌ Erro ao salvar no banco: '+dbErr.message,'err');return;}
+    if(dbErr)throw new Error('Erro no banco: '+dbErr.message);
     if(msgEl)msgEl.textContent='✅ Enviado com sucesso!';
     setTimeout(()=>{if(progEl)progEl.style.display='none';if(msgEl)msgEl.style.color='';},2000);
     const fi=document.getElementById('docFileInput');if(fi)fi.value='';
@@ -3572,4 +3529,88 @@ function handleSecImportFile(inp){
   };
   reader.readAsArrayBuffer(f);
 }
-function buildSecImportPreview()
+function buildSecImportPreview(){
+  if(!_secImportRows.length){toast('Carregue uma planilha primeiro','warn');return;}
+  const clinic=userProfile?.role==='secretaria_sjc'?'hernia':'dtm';
+  const iData=parseInt(document.getElementById('sColData')?.value||0);
+  const iDesc=parseInt(document.getElementById('sColDesc')?.value||1);
+  const iVal=parseInt(document.getElementById('sColValor')?.value||2);
+  const iTipo=document.getElementById('sColTipo')?.value||'_auto';
+  _secImportPreview=_secImportRows.map(r=>{
+    const vRaw=parseValorBR(r[iVal]);
+    if(isNaN(vRaw)||vRaw<=0)return null;
+    let tipo='receita';
+    if(iTipo!=='_auto'){const tv=String(r[parseInt(iTipo)]||'').toLowerCase();tipo=/(despes|sa[íi]da|d[eé]b)/.test(tv)?'despesa':'receita';}
+    const dt=parseDateBR(String(r[iData]||''));
+    if(!dt)return null;
+    return{data:dt,descricao:String(r[iDesc]||'Sem descrição').trim(),valor:vRaw,tipo,clinica:clinic,categoria:'',pagamento:'pix'};
+  }).filter(Boolean);
+  if(!_secImportPreview.length){toast('Nenhuma linha válida. Verifique colunas.','warn');return;}
+  const tb=document.getElementById('secImportBody');
+  if(tb)tb.innerHTML=_secImportPreview.map(r=>`<tr>
+    <td style="white-space:nowrap;font-size:11px">${r.data}</td>
+    <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.descricao}</td>
+    <td style="text-align:right;font-weight:600;font-size:11px;color:${r.tipo==='receita'?'#059669':'#dc2626'}">${fmtN(r.valor)}</td>
+    <td><span style="font-size:10px;font-weight:600;color:${r.tipo==='receita'?'#166534':'#991b1b'}">${r.tipo==='receita'?'Rec':'Desp'}</span></td>
+  </tr>`).join('');
+  const tit=document.getElementById('secImportTitle');
+  const sts=document.getElementById('secImportStats');
+  if(tit)tit.textContent='📋 '+_secImportPreview.length+' lançamentos';
+  const tR=_secImportPreview.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
+  const tD=_secImportPreview.filter(r=>r.tipo==='despesa').reduce((s,r)=>s+r.valor,0);
+  if(sts)sts.textContent='R$'+fmtN(tR)+' rec · R$'+fmtN(tD)+' desp';
+  ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='block';});
+  document.getElementById('secImportPreview').style.display='block';
+}
+async function confirmSecImport(){
+  if(!_secImportPreview.length){toast('Nada para importar','warn');return;}
+  const btn=document.querySelector('#secImportPreview .btn-primary');
+  if(btn){btn.disabled=true;btn.textContent='⏳...';}
+  try{
+    const batch=_secImportPreview.map(r=>({
+      clinic:r.clinica,tipo:r.tipo,categoria:r.categoria||null,
+      descricao:r.descricao,valor:r.valor,data:r.data,pagamento:r.pagamento||'pix',observacao:''
+    }));
+    let ok=0;
+    for(let i=0;i<batch.length;i+=50){
+      const{error}=await getSvc().from('transactions').insert(batch.slice(i,i+50));
+      if(!error)ok+=Math.min(50,batch.length-i);
+    }
+    _secImportPreview=[];
+    ['secImportMapping','secImportPreview'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    const rt=document.getElementById('secImportResultText');if(rt)rt.textContent='✅ '+ok+' lançamentos importados!';
+    const res=document.getElementById('secImportResult');if(res)res.style.display='block';
+    toast('✅ '+ok+' lançamentos importados!');
+    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
+  }catch(e){
+    toast('Erro: '+e.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='✅ Importar';}
+  }
+}
+function resetSecImport(){
+  _secImportRows=[];_secImportHeaders=[];_secImportPreview=[];
+  ['secImportMapping','secImportPreview','secImportResult'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const fi=document.getElementById('secImportFile');if(fi)fi.value='';
+  const drop=document.getElementById('secImportDrop');if(drop)drop.style.display='block';
+}
+
+// ===== BANNER PLANILHAS — injetado quando a seção é aberta =====
+function _injetaBannerPlanilhas(){
+  const impSect=document.querySelector('#s-importar');
+  if(!impSect||document.getElementById('btnCarregarPlanilhas'))return;
+  const tRec=PLANILHAS_DATA.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
+  const banner=document.createElement('div');
+  banner.id='bannerPlanilhas';
+  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
+  banner.innerHTML='<div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Planilhas Abr–Jun 2025 prontas para importar</div>'
+    +'<div style="font-size:13px;opacity:.9">'+PLANILHAS_DATA.length+' lançamentos · Dr. Hérnia SJC · Total: R$ '+tRec.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
+    +'<div style="font-size:11px;opacity:.7;margin-top:4px">Abril 2025 (Karina) · Maio 2025 (consultas + tratamentos) · Junho 2025</div>'
+    +'</div>'
+    +'<button id="btnCarregarPlanilhas" class="btn" style="background:white;color:#1d4ed8;font-weight:700;padding:10px 22px;font-size:13px;flex-shrink:0" onclick="carregarPlanilhas()">'
+    +'✅ Importar Tudo com 1 Clique</button>';
+  impSect.insertBefore(banner,impSect.firstChild);
+}
+</script>
+</body>
+</html>
