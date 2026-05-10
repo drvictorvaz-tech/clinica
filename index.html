@@ -3638,7 +3638,18 @@ window.addEventListener('unhandledrejection',e=>{loading(false);console.error('U
 function _injetaBannerPlanilhas(){
   const impSect=document.querySelector('#s-importar');
   if(!impSect||document.getElementById('btnCarregarPlanilhas'))return;
+  if(!Array.isArray(PLANILHAS_DATA)||!PLANILHAS_DATA.length)return;
   const tRec=PLANILHAS_DATA.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
   const banner=document.createElement('div');
   banner.id='bannerPlanilhas';
-  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius
+  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
+  banner.innerHTML='<div>'
+    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Planilhas prontas para importar</div>'
+    +'<div style="font-size:13px;opacity:.9">'+PLANILHAS_DATA.length+' lançamentos · Total receitas: R$ '+tRec.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
+    +'</div>'
+    +'<button id="btnCarregarPlanilhas" onclick="carregarPlanilhas()" style="background:white;color:#1d4ed8;border:none;padding:10px 20px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap">📥 Importar Tudo</button>';
+  impSect.insertBefore(banner,impSect.firstChild);
+}
+</script>
+</body>
+</html>
