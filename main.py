@@ -590,3 +590,266 @@ Responda sempre em portugues brasileiro."""
         messages=messages
     )
     return {"resposta": resp.content[0].text}
+
+# ============================================================
+# IA PACIENTES — Endpoints
+# ============================================================
+
+class PacienteCreate(BaseModel):
+    nome: str
+    cpf: Optional[str] = ""
+    celular: Optional[str] = ""
+    email: Optional[str] = ""
+    data_nascimento: Optional[str] = None
+    sexo: Optional[str] = ""
+    profissao: Optional[str] = ""
+    estado_civil: Optional[str] = ""
+    plano_saude: Optional[str] = ""
+    endereco: Optional[str] = ""
+    como_conheceu: Optional[str] = ""
+    observacoes: Optional[str] = ""
+
+class PacienteUpdate(BaseModel):
+    nome: Optional[str] = None
+    cpf: Optional[str] = None
+    celular: Optional[str] = None
+    email: Optional[str] = None
+    data_nascimento: Optional[str] = None
+    sexo: Optional[str] = None
+    profissao: Optional[str] = None
+    estado_civil: Optional[str] = None
+    plano_saude: Optional[str] = None
+    endereco: Optional[str] = None
+    como_conheceu: Optional[str] = None
+    observacoes: Optional[str] = None
+
+class EvolucaoCreate(BaseModel):
+    paciente_id: str
+    data_consulta: Optional[str] = None
+    tipo: Optional[str] = "consulta"
+    queixa_principal: Optional[str] = ""
+    anamnese: Optional[str] = ""
+    exame_clinico: Optional[str] = ""
+    diagnostico: Optional[str] = ""
+    plano_tratamento: Optional[str] = ""
+    procedimentos_realizados: Optional[str] = ""
+    orientacoes: Optional[str] = ""
+    proxima_consulta: Optional[str] = None
+    valor: Optional[float] = None
+    status_pagamento: Optional[str] = "pendente"
+    forma_pagamento: Optional[str] = ""
+
+class EvolucaoUpdate(BaseModel):
+    data_consulta: Optional[str] = None
+    tipo: Optional[str] = None
+    queixa_principal: Optional[str] = None
+    anamnese: Optional[str] = None
+    exame_clinico: Optional[str] = None
+    diagnostico: Optional[str] = None
+    plano_tratamento: Optional[str] = None
+    procedimentos_realizados: Optional[str] = None
+    orientacoes: Optional[str] = None
+    proxima_consulta: Optional[str] = None
+    valor: Optional[float] = None
+    status_pagamento: Optional[str] = None
+    forma_pagamento: Optional[str] = None
+
+class AgendaCreate(BaseModel):
+    paciente_id: Optional[str] = None
+    nome_paciente: Optional[str] = ""
+    data_hora: str
+    duracao_minutos: Optional[int] = 60
+    tipo: Optional[str] = "consulta"
+    observacoes: Optional[str] = ""
+    status: Optional[str] = "agendado"
+
+class AgendaUpdate(BaseModel):
+    paciente_id: Optional[str] = None
+    nome_paciente: Optional[str] = None
+    data_hora: Optional[str] = None
+    duracao_minutos: Optional[int] = None
+    tipo: Optional[str] = None
+    observacoes: Optional[str] = None
+    status: Optional[str] = None
+
+# Pacientes
+@app.post("/pacientes")
+def criar_paciente(req: PacienteCreate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    row = req.dict()
+    if not row.get("data_nascimento"):
+        row["data_nascimento"] = None
+    resp = db.table("pacientes").insert(row).execute()
+    if not resp.data:
+        raise HTTPException(500, "Erro ao criar paciente")
+    return resp.data[0]
+
+@app.get("/pacientes")
+def listar_pacientes(busca: str = "", pagina: int = 1, limite: int = 50):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    offset = (pagina - 1) * limite
+    q = db.table("pacientes").select("id,nome,cpf,celular,email,data_nascimento,plano_saude,ativo,criado_em").eq("ativo", True)
+    if busca:
+        q = q.ilike("nome", f"%{busca}%")
+    resp = q.order("nome").range(offset, offset + limite - 1).execute()
+    count_q = db.table("pacientes").select("id", count="exact").eq("ativo", True)
+    if busca:
+        count_q = count_q.ilike("nome", f"%{busca}%")
+    count_resp = count_q.execute()
+    return {"pacientes": resp.data, "total": count_resp.count or 0, "pagina": pagina, "limite": limite}
+
+@app.get("/pacientes/{paciente_id}")
+def obter_paciente(paciente_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    resp = db.table("pacientes").select("*").eq("id", paciente_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Paciente nao encontrado")
+    return resp.data[0]
+
+@app.put("/pacientes/{paciente_id}")
+def atualizar_paciente(paciente_id: str, req: PacienteUpdate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    update_data = {k: v for k, v in req.dict().items() if v is not None}
+    update_data["atualizado_em"] = datetime.datetime.utcnow().isoformat()
+    resp = db.table("pacientes").update(update_data).eq("id", paciente_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Paciente nao encontrado")
+    return resp.data[0]
+
+@app.delete("/pacientes/{paciente_id}")
+def deletar_paciente(paciente_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    db.table("pacientes").update({"ativo": False, "atualizado_em": datetime.datetime.utcnow().isoformat()}).eq("id", paciente_id).execute()
+    return {"ok": True}
+
+# Evolucoes
+@app.post("/evolucoes")
+def criar_evolucao(req: EvolucaoCreate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    row = req.dict()
+    if not row.get("data_consulta"):
+        row["data_consulta"] = datetime.date.today().isoformat()
+    if not row.get("proxima_consulta"):
+        row["proxima_consulta"] = None
+    if not row.get("paciente_id"):
+        raise HTTPException(400, "paciente_id e obrigatorio")
+    resp = db.table("evolucoes").insert(row).execute()
+    if not resp.data:
+        raise HTTPException(500, "Erro ao criar evolucao")
+    evolucao = resp.data[0]
+    if req.valor and req.valor > 0 and req.status_pagamento and req.status_pagamento != "pendente":
+        try:
+            paciente = db.table("pacientes").select("nome").eq("id", req.paciente_id).execute()
+            nome_pac = paciente.data[0]["nome"] if paciente.data else "Paciente"
+            lancamento = {
+                "descricao": f"Consulta odontologica - {nome_pac}",
+                "valor": req.valor,
+                "tipo": "receita",
+                "categoria": "Consulta Odontologica",
+                "data": req.data_consulta or datetime.date.today().isoformat(),
+                "status": req.status_pagamento,
+                "forma_pagamento": req.forma_pagamento or "",
+                "origem": "ia_pacientes"
+            }
+            db.table("transactions").insert(lancamento).execute()
+            db.table("evolucoes").update({"enviado_financeiro": True}).eq("id", evolucao["id"]).execute()
+        except Exception:
+            pass
+    return evolucao
+
+@app.get("/pacientes/{paciente_id}/evolucoes")
+def listar_evolucoes(paciente_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    resp = db.table("evolucoes").select("*").eq("paciente_id", paciente_id).order("data_consulta", desc=True).execute()
+    return {"evolucoes": resp.data, "total": len(resp.data)}
+
+@app.get("/evolucoes/{evolucao_id}")
+def obter_evolucao(evolucao_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    resp = db.table("evolucoes").select("*").eq("id", evolucao_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Evolucao nao encontrada")
+    return resp.data[0]
+
+@app.put("/evolucoes/{evolucao_id}")
+def atualizar_evolucao(evolucao_id: str, req: EvolucaoUpdate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    update_data = {k: v for k, v in req.dict().items() if v is not None}
+    update_data["atualizado_em"] = datetime.datetime.utcnow().isoformat()
+    resp = db.table("evolucoes").update(update_data).eq("id", evolucao_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Evolucao nao encontrada")
+    return resp.data[0]
+
+@app.delete("/evolucoes/{evolucao_id}")
+def deletar_evolucao(evolucao_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    db.table("evolucoes").delete().eq("id", evolucao_id).execute()
+    return {"ok": True}
+
+# Agenda
+@app.post("/agenda")
+def criar_agendamento(req: AgendaCreate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    row = req.dict()
+    if not row.get("paciente_id"):
+        row["paciente_id"] = None
+    resp = db.table("agenda").insert(row).execute()
+    if not resp.data:
+        raise HTTPException(500, "Erro ao criar agendamento")
+    return resp.data[0]
+
+@app.get("/agenda")
+def listar_agenda(data_inicio: Optional[str] = None, data_fim: Optional[str] = None):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    q = db.table("agenda").select("*")
+    if data_inicio:
+        q = q.gte("data_hora", data_inicio)
+    if data_fim:
+        q = q.lte("data_hora", data_fim)
+    resp = q.order("data_hora").execute()
+    return {"agendamentos": resp.data, "total": len(resp.data)}
+
+@app.put("/agenda/{agenda_id}")
+def atualizar_agendamento(agenda_id: str, req: AgendaUpdate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    update_data = {k: v for k, v in req.dict().items() if v is not None}
+    update_data["atualizado_em"] = datetime.datetime.utcnow().isoformat()
+    resp = db.table("agenda").update(update_data).eq("id", agenda_id).execute()
+    if not resp.data:
+        raise HTTPException(404, "Agendamento nao encontrado")
+    return resp.data[0]
+
+@app.delete("/agenda/{agenda_id}")
+def deletar_agendamento(agenda_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    db.table("agenda").delete().eq("id", agenda_id).execute()
+    return {"ok": True}
