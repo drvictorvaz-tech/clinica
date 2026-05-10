@@ -197,7 +197,7 @@ tbody tr:last-child td{border-bottom:none}
 </head>
 <body>
 <!-- LOADING -->
-<div id="loadingOverlay"><div class="spinner"></div></div>
+<div id="loadingOverlay" onclick="loading(false)" title="Clique para fechar"><div class="spinner"></div></div>
 <div id="toast"></div>
 <div id="nfPrint"></div>
 
@@ -1286,27 +1286,29 @@ async function saveLanc(){
   const obs=document.getElementById('lObs').value.trim();
   if(!dt||!vl||isNaN(vl)||vl<=0||!ds){toast('Preencha todos os campos!','err');return;}
   loading(true);
-  const{error}=await getSvc().from('transactions').insert({clinic:cl,tipo:tp,categoria:cat,descricao:ds,valor:vl,data:dt,pagamento:pg,observacao:obs});
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mLanc');
-  toast('✅ Lançamento salvo!');
-  document.getElementById('lVl').value='';document.getElementById('lDs').value='';document.getElementById('lObs').value='';
-  const ac=document.querySelector('.nb.active');const sid=ac?.dataset?.s;
-  if(sid==='dashboard')renderDash();else if(sid==='lancamentos')renderLanc();
-  // Auto commission
-  if(_comAutoProc&&tp==='receita'){
-    const proc=_comAutoProc;_comAutoProc=null;
-    if(confirm(`Este protocolo gera comissão de ${proc.pct}%.\nDeseja registrar agora?`)){
-      document.getElementById('coCl').value=cl;
-      document.getElementById('coDt').value=dt;
-      document.getElementById('coProt').value=proc.nome;
-      document.getElementById('coVp').value=vl;
-      document.getElementById('coPct').value=proc.pct;
-      document.getElementById('coVc').value=fmt(vl*proc.pct/100);
-      openModal('mCom');
+  try{
+    const{error}=await getSvc().from('transactions').insert({clinic:cl,tipo:tp,categoria:cat,descricao:ds,valor:vl,data:dt,pagamento:pg,observacao:obs});
+    loading(false);
+    if(error){toast('Erro: '+error.message,'err');return;}
+    closeModal('mLanc');
+    toast('✅ Lançamento salvo!');
+    document.getElementById('lVl').value='';document.getElementById('lDs').value='';document.getElementById('lObs').value='';
+    const ac=document.querySelector('.nb.active');const sid=ac?.dataset?.s;
+    if(sid==='dashboard')renderDash();else if(sid==='lancamentos')renderLanc();
+    // Auto commission
+    if(_comAutoProc&&tp==='receita'){
+      const proc=_comAutoProc;_comAutoProc=null;
+      if(confirm(`Este protocolo gera comissão de ${proc.pct}%.\nDeseja registrar agora?`)){
+        document.getElementById('coCl').value=cl;
+        document.getElementById('coDt').value=dt;
+        document.getElementById('coProt').value=proc.nome;
+        document.getElementById('coVp').value=vl;
+        document.getElementById('coPct').value=proc.pct;
+        document.getElementById('coVc').value=fmt(vl*proc.pct/100);
+        openModal('mCom');
+      }
     }
-  }
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('saveLanc:',e);}
 }
 async function delTx(id){
   if(!confirm('Remover este lançamento?'))return;
@@ -1606,12 +1608,14 @@ async function saveNota(){
   const lastNum=last&&last[0]?.numero?parseInt(last[0].numero)||0:0;
   const numero=document.getElementById('nNum').value||String(lastNum+1).padStart(4,'0');
   loading(true);
-  const{error}=await getSvc().from('notas_fiscais').insert({clinic:cl,numero,paciente:pac,cpf,descricao:desc,valor:vl,iss,codigo:cod||null,data:dt});
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mNota');toast('✅ NF registrada!');
-  document.getElementById('nPac').value='';document.getElementById('nCpf').value='';document.getElementById('nDesc').value='';document.getElementById('nVl').value='';document.getElementById('nNum').value='';
-  renderNotas();
+  try{
+    const{error}=await getSvc().from('notas_fiscais').insert({clinic:cl,numero,paciente:pac,cpf,descricao:desc,valor:vl,iss,codigo:cod||null,data:dt});
+    loading(false);
+    if(error){toast('Erro: '+error.message,'err');return;}
+    closeModal('mNota');toast('✅ NF registrada!');
+    document.getElementById('nPac').value='';document.getElementById('nCpf').value='';document.getElementById('nDesc').value='';document.getElementById('nVl').value='';document.getElementById('nNum').value='';
+    renderNotas();
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('saveNota:',e);}
 }
 async function cancelNF(id){if(!confirm('Cancelar esta nota?'))return;await getSvc().from('notas_fiscais').update({status:'cancelada'}).eq('id',id);renderNotas();toast('Nota cancelada.');}
 async function delNF(id){if(!confirm('Remover esta nota?'))return;await getSvc().from('notas_fiscais').delete().eq('id',id);renderNotas();toast('Nota removida.');}
@@ -1975,29 +1979,33 @@ async function saveProc(){
   if(!cat){toast('Informe a categoria.','warn');return;}
   if(isNaN(val)||val<0){toast('Informe um valor válido.','err');return;}
   loading(true);
-  let error;
-  if(!id){
-    const r=await getSvc().from('procedimentos').insert({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0,ativo:true});
-    error=r.error;
-  }else{
-    const r=await getSvc().from('procedimentos').update({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0}).eq('id',id);
-    error=r.error;
-  }
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mProc');toast(id?'✅ Procedimento atualizado!':'✅ Procedimento criado!');
-  await loadProcedimentos();renderProcedimentos();
+  try{
+    let error;
+    if(!id){
+      const r=await getSvc().from('procedimentos').insert({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0,ativo:true});
+      error=r.error;
+    }else{
+      const r=await getSvc().from('procedimentos').update({clinic,categoria:cat,nome,valor:val,gera_comissao:com,percentual_comissao:com?pct:0}).eq('id',id);
+      error=r.error;
+    }
+    loading(false);
+    if(error){toast('Erro: '+error.message,'err');return;}
+    closeModal('mProc');toast(id?'✅ Procedimento atualizado!':'✅ Procedimento criado!');
+    await loadProcedimentos();renderProcedimentos();
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('saveProc:',e);}
 }
 async function delProc(){
   const id=document.getElementById('procId').value;
   if(!id)return;
   if(!confirm('Remover este procedimento da tabela?'))return;
   loading(true);
-  const{error}=await getSvc().from('procedimentos').update({ativo:false}).eq('id',id);
-  loading(false);
-  if(error){toast('Erro: '+error.message,'err');return;}
-  closeModal('mProc');toast('Procedimento removido.');
-  await loadProcedimentos();renderProcedimentos();
+  try{
+    const{error}=await getSvc().from('procedimentos').update({ativo:false}).eq('id',id);
+    loading(false);
+    if(error){toast('Erro: '+error.message,'err');return;}
+    closeModal('mProc');toast('Procedimento removido.');
+    await loadProcedimentos();renderProcedimentos();
+  }catch(e){loading(false);toast('❌ Erro inesperado: '+e.message,'err');console.error('delProc:',e);}
 }
 // ===== RELATÓRIOS =====
 async function renderRel(){
@@ -3621,6 +3629,11 @@ function resetSecImport(){
   const drop=document.getElementById('secImportDrop');if(drop)drop.style.display='block';
 }
 
+// ===== SEGURANÇA: Escape destrava loading overlay =====
+document.addEventListener('keydown',e=>{if(e.key==='Escape')loading(false);});
+window.addEventListener('error',e=>{loading(false);console.error('Global error:',e.message);});
+window.addEventListener('unhandledrejection',e=>{loading(false);console.error('Unhandled promise rejection:',e.reason);});
+
 // ===== BANNER PLANILHAS — injetado quando a seção é aberta =====
 function _injetaBannerPlanilhas(){
   const impSect=document.querySelector('#s-importar');
@@ -3628,16 +3641,4 @@ function _injetaBannerPlanilhas(){
   const tRec=PLANILHAS_DATA.filter(r=>r.tipo==='receita').reduce((s,r)=>s+r.valor,0);
   const banner=document.createElement('div');
   banner.id='bannerPlanilhas';
-  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap';
-  banner.innerHTML='<div>'
-    +'<div style="font-size:16px;font-weight:700;margin-bottom:4px">📊 Planilhas Abr–Jun 2025 prontas para importar</div>'
-    +'<div style="font-size:13px;opacity:.9">'+PLANILHAS_DATA.length+' lançamentos · Dr. Hérnia SJC · Total: R$ '+tRec.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</div>'
-    +'<div style="font-size:11px;opacity:.7;margin-top:4px">Abril 2025 (Karina) · Maio 2025 (consultas + tratamentos) · Junho 2025</div>'
-    +'</div>'
-    +'<button id="btnCarregarPlanilhas" class="btn" style="background:white;color:#1d4ed8;font-weight:700;padding:10px 22px;font-size:13px;flex-shrink:0" onclick="carregarPlanilhas()">'
-    +'✅ Importar Tudo com 1 Clique</button>';
-  impSect.insertBefore(banner,impSect.firstChild);
-}
-</script>
-</body>
-</html>
+  banner.style.cssText='background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius
