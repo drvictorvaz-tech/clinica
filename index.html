@@ -193,6 +193,31 @@ tbody tr:last-child td{border-bottom:none}
 .sec-tbl tr:hover td{background:#f8fafc}
 .tag-rec{background:#dcfce7;color:#166534;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
 .tag-des{background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600}
+/* ---- ENTRADA RÁPIDA VIA IA ---- */
+.er-box{background:white;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px}
+.er-box h3{font-size:13px;font-weight:700;margin-bottom:4px;color:#0f172a}
+.er-subtitle{font-size:12px;color:#64748b;margin-bottom:14px}
+.er-input-wrap{position:relative}
+.er-input{width:100%;padding:14px 54px 14px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:none;outline:none;transition:border-color .15s;line-height:1.5}
+.er-input:focus{border-color:#1d4ed8}
+.er-send{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#1d4ed8;color:white;border:none;border-radius:7px;padding:8px 14px;cursor:pointer;font-size:14px;font-weight:600}
+.er-send:hover{background:#1e40af}
+.er-examples{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.er-ex{padding:5px 12px;border-radius:20px;background:#f1f5f9;border:none;cursor:pointer;font-size:11px;color:#475569;transition:all .15s}
+.er-ex:hover{background:#dbeafe;color:#1d4ed8}
+.er-preview{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-top:16px;display:none}
+.er-preview.err{background:#fff1f2;border-color:#fca5a5}
+.er-preview-title{font-size:12px;font-weight:700;margin-bottom:12px;color:#166534}
+.er-preview.err .er-preview-title{color:#991b1b}
+.er-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.er-field{background:white;border-radius:7px;padding:10px;border:1px solid #dcfce7}
+.er-field .lbl{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;margin-bottom:3px}
+.er-field .val{font-size:13px;font-weight:600;color:#0f172a}
+.er-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.er-hist-item{background:#f8fafc;border-radius:7px;padding:8px 12px;font-size:12px;color:#374151;border:1px solid #f1f5f9;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+.dot-r{background:#059669}.dot-d{background:#dc2626}
+
 </style>
 </head>
 <body>
@@ -783,6 +808,38 @@ tbody tr:last-child td{border-bottom:none}
 </div>
 
 
+<div id="s-entrada-rapida" class="section pc">
+  <div class="er-box">
+    <h3>⚡ Entrada Rápida via IA</h3>
+    <p class="er-subtitle">Digite em linguagem natural e a IA preenche o lançamento automaticamente.</p>
+    <div class="er-input-wrap">
+      <textarea class="er-input" id="erInput" placeholder="Ex: Consulta João hoje R$200 pix DTM" rows="2"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();processarEntrada()}"></textarea>
+      <button class="er-send" onclick="processarEntrada()" title="Processar">➤</button>
+    </div>
+    <div class="er-examples">
+      <button class="er-ex" onclick="erEx('Consulta Maria Silva hoje R$ 250 pix DTM')">💊 Consulta R$250 PIX</button>
+      <button class="er-ex" onclick="erEx('Cirurgia hérnia ontem R$ 1500 cartão crédito')">⚕️ Cirurgia R$1500</button>
+      <button class="er-ex" onclick="erEx('Toxina botulínica hoje R$ 800 dinheiro DTM')">💉 Toxina R$800</button>
+      <button class="er-ex" onclick="erEx('Aluguel clínica DTM R$ 3200 boleto')">🏢 Aluguel R$3200</button>
+      <button class="er-ex" onclick="erEx('Royalties franquia hérnia R$ 1200 transferência')">💸 Royalties R$1200</button>
+      <button class="er-ex" onclick="erEx('Retorno consulta sono R$ 80 pix')">🔄 Retorno R$80</button>
+    </div>
+    <div id="erPreview" class="er-preview">
+      <div class="er-preview-title" id="erPreviewTitle">✅ Lançamento identificado — confira antes de salvar</div>
+      <div class="er-fields" id="erFields"></div>
+      <div class="er-actions">
+        <button class="btn btn-ghost btn-sm" onclick="limparEntrada()">✕ Cancelar</button>
+        <button class="btn btn-success" id="erSaveBtn" onclick="salvarEntradaRapida()">💾 Confirmar e Salvar</button>
+      </div>
+    </div>
+  </div>
+  <div class="er-box" id="erHistBox" style="display:none">
+    <h3>📋 Últimos lançamentos rápidos</h3>
+    <div id="erHistList"></div>
+  </div>
+</div>
+
 </main>
 </div><!-- /appScreen -->
 
@@ -942,6 +999,7 @@ const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agos
 const PG={pix:'PIX',cartao_credito:'Cartão Crédito',cartao_debito:'Cartão Débito',dinheiro:'Dinheiro',transferencia:'Transferência',plano:'Plano/Convênio',cheque:'Cheque',boleto:'Boleto'};
 const ROLE_LABELS={admin:'Administrador',contabilidade:'Contabilidade',secretaria_sjc:'Secretaria SJC',secretaria_dtm:'Secretaria DTM'};
 const NAV_ITEMS=[
+  {id:'entrada-rapida',ic:'⚡',lbl:'Entrada Rápida',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'dashboard',ic:'📊',lbl:'Dashboard',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'importar',ic:'📥',lbl:'Importar Planilha',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
   {id:'documentos',ic:'📁',lbl:'Documentos',roles:['admin','contabilidade','secretaria_sjc','secretaria_dtm']},
@@ -1148,7 +1206,7 @@ function showSection(id){
   const sec=document.getElementById('s-'+id);
   if(sec)sec.classList.add('active');
   document.querySelectorAll('.nb[data-s]').forEach(b=>b.classList.toggle('active',b.dataset.s===id));
-  const titles={dashboard:'Dashboard',importar:'Importar Planilha',documentos:'Documentos',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
+  const titles={'entrada-rapida':'Entrada Rápida via IA',dashboard:'Dashboard',importar:'Importar Planilha',documentos:'Documentos',lancamentos:'Lançamentos',notas:'Notas Fiscais',horas:'Horas Extras',comissoes:'Comissões',procedimentos:'Procedimentos',relatorios:'Relatórios',ia:'IA Consultora',auditoria:'Auditoria',usuarios:'Usuários'};
   document.getElementById('pgTitle').textContent=titles[id]||id;
   if(id==='dashboard')renderDash();
   else if(id==='importar'){resetImport();setTimeout(_injetaBannerPlanilhas,200);}
@@ -3650,6 +3708,127 @@ function _injetaBannerPlanilhas(){
     +'<button id="btnCarregarPlanilhas" onclick="carregarPlanilhas()" style="background:white;color:#1d4ed8;border:none;padding:10px 20px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap">📥 Importar Tudo</button>';
   impSect.insertBefore(banner,impSect.firstChild);
 }
+let _erParsed=null;
+const ER_HIST_KEY='er_hist_';
+function erHistKey(){return ER_HIST_KEY+(currentUser?.id||'default');}
+
+function erEx(txt){
+  document.getElementById('erInput').value=txt;
+  processarEntrada();
+}
+
+function limparEntrada(){
+  document.getElementById('erInput').value='';
+  document.getElementById('erPreview').style.display='none';
+  _erParsed=null;
+}
+
+function parseEntradaRapida(txt){
+  const t=txt.toLowerCase();
+  const r={ok:false,clinica:'dtm',tipo:'receita',valor:0,data:'',pagamento:'pix',categoria:'',descricao:txt.trim()};
+
+  if(/hérnia|hernia|sjc|cirurgi/i.test(txt)) r.clinica='hernia';
+  else if(/dtm|sono|bruxismo|dor oral|oclusão|oclusal|miofunc/i.test(txt)) r.clinica='dtm';
+  else r.clinica=(typeof userClinic==='function'?userClinic():null)||'dtm';
+
+  if(/aluguel|paguei|pagamento de|conta |despesa|gasto|custo|imposto|royalt|material|energia|agua|luz|internet|software|contador|funcionári|salári|folha|marketing/i.test(t))
+    r.tipo='despesa';
+  else r.tipo='receita';
+
+  let vlMatch=null;
+  const pats=[/R\$\s?([\d]+[.,][\d]{2})/i,/R\$\s?(\d+)/i,/([\d]+[.,][\d]{2})\s*reais?/i,/(\d{2,6})\s*(?:reais?|,00)/i];
+  for(const p of pats){const m=txt.match(p);if(m){vlMatch=m;break;}}
+  if(!vlMatch){const m=txt.match(/\b(\d{2,5})\b/);if(m)vlMatch=m;}
+  if(vlMatch){
+    const raw=(vlMatch[1]||'0').replace(/\./g,'').replace(',','.');
+    r.valor=parseFloat(raw)||0;
+  }
+
+  const hoje=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const fmtD=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  if(/\bontem\b/i.test(t)){const d=new Date(hoje);d.setDate(d.getDate()-1);r.data=fmtD(d);}
+  else if(/\bhoje\b|\bagora\b/i.test(t)){r.data=fmtD(hoje);}
+  else{
+    const dmY=txt.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    const dm=txt.match(/(\d{1,2})\/(\d{1,2})/);
+    if(dmY)r.data=dmY[3]+'-'+pad(dmY[2])+'-'+pad(dmY[1]);
+    else if(dm)r.data=hoje.getFullYear()+'-'+pad(dm[2])+'-'+pad(dm[1]);
+    else r.data=fmtD(hoje);
+  }
+
+  if(/crédit|credit/i.test(t)) r.pagamento='cartao_credito';
+  else if(/débit|debit/i.test(t)) r.pagamento='cartao_debito';
+  else if(/cartão|cartao/i.test(t)) r.pagamento='cartao_credito';
+  else if(/dinheir/i.test(t)) r.pagamento='dinheiro';
+  else if(/transfer/i.test(t)) r.pagamento='transferencia';
+  else if(/convênio|convenio|plano/i.test(t)) r.pagamento='plano';
+  else if(/cheque/i.test(t)) r.pagamento='cheque';
+  else if(/boleto/i.test(t)) r.pagamento='boleto';
+  else r.pagamento='pix';
+
+  const cats=(typeof CATS!=='undefined'?(CATS[r.clinica]||CATS.dtm)[r.tipo]:[]);
+  const catMap={'consulta':['Consulta Particular','Consulta Cirúrgica'],'cirurgi':['Cirurgia'],'retorno':['Retorno'],'convênio|convenio|plano':['Convênio'],'toxin|botulín|bótox|botox':['Toxina Botulínica'],'plac':['Placa DTM'],'sono|apneia':['Tratamento Sono'],'radiografi':['Radiografia'],'aluguel':['Aluguel'],'funcionári|salári|folha':['Funcionários'],'material':['Material Odontológico','Material Cirúrgico'],'equip':['Equipamentos'],'market|publicid':['Marketing'],'contad':['Contador'],'imposto|taxa':['Impostos'],'software|sistema':['Softwares'],'agua|luz|energia|internet':['Água/Luz/Internet'],'curso|treinament':['Cursos'],'royalt|franquia':['Royalties','Royalties (Franquia)'],'miofunc':['Terapia Miofuncional'],'protocolo':['Protocolo'],'exame':['Exames']};
+  let foundCat='';
+  for(const[pat,opts] of Object.entries(catMap)){if(new RegExp(pat,'i').test(t)){const m=opts.find(o=>cats.includes(o));if(m){foundCat=m;break;}}}
+  r.categoria=foundCat||(cats[0]||'Outros');
+  r.ok=r.valor>0;
+  return r;
+}
+
+function processarEntrada(){
+  const txt=document.getElementById('erInput').value.trim();
+  if(!txt)return;
+  const p=parseEntradaRapida(txt);
+  _erParsed=p;
+  const prev=document.getElementById('erPreview');
+  const title=document.getElementById('erPreviewTitle');
+  const fields=document.getElementById('erFields');
+  const pgL={pix:'PIX',cartao_credito:'Cartão Crédito',cartao_debito:'Cartão Débito',dinheiro:'Dinheiro',transferencia:'Transferência',plano:'Plano/Convênio',cheque:'Cheque',boleto:'Boleto'};
+  const clLbl=p.clinica==='dtm'?'🦷 DTM & Sono':'⚕️ Dr. Hérnia SJC';
+  const tpLbl=p.tipo==='receita'?'💚 Receita':'🔴 Despesa';
+  const dtFmt=p.data?p.data.split('-').reverse().join('/'):'Hoje';
+  if(!p.ok){prev.className='er-preview err';title.textContent='⚠️ Não consegui identificar o valor.';fields.innerHTML='';prev.style.display='block';document.getElementById('erSaveBtn').style.display='none';return;}
+  prev.className='er-preview';title.textContent='✅ Lançamento identificado — confira antes de salvar';document.getElementById('erSaveBtn').style.display='';
+  const vlColor=p.tipo==='receita'?'#059669':'#dc2626';
+  const vlFmt='R$ '+p.valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  fields.innerHTML='<div class="er-field"><div class="lbl">Clínica</div><div class="val">'+clLbl+'</div></div><div class="er-field"><div class="lbl">Tipo</div><div class="val">'+tpLbl+'</div></div><div class="er-field"><div class="lbl">Valor</div><div class="val" style="color:'+vlColor+';font-size:16px">'+vlFmt+'</div></div><div class="er-field"><div class="lbl">Data</div><div class="val">'+dtFmt+'</div></div><div class="er-field"><div class="lbl">Pagamento</div><div class="val">'+(pgL[p.pagamento]||p.pagamento)+'</div></div><div class="er-field"><div class="lbl">Categoria</div><div class="val">'+p.categoria+'</div></div><div class="er-field" style="grid-column:span 3"><div class="lbl">Descrição</div><div class="val">'+p.descricao+'</div></div>';
+  prev.style.display='block';
+  prev.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function salvarEntradaRapida(){
+  if(!_erParsed||!_erParsed.ok)return;
+  const p=_erParsed;
+  loading(true);
+  try{
+    const{error}=await getSvc().from('transactions').insert({clinic:p.clinica,tipo:p.tipo,categoria:p.categoria,descricao:p.descricao,valor:p.valor,data:p.data,pagamento:p.pagamento,observacao:'Entrada rápida via IA'});
+    loading(false);
+    if(error){toast('Erro: '+error.message,'err');return;}
+    try{const h=JSON.parse(localStorage.getItem(erHistKey())||'[]');h.unshift({...p,ts:Date.now()});localStorage.setItem(erHistKey(),JSON.stringify(h.slice(0,20)));}catch(e){}
+    toast('✅ Lançamento salvo!');
+    document.getElementById('erInput').value='';
+    document.getElementById('erPreview').style.display='none';
+    _erParsed=null;
+    renderErHist();
+  }catch(e){loading(false);toast('❌ Erro: '+e.message,'err');}
+}
+
+function renderErHist(){
+  try{
+    const h=JSON.parse(localStorage.getItem(erHistKey())||'[]');
+    const box=document.getElementById('erHistBox');
+    const list=document.getElementById('erHistList');
+    if(!h.length){if(box)box.style.display='none';return;}
+    box.style.display='block';
+    const pgL={pix:'PIX',cartao_credito:'Crédito',cartao_debito:'Débito',dinheiro:'Dinheiro',transferencia:'Transf.',plano:'Plano',cheque:'Cheque',boleto:'Boleto'};
+    list.innerHTML=h.slice(0,8).map(p=>{const cl=p.clinica==='dtm'?'DTM':'Hérnia';const dt=p.data?p.data.split('-').reverse().join('/'):'';
+    const cor=p.tipo==='receita'?'dot-r':'dot-d';const vl='R$ '+p.valor.toFixed(0);
+    return '<div class="er-hist-item"><span><span class="dot '+cor+'"></span><b>'+vl+'</b> — '+p.categoria+' — '+cl+' — '+dt+'</span><span style="color:#94a3b8;font-size:10px">'+(pgL[p.pagamento]||'')+'</span></div>';
+    }).join('');
+  }catch(e){}
+}
+
 </script>
 </body>
 </html>
