@@ -3404,29 +3404,44 @@ async function loadDocs(){
     let q=getSvc().from('documentos').select('*').order('created_at',{ascending:false});
     if(clinic)q=q.eq('clinic',clinic);
     if(tipo)q=q.eq('tipo',tipo);
-    const{data:docs}=await q;
+    const{data:docs,error}=await q;
+    if(error)throw error;
     if(!docs||!docs.length){
-      tb.innerHTML='';
-      if(empt)empt.style.display='block';
+      container.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8;font-size:13px"><div style="font-size:36px;margin-bottom:10px">📄</div>Nenhum documento encontrado</div>';
       return;
     }
-    if(empt)empt.style.display='none';
-    tb.innerHTML=docs.map(d=>{
+    const rows=docs.map(d=>{
       const dt=new Date(d.created_at).toLocaleDateString('pt-BR');
-      const sz=d.tamanho?Math.round(d.tamanho/1024)+'KB':'—';
-      return`<tr>
+      const sz=d.tamanho?d.tamanho>1048576?(d.tamanho/1048576).toFixed(1)+'MB':Math.round(d.tamanho/1024)+'KB':'—';
+      const ic=d.tipo==='pdf'?'📄':d.tipo==='word'?'📝':d.tipo==='excel'?'📊':'📎';
+      const url=d.storage_path?`${SB_URL}/storage/v1/object/public/documentos/${d.storage_path}`:'';
+      const sp=(d.storage_path||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<tr>
         <td style="font-size:12px;white-space:nowrap">${dt}</td>
-        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'DTM':'Hérnia'}</span></td>
-        <td style="font-size:12px">${d.tipo||'—'}</td>
-        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.descricao||d.nome||'—'}</td>
+        <td><span class="badge badge-${d.clinic}">${d.clinic==='dtm'?'🦷 DTM':'⚕️ Hérnia'}</span></td>
+        <td style="font-size:12px">${ic} ${(d.tipo||'').toUpperCase()}</td>
+        <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.descricao||d.nome||''}">${d.descricao||d.nome||'—'}</td>
         <td style="font-size:11px;color:#64748b">${sz}</td>
-        <td style="display:flex;gap:6px">
-          ${d.url?`<a href="${d.url}" target="_blank" class="btn btn-sm btn-ghost">📥 Ver</a>`:''}
-          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${(d.storage_path||'').replace(/'/g,\"\\\'\")}')">🗑️</button>`:''}
+        <td style="white-space:nowrap">
+          ${url?`<a href="${url}" target="_blank" rel="noopener" class="btn btn-sm btn-ghost" style="text-decoration:none">📥 Abrir</a> `:''}
+          ${isAdmin()?`<button class="btn btn-sm btn-danger" onclick="delDoc('${d.id}','${sp}')">🗑️</button>`:''}
         </td>
       </tr>`;
     }).join('');
-  }catch(e){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:16px">Erro ao carregar documentos</td></tr>';}
+    container.innerHTML=`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:2px solid #e2e8f0;background:#f8fafc">
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">DATA</th>
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">CLÍNICA</th>
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">TIPO</th>
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">DESCRIÇÃO</th>
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">TAMANHO</th>
+        <th style="text-align:left;padding:8px 10px;font-size:11px;color:#64748b;font-weight:600">AÇÕES</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  }catch(e){
+    container.innerHTML=`<div style="text-align:center;color:#dc2626;padding:20px;font-size:13px">❌ Erro ao carregar: ${e.message}</div>`;
+  }
 }
 async function delDoc(id,storagePath){
   if(!confirm('Remover este documento permanentemente?'))return;
