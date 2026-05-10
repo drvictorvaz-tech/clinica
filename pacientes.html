@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IA Pacientes â Dr. Victor Vaz</title>
+<title>IA Pacientes — Dr. Victor Vaz</title>
 <style>
 :root {
   --bg: #f1f5f9;
@@ -22,7 +22,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;min-height:100vh;font-size:14px}
 
-/* ââ Sidebar ââ */
+/* ── Sidebar ── */
 #sidebar{
   width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);
   border-right:1px solid var(--border);display:flex;flex-direction:column;
@@ -44,7 +44,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .sidebar-footer a{color:var(--text2);font-size:12px;text-decoration:none}
 .sidebar-footer a:hover{color:var(--accent)}
 
-/* ââ Main ââ */
+/* ── Main ── */
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
 #topbar{
   background:var(--surface);border-bottom:1px solid var(--border);
@@ -68,17 +68,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 
 #content{padding:24px;flex:1}
 
-/* ââ Cards ââ */
+/* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
 .card-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
-/* ââ Stats row ââ */
+/* ── Stats row ── */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
 .stat-num{font-size:26px;font-weight:700;color:var(--accent)}
 .stat-label{font-size:12px;color:var(--text2);margin-top:2px}
 
-/* ââ Search ââ */
+/* ── Search ── */
 .search-bar{
   display:flex;align-items:center;gap:10px;background:var(--surface2);
   border:1px solid var(--border);border-radius:8px;padding:0 12px;
@@ -90,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .search-bar input::placeholder{color:var(--text2)}
 .search-bar .icon{color:var(--text2);font-size:16px}
 
-/* ââ Table ââ */
+/* ── Table ── */
 .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse}
 th{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
@@ -108,7 +108,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .badge-gray{background:rgba(139,148,158,.15);color:var(--text2)}
 .badge-red{background:rgba(248,81,73,.15);color:var(--danger)}
 
-/* ââ Forms ââ */
+/* ── Forms ── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .form-full{grid-column:1/-1}
@@ -129,7 +129,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   letter-spacing:.6px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:12px;
 }
 
-/* ââ Modals ââ */
+/* ── Modals ── */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
   display:none;align-items:center;justify-content:center;
@@ -148,7 +148,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .modal-close:hover{color:var(--text)}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
 
-/* ââ Patient profile ââ */
+/* ── Patient profile ── */
 .profile-header{
   display:flex;align-items:center;gap:16px;margin-bottom:20px;
   padding-bottom:20px;border-bottom:1px solid var(--border);
@@ -169,7 +169,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .profile-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .profile-tab:hover{color:var(--text)}
 
-/* ââ EvoluÃ§Ãµes ââ */
+/* ── Evoluções ── */
 .evolucao-card{
   border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;
   transition:border-color .15s;
@@ -188,7 +188,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 }
 .evo-valor{font-size:15px;font-weight:700;color:var(--success)}
 
-/* ââ Agenda / Calendar ââ */
+/* ── Agenda / Calendar ── */
 .agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .agenda-nav h3{font-size:16px;font-weight:700;flex:1;text-align:center}
 .week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
@@ -226,7 +226,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .agenda-info .name{font-weight:600}
 .agenda-info .detail{font-size:12px;color:var(--text2);margin-top:1px}
 
-/* ââ Toast ââ */
+/* ── Toast ── */
 #toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
   background:var(--surface);border:1px solid var(--border);border-radius:10px;
@@ -240,7 +240,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 #toast.warn{border-left:4px solid var(--warn);color:var(--warn)}
 #toast.info{border-left:4px solid #58a6ff;color:#58a6ff}
 
-/* ââ Loading ââ */
+/* ── Loading ── */
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-overlay{
@@ -254,7 +254,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .empty-state p{font-size:15px}
 .empty-state small{font-size:13px;opacity:.6}
 
-/* ââ Pagination ââ */
+/* ── Pagination ── */
 .pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:16px}
 .page-btn{
   padding:6px 12px;border-radius:6px;border:1px solid var(--border);
@@ -264,58 +264,58 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ââ Divider ââ */
+/* ── Divider ── */
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
 </style>
 </head>
 <body>
 
-<!-- âââââââââââââââââââââââââââ SIDEBAR âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <h1>ð¦· IA Pacientes</h1>
-    <p>Dr. Victor Vaz â DTM & Sono</p>
+    <h1>🦷 IA Pacientes</h1>
+    <p>Dr. Victor Vaz — DTM & Sono</p>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')">
-      <span class="icon">ð</span>Dashboard
+      <span class="icon">📊</span>Dashboard
     </div>
     <div class="nav-item" data-view="pacientes" onclick="showView('pacientes')">
-      <span class="icon">ð¥</span>Pacientes
+      <span class="icon">👥</span>Pacientes
     </div>
     <div class="nav-item" data-view="agenda" onclick="showView('agenda')">
-      <span class="icon">ð</span>Agenda
+      <span class="icon">📅</span>Agenda
     </div>
-    <div class="nav-section">AÃ§Ãµes</div>
+    <div class="nav-section">Ações</div>
     <div class="nav-item" onclick="openModalCadastro()">
-      <span class="icon">â</span>Novo Paciente
+      <span class="icon">➕</span>Novo Paciente
     </div>
     <div class="nav-item" onclick="openModalEvolucao(null)">
-      <span class="icon">ð</span>Nova EvoluÃ§Ã£o
+      <span class="icon">📝</span>Nova Evolução
     </div>
     <div class="nav-item" onclick="openModalAgendamento()">
-      <span class="icon">ð</span>Agendar Consulta
+      <span class="icon">🕐</span>Agendar Consulta
     </div>
     <div class="nav-section">Sistema</div>
     <div class="nav-item" onclick="window.open('dr_victor_clinica.html')">
-      <span class="icon">ð§ </span>IA ClÃ­nica
+      <span class="icon">🧠</span>IA Clínica
     </div>
     <div class="nav-item" onclick="window.open('index.html')">
-      <span class="icon">ð°</span>IA Financeira
+      <span class="icon">💰</span>IA Financeira
     </div>
     <div class="nav-item" onclick="window.open('historico.html')">
-      <span class="icon">ð</span>HistÃ³rico
+      <span class="icon">📋</span>Histórico
     </div>
   </div>
   <div class="sidebar-footer">
-    <a href="dr_victor_clinica.html">â IA ClÃ­nica</a>
+    <a href="dr_victor_clinica.html">← IA Clínica</a>
     &nbsp;|&nbsp;
-    <a href="index.html">Financeira â</a>
+    <a href="index.html">Financeira →</a>
   </div>
 </nav>
 
-<!-- âââââââââââââââââââââââââââ MAIN âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
 <div id="main">
   <div id="topbar">
     <h2 id="topbar-title">Dashboard</h2>
@@ -323,36 +323,36 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
   <div id="content">
 
-    <!-- ââ VIEW: Dashboard ââ -->
+    <!-- ── VIEW: Dashboard ── -->
     <div id="view-dashboard">
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-num" id="stat-pacientes">â</div>
+          <div class="stat-num" id="stat-pacientes">—</div>
           <div class="stat-label">Pacientes ativos</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-hoje">â</div>
+          <div class="stat-num" id="stat-hoje">—</div>
           <div class="stat-label">Consultas hoje</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-semana">â</div>
+          <div class="stat-num" id="stat-semana">—</div>
           <div class="stat-label">Esta semana</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-receita">â</div>
-          <div class="stat-label">Receita do mÃªs</div>
+          <div class="stat-num" id="stat-receita">—</div>
+          <div class="stat-label">Receita do mês</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
-          <div class="card-title">ð PrÃ³ximas consultas</div>
+          <div class="card-title">📅 Próximas consultas</div>
           <div id="proximas-consultas">
             <div class="spinner" style="margin:20px auto;display:block"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-title">ð Ãltimas evoluÃ§Ãµes</div>
+          <div class="card-title">🕐 Últimas evoluções</div>
           <div id="ultimas-evolucoes">
             <div class="spinner" style="margin:20px auto;display:block"></div>
           </div>
@@ -360,11 +360,11 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
       </div>
     </div>
 
-    <!-- ââ VIEW: Pacientes ââ -->
+    <!-- ── VIEW: Pacientes ── -->
     <div id="view-pacientes" style="display:none">
       <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
         <div class="search-bar" style="flex:1">
-          <span class="icon">ð</span>
+          <span class="icon">🔍</span>
           <input type="text" id="busca-input" placeholder="Buscar paciente pelo nome..." oninput="debuscaPaciente()">
         </div>
         <button class="btn btn-primary" onclick="openModalCadastro()">+ Novo Paciente</button>
@@ -389,20 +389,20 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
       <div class="pagination" id="paginacao"></div>
     </div>
 
-    <!-- ââ VIEW: Ficha do Paciente ââ -->
+    <!-- ── VIEW: Ficha do Paciente ── -->
     <div id="view-ficha" style="display:none">
-      <button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="showView('pacientes')">â Voltar</button>
+      <button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="showView('pacientes')">← Voltar</button>
       <div class="card" id="ficha-container">
         <div class="spinner" style="margin:40px auto;display:block"></div>
       </div>
     </div>
 
-    <!-- ââ VIEW: Agenda ââ -->
+    <!-- ── VIEW: Agenda ── -->
     <div id="view-agenda" style="display:none">
       <div class="agenda-nav">
-        <button class="btn-icon" onclick="agendaNavSemana(-1)">â</button>
+        <button class="btn-icon" onclick="agendaNavSemana(-1)">◀</button>
         <h3 id="agenda-titulo">Agenda</h3>
-        <button class="btn-icon" onclick="agendaNavSemana(1)">â¶</button>
+        <button class="btn-icon" onclick="agendaNavSemana(1)">▶</button>
         <button class="btn btn-outline btn-sm" onclick="agendaHoje()">Hoje</button>
         <button class="btn btn-primary btn-sm" onclick="openModalAgendamento()">+ Agendar</button>
       </div>
@@ -414,14 +414,14 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- âââââââââââââââââââââââââââ MODALS âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
 
 <!-- Modal: Cadastro de Paciente -->
 <div class="modal-overlay" id="modal-cadastro">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modal-cadastro-titulo">â Novo Paciente</h3>
-      <button class="modal-close" onclick="closeModal('modal-cadastro')">â</button>
+      <h3 id="modal-cadastro-titulo">➕ Novo Paciente</h3>
+      <button class="modal-close" onclick="closeModal('modal-cadastro')">✕</button>
     </div>
     <form id="form-cadastro" onsubmit="salvarPaciente(event)">
       <div class="form-section">
@@ -457,7 +457,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group">
-            <label>ProfissÃ£o</label>
+            <label>Profissão</label>
             <input type="text" id="p-profissao" placeholder="Ex: Professor">
           </div>
           <div class="form-group">
@@ -467,24 +467,24 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option>Solteiro(a)</option>
               <option>Casado(a)</option>
               <option>Divorciado(a)</option>
-              <option>ViÃºvo(a)</option>
-              <option>UniÃ£o estÃ¡vel</option>
+              <option>Viúvo(a)</option>
+              <option>União estável</option>
             </select>
           </div>
         </div>
       </div>
       <div class="form-section">
-        <div class="form-section-title">Dados ClÃ­nicos</div>
+        <div class="form-section-title">Dados Clínicos</div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Plano de saÃºde</label>
+            <label>Plano de saúde</label>
             <input type="text" id="p-plano" placeholder="Particular / Unimed / etc.">
           </div>
           <div class="form-group">
             <label>Como nos conheceu</label>
             <select id="p-como">
               <option value="">Selecione</option>
-              <option>IndicaÃ§Ã£o</option>
+              <option>Indicação</option>
               <option>Instagram</option>
               <option>Google</option>
               <option>Facebook</option>
@@ -492,12 +492,12 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group form-full">
-            <label>EndereÃ§o</label>
-            <input type="text" id="p-endereco" placeholder="Rua, nÃºmero, bairro, cidade">
+            <label>Enderço </label>
+            <input type="text" id="p-endereco" placeholder="Rua, número, bairro, cidade">
           </div>
           <div class="form-group form-full">
-            <label>ObservaÃ§Ãµes gerais</label>
-            <textarea id="p-obs" placeholder="Alergias, informaÃ§Ãµes relevantes..."></textarea>
+            <label>Observações gerais</label>
+            <textarea id="p-obs" placeholder="Alergias, informações relevantes..."></textarea>
           </div>
         </div>
       </div>
@@ -509,12 +509,12 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
 </div>
 
-<!-- Modal: Nova EvoluÃ§Ã£o -->
+<!-- Modal: Nova Evolução -->
 <div class="modal-overlay" id="modal-evolucao">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h3>ð Registro de EvoluÃ§Ã£o</h3>
-      <button class="modal-close" onclick="closeModal('modal-evolucao')">â</button>
+      <h3>📝 Registro de Evolução</h3>
+      <button class="modal-close" onclick="closeModal('modal-evolucao')">✕</button>
     </div>
     <form id="form-evolucao" onsubmit="salvarEvolucao(event)">
       <input type="hidden" id="e-paciente-id">
@@ -541,53 +541,53 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="consulta">Consulta</option>
               <option value="retorno">Retorno</option>
               <option value="procedimento">Procedimento</option>
-              <option value="urgencia">UrgÃªncia</option>
-              <option value="avaliacao">AvaliaÃ§Ã£o</option>
+              <option value="urgencia">Urgência</option>
+              <option value="avaliacao">Avaliação</option>
             </select>
           </div>
           <div class="form-group">
-            <label>PrÃ³xima consulta</label>
+            <label>Próxima consulta</label>
             <input type="date" id="e-proxima">
           </div>
         </div>
       </div>
 
       <div class="form-section">
-        <div class="form-section-title">Registro ClÃ­nico</div>
+        <div class="form-section-title">Registro Clínico</div>
         <div class="form-grid">
           <div class="form-group form-full">
             <label>Queixa principal</label>
             <textarea id="e-queixa" rows="2" placeholder="O que o paciente relata..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>Anamnese / HistÃ³rico</label>
-            <textarea id="e-anamnese" rows="2" placeholder="HistÃ³rico clÃ­nico relevante..."></textarea>
+            <label>Anamnese / Histórico</label>
+            <textarea id="e-anamnese" rows="2" placeholder="Histórico clínico relevante..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>Exame clÃ­nico</label>
-            <textarea id="e-exame" rows="3" placeholder="Achados do exame fÃ­sico, ATM, musculatura..."></textarea>
+            <label>Exame clínico</label>
+            <textarea id="e-exame" rows="3" placeholder="Achados do exame físico, ATM, musculatura..."></textarea>
           </div>
           <div class="form-group">
-            <label>DiagnÃ³stico</label>
-            <textarea id="e-diagnostico" rows="2" placeholder="HipÃ³teses e diagnÃ³sticos..."></textarea>
+            <label>Diagnóstico</label>
+            <textarea id="e-diagnostico" rows="2" placeholder="Hipóteses e diagnósticos..."></textarea>
           </div>
           <div class="form-group">
             <label>Plano de tratamento</label>
-            <textarea id="e-plano" rows="2" placeholder="Conduta e prÃ³ximos passos..."></textarea>
+            <textarea id="e-plano" rows="2" placeholder="Conduta e próximos passos..."></textarea>
           </div>
           <div class="form-group form-full">
             <label>Procedimentos realizados</label>
             <textarea id="e-procedimentos" rows="2" placeholder="Procedimentos executados nesta consulta..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>OrientaÃ§Ãµes ao paciente</label>
-            <textarea id="e-orientacoes" rows="2" placeholder="OrientaÃ§Ãµes dadas, prescriÃ§Ãµes..."></textarea>
+            <label>Orientações ao paciente</label>
+            <textarea id="e-orientacoes" rows="2" placeholder="Orientações dadas, prescrições..."></textarea>
           </div>
         </div>
       </div>
 
       <div class="form-section">
-        <div class="form-section-title">ð° Financeiro â IntegraÃ§Ã£o automÃ¡tica com IA Financeira</div>
+        <div class="form-section-title">💰 Financeiro — Integração automática com IA Financeira</div>
         <div class="form-grid-3">
           <div class="form-group">
             <label>Valor (R$)</label>
@@ -599,7 +599,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="pendente">Pendente</option>
               <option value="pago">Pago</option>
               <option value="particular">Particular (Pago)</option>
-              <option value="convenio">ConvÃªnio</option>
+              <option value="convenio">Convênio</option>
               <option value="cortesia">Cortesia</option>
             </select>
           </div>
@@ -609,18 +609,18 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="">Selecione</option>
               <option>Dinheiro</option>
               <option>PIX</option>
-              <option>CartÃ£o de crÃ©dito</option>
-              <option>CartÃ£o de dÃ©bito</option>
-              <option>TransferÃªncia</option>
+              <option>Cartão de crédito</option>
+              <option>Cartão de débito</option>
+              <option>Transferência</option>
             </select>
           </div>
         </div>
-        <p style="font-size:12px;color:var(--text2);margin-top:8px">â¡ Ao salvar com valor e status diferente de "Pendente", o lanÃ§amento serÃ¡ enviado automaticamente para a IA Financeira.</p>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px">⚡ Ao salvar com valor e status diferente de "Pendente", o lançamento será enviado automaticamente para a IA Financeira.</p>
       </div>
 
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-evolucao')">Cancelar</button>
-        <button type="submit" class="btn btn-primary" id="btn-salvar-evo">ð¾ Salvar EvoluÃ§Ã£o</button>
+        <button type="submit" class="btn btn-primary" id="btn-salvar-evo">💾 Salvar Evolução</button>
       </div>
     </form>
   </div>
@@ -630,8 +630,8 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 <div class="modal-overlay" id="modal-agendamento">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h3>ð <span id="modal-agenda-titulo">Novo Agendamento</span></h3>
-      <button class="modal-close" onclick="closeModal('modal-agendamento')">â</button>
+      <h3>🕐 <span id="modal-agenda-titulo">Novo Agendamento</span></h3>
+      <button class="modal-close" onclick="closeModal('modal-agendamento')">✕</button>
     </div>
     <form id="form-agendamento" onsubmit="salvarAgendamento(event)">
       <input type="hidden" id="ag-id">
@@ -654,7 +654,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             <input type="datetime-local" id="ag-data-hora" required>
           </div>
           <div class="form-group">
-            <label>DuraÃ§Ã£o (min)</label>
+            <label>Duração (min)</label>
             <select id="ag-duracao">
               <option value="30">30 min</option>
               <option value="45">45 min</option>
@@ -684,8 +684,8 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group form-full">
-            <label>ObservaÃ§Ãµes</label>
-            <textarea id="ag-obs" rows="2" placeholder="ObservaÃ§Ãµes do agendamento..."></textarea>
+            <label>Observações</label>
+            <textarea id="ag-obs" rows="2" placeholder="Observações do agendamento..."></textarea>
           </div>
         </div>
       </div>
@@ -697,11 +697,11 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
 </div>
 
-<!-- Modal: ConfirmaÃ§Ã£o -->
+<!-- Modal: Confirmação -->
 <div class="modal-overlay" id="modal-confirma">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h3 id="confirma-titulo">Confirmar aÃ§Ã£o</h3>
+      <h3 id="confirma-titulo">Confirmar ação</h3>
     </div>
     <p id="confirma-msg" style="color:var(--text2);margin-bottom:20px"></p>
     <div class="modal-footer">
@@ -715,14 +715,14 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 <div id="toast"></div>
 
 <script>
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // CONFIG
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 const API = 'https://clinica-production-22e0.up.railway.app';
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // UTILS
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let toastTimer;
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');
@@ -733,17 +733,17 @@ function showToast(msg, type='info') {
 }
 
 function formatDate(str) {
-  if (!str) return 'â';
+  if (!str) return '—';
   const d = new Date(str + (str.includes('T') ? '' : 'T00:00:00'));
   return d.toLocaleDateString('pt-BR');
 }
 function formatDateTime(str) {
-  if (!str) return 'â';
+  if (!str) return '—';
   const d = new Date(str);
   return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 function formatMoeda(v) {
-  if (!v && v !== 0) return 'â';
+  if (!v && v !== 0) return '—';
   return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 function iniciais(nome) {
@@ -769,9 +769,9 @@ async function api(method, path, body) {
   return r.json();
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
-// NAVEGAÃÃO
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
+// NAVEGAÇÃO
+// ═══════════════════════════════════════════════
 let currentView = 'dashboard';
 const views = ['dashboard','pacientes','ficha','agenda'];
 const viewTitles = {
@@ -788,7 +788,7 @@ function showView(view, extra) {
   });
   currentView = view;
 
-  // aÃ§Ãµes do topbar
+  // ações do topbar
   const acts = document.getElementById('topbar-actions');
   acts.innerHTML = '';
   if (view === 'pacientes') {
@@ -808,12 +808,12 @@ function showView(view, extra) {
   if (view === 'ficha' && extra) {
     const b1 = document.createElement('button');
     b1.className = 'btn btn-outline btn-sm';
-    b1.textContent = 'âï¸ Editar';
+    b1.textContent = '✏️ Editar';
     b1.onclick = () => openModalCadastro(extra);
     const b2 = document.createElement('button');
     b2.className = 'btn btn-primary btn-sm';
     b2.style.marginLeft = '8px';
-    b2.textContent = '+ EvoluÃ§Ã£o';
+    b2.textContent = '+ Evolução';
     b2.onclick = () => openModalEvolucao(extra.id, extra.nome);
     acts.appendChild(b1);
     acts.appendChild(b2);
@@ -824,9 +824,9 @@ function showView(view, extra) {
   if (view === 'agenda') loadAgenda();
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // DASHBOARD
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 async function loadDashboard() {
   try {
     const hoje = dataHoje();
@@ -842,38 +842,38 @@ async function loadDashboard() {
       api('GET', `/agenda?data_inicio=${inicioSemana.toISOString()}&data_fim=${fimSemana.toISOString()}`).catch(() => ({ agendamentos: [] })),
     ]);
 
-    document.getElementById('stat-pacientes').textContent = pacs.total ?? 'â';
+    document.getElementById('stat-pacientes').textContent = pacs.total ?? '—';
     document.getElementById('stat-hoje').textContent = agHoje.agendamentos?.length ?? 0;
     document.getElementById('stat-semana').textContent = agSemana.agendamentos?.length ?? 0;
-    document.getElementById('stat-receita').textContent = 'â';
+    document.getElementById('stat-receita').textContent = '—';
 
-    // PrÃ³ximas consultas
+    // Próximas consultas
     const proxEl = document.getElementById('proximas-consultas');
     const proxItems = (agHoje.agendamentos || []).slice(0, 5);
     if (proxItems.length === 0) {
-      proxEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="icon">ð</div><p>Nenhuma consulta hoje</p></div>';
+      proxEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="icon">📅</div><p>Nenhuma consulta hoje</p></div>';
     } else {
       proxEl.innerHTML = proxItems.map(ag => `
         <div class="agenda-item" style="margin-bottom:8px" onclick="openModalAgendamento(${JSON.stringify(ag).replace(/"/g,'&quot;')})">
-          <div class="agenda-time">${formatDateTime(ag.data_hora).split(',')[1]?.trim() || 'â'}</div>
+          <div class="agenda-time">${formatDateTime(ag.data_hora).split(',')[1]?.trim() || '—'}</div>
           <div class="agenda-info">
             <div class="name">${ag.nome_paciente || 'Sem nome'}</div>
-            <div class="detail">${ag.tipo} Â· ${ag.status}</div>
+            <div class="detail">${ag.tipo} · ${ag.status}</div>
           </div>
         </div>
       `).join('');
     }
 
-    // Ãltimas evoluÃ§Ãµes â buscar das Ãºltimas analises como proxy
-    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluÃ§Ãµes</div>';
+    // Últimas evoluções — buscar das últimas analises como proxy
+    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluções</div>';
   } catch (e) {
     console.warn('Dashboard error:', e);
   }
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // PACIENTES
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let paginaAtual = 1;
 let totalPacientes = 0;
 let buscaAtual = '';
@@ -902,9 +902,9 @@ function renderTabelaPacientes(pacientes) {
   if (!pacientes || pacientes.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
-        <div class="icon">ð¥</div>
+        <div class="icon">👥</div>
         <p>Nenhum paciente encontrado</p>
-        <small>Cadastre um novo paciente para comeÃ§ar</small>
+        <small>Cadastre um novo paciente para começar</small>
       </div>
     </td></tr>`;
     return;
@@ -920,12 +920,12 @@ function renderTabelaPacientes(pacientes) {
           </div>
         </div>
       </td>
-      <td>${p.cpf || '<span style="color:var(--text2)">â</span>'}</td>
-      <td>${p.celular || '<span style="color:var(--text2)">â</span>'}</td>
+      <td>${p.cpf || '<span style="color:var(--text2)">—</span>'}</td>
+      <td>${p.celular || '<span style="color:var(--text2)">—</span>'}</td>
       <td>${p.plano_saude ? `<span class="badge badge-blue">${p.plano_saude}</span>` : '<span style="color:var(--text2)">Particular</span>'}</td>
       <td><span style="color:var(--text2);font-size:12px">${formatDate(p.criado_em)}</span></td>
       <td onclick="event.stopPropagation()">
-        <button class="btn-icon" title="Editar" onclick="openModalCadastro(null,'${p.id}')">âï¸</button>
+        <button class="btn-icon" title="Editar" onclick="openModalCadastro(null,'${p.id}')">✏️</button>
       </td>
     </tr>
   `).join('');
@@ -935,15 +935,15 @@ function renderPaginacao(total, pagina, limite) {
   const totalPags = Math.ceil(total / limite);
   const el = document.getElementById('paginacao');
   if (totalPags <= 1) { el.innerHTML = ''; return; }
-  let html = `<button class="page-btn" onclick="mudaPagina(${pagina-1})" ${pagina<=1?'disabled':''}>â</button>`;
+  let html = `<button class="page-btn" onclick="mudaPagina(${pagina-1})" ${pagina<=1?'disabled':''}>◀</button>`;
   for (let i = 1; i <= totalPags; i++) {
     if (i === pagina || i === 1 || i === totalPags || Math.abs(i - pagina) <= 1) {
       html += `<button class="page-btn ${i===pagina?'active':''}" onclick="mudaPagina(${i})">${i}</button>`;
     } else if (Math.abs(i - pagina) === 2) {
-      html += `<span style="color:var(--text2)">â¦</span>`;
+      html += `<span style="color:var(--text2)">…</span>`;
     }
   }
-  html += `<button class="page-btn" onclick="mudaPagina(${pagina+1})" ${pagina>=totalPags?'disabled':''}>â¶</button>`;
+  html += `<button class="page-btn" onclick="mudaPagina(${pagina+1})" ${pagina>=totalPags?'disabled':''}>▶</button>`;
   html += `<span style="font-size:12px;color:var(--text2);margin-left:8px">${total} pacientes</span>`;
   el.innerHTML = html;
 }
@@ -954,9 +954,9 @@ function mudaPagina(p) {
   window.scrollTo(0, 0);
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // FICHA DO PACIENTE
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let pacienteAtual = null;
 
 async function abrirFicha(id) {
@@ -985,21 +985,21 @@ function renderFicha(pac, evos) {
       <div class="profile-avatar">${iniciais(pac.nome)}</div>
       <div class="profile-info">
         <h2>${pac.nome}</h2>
-        <p>${[idade, pac.sexo, pac.profissao].filter(Boolean).join(' Â· ')}</p>
+        <p>${[idade, pac.sexo, pac.profissao].filter(Boolean).join(' · ')}</p>
         <div class="profile-meta">
-          ${pac.celular ? `<span>ð± ${pac.celular}</span>` : ''}
-          ${pac.email ? `<span>âï¸ ${pac.email}</span>` : ''}
-          ${pac.cpf ? `<span>ðªª ${pac.cpf}</span>` : ''}
-          ${pac.plano_saude ? `<span>ð¥ ${pac.plano_saude}</span>` : ''}
-          <span>ð Desde ${formatDate(pac.criado_em)}</span>
+          ${pac.celular ? `<span>📱 ${pac.celular}</span>` : ''}
+          ${pac.email ? `<span>✉️ ${pac.email}</span>` : ''}
+          ${pac.cpf ? `<span>🪪 ${pac.cpf}</span>` : ''}
+          ${pac.plano_saude ? `<span>🏥 ${pac.plano_saude}</span>` : ''}
+          <span>📅 Desde ${formatDate(pac.criado_em)}</span>
         </div>
       </div>
     </div>
 
     <div class="profile-tabs">
-      <div class="profile-tab active" id="tab-evos" onclick="switchTab('evos')">ð EvoluÃ§Ãµes (${evos.length})</div>
-      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">ð¤ Dados cadastrais</div>
-      <div class="profile-tab" onclick="openModalEvolucao('${pac.id}','${pac.nome}')">+ Nova EvoluÃ§Ã£o</div>
+      <div class="profile-tab active" id="tab-evos" onclick="switchTab('evos')">📝 Evoluções (${evos.length})</div>
+      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">👤 Dados cadastrais</div>
+      <div class="profile-tab" onclick="openModalEvolucao('${pac.id}','${pac.nome}')">+ Nova Evolução</div>
     </div>
 
     <div id="tab-content-evos">${renderEvolucoes(evos, pac.id)}</div>
@@ -1017,32 +1017,32 @@ function switchTab(tab) {
 function renderEvolucoes(evos, pacId) {
   if (!evos || evos.length === 0) {
     return `<div class="empty-state">
-      <div class="icon">ð</div>
-      <p>Nenhuma evoluÃ§Ã£o registrada</p>
-      <button class="btn btn-primary" style="margin-top:14px" onclick="openModalEvolucao('${pacId}')">+ Registrar primeira evoluÃ§Ã£o</button>
+      <div class="icon">📝</div>
+      <p>Nenhuma evolução registrada</p>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="openModalEvolucao('${pacId}')">+ Registrar primeira evolução</button>
     </div>`;
   }
   return evos.map(evo => `
     <div class="evolucao-card">
       <div class="evolucao-header">
-        <span class="evolucao-date">ð ${formatDate(evo.data_consulta)}</span>
+        <span class="evolucao-date">📅 ${formatDate(evo.data_consulta)}</span>
         <span class="badge ${badgeTipo(evo.tipo)}">${evo.tipo}</span>
-        ${evo.enviado_financeiro ? '<span class="badge badge-green" title="LanÃ§amento enviado Ã  IA Financeira">ð° Financeiro â</span>' : ''}
+        ${evo.enviado_financeiro ? '<span class="badge badge-green" title="Lançamento enviado à IA Financeira">💰 Financeiro ✓</span>' : ''}
         <div style="flex:1"></div>
-        <button class="btn-icon" title="Editar" onclick="editarEvolucao('${evo.id}')">âï¸</button>
-        <button class="btn-icon" title="Excluir" onclick="confirmarExcluirEvolucao('${evo.id}')">ðï¸</button>
+        <button class="btn-icon" title="Editar" onclick="editarEvolucao('${evo.id}')">✏️</button>
+        <button class="btn-icon" title="Excluir" onclick="confirmarExcluirEvolucao('${evo.id}')">🗑️</button>
       </div>
       <div class="evolucao-body">
         ${evo.queixa_principal ? `<div class="evo-field evo-field-full"><strong>Queixa principal</strong>${evo.queixa_principal}</div>` : ''}
-        ${evo.exame_clinico ? `<div class="evo-field"><strong>Exame clÃ­nico</strong>${evo.exame_clinico}</div>` : ''}
-        ${evo.diagnostico ? `<div class="evo-field"><strong>DiagnÃ³stico</strong>${evo.diagnostico}</div>` : ''}
+        ${evo.exame_clinico ? `<div class="evo-field"><strong>Exame clínico</strong>${evo.exame_clinico}</div>` : ''}
+        ${evo.diagnostico ? `<div class="evo-field"><strong>Diagnóstico</strong>${evo.diagnostico}</div>` : ''}
         ${evo.plano_tratamento ? `<div class="evo-field"><strong>Plano</strong>${evo.plano_tratamento}</div>` : ''}
         ${evo.procedimentos_realizados ? `<div class="evo-field evo-field-full"><strong>Procedimentos realizados</strong>${evo.procedimentos_realizados}</div>` : ''}
-        ${evo.orientacoes ? `<div class="evo-field evo-field-full"><strong>OrientaÃ§Ãµes</strong>${evo.orientacoes}</div>` : ''}
+        ${evo.orientacoes ? `<div class="evo-field evo-field-full"><strong>Orientações</strong>${evo.orientacoes}</div>` : ''}
       </div>
       <div class="evolucao-footer">
         <div>
-          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)">ð Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
+          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)">🔁 Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           ${evo.valor ? `<span class="evo-valor">${formatMoeda(evo.valor)}</span>` : ''}
@@ -1057,10 +1057,10 @@ function renderDadosCadastrais(pac) {
   const campos = [
     ['CPF', pac.cpf], ['Celular', pac.celular], ['E-mail', pac.email],
     ['Data de nascimento', formatDate(pac.data_nascimento)],
-    ['Sexo', pac.sexo], ['ProfissÃ£o', pac.profissao],
-    ['Estado civil', pac.estado_civil], ['Plano de saÃºde', pac.plano_saude],
-    ['EndereÃ§o', pac.endereco], ['Como nos conheceu', pac.como_conheceu],
-    ['ObservaÃ§Ãµes', pac.observacoes],
+    ['Sexo', pac.sexo], ['Profissão', pac.profissao],
+    ['Estado civil', pac.estado_civil], ['Plano de saúde', pac.plano_saude],
+    ['Endereço', pac.endereco], ['Como nos conheceu', pac.como_conheceu],
+    ['Observações', pac.observacoes],
   ].filter(([, v]) => v);
   if (!campos.length) return '<p style="color:var(--text2)">Nenhum dado adicional cadastrado.</p>';
   return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
@@ -1077,15 +1077,15 @@ function badgePag(status) {
   return m[status] || 'badge-gray';
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // MODAL CADASTRO PACIENTE
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let editandoPacienteId = null;
 
 async function openModalCadastro(pac, idParaBuscar) {
   editandoPacienteId = null;
   document.getElementById('form-cadastro').reset();
-  document.getElementById('modal-cadastro-titulo').textContent = 'â Novo Paciente';
+  document.getElementById('modal-cadastro-titulo').textContent = '➕ Novo Paciente';
 
   if (idParaBuscar) {
     try {
@@ -1095,7 +1095,7 @@ async function openModalCadastro(pac, idParaBuscar) {
 
   if (pac && pac.id) {
     editandoPacienteId = pac.id;
-    document.getElementById('modal-cadastro-titulo').textContent = 'âï¸ Editar Paciente';
+    document.getElementById('modal-cadastro-titulo').textContent = '✏️ Editar Paciente';
     document.getElementById('p-nome').value = pac.nome || '';
     document.getElementById('p-cpf').value = pac.cpf || '';
     document.getElementById('p-celular').value = pac.celular || '';
@@ -1115,7 +1115,7 @@ async function openModalCadastro(pac, idParaBuscar) {
 async function salvarPaciente(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-salvar-paciente');
-  btn.textContent = 'Salvandoâ¦';
+  btn.textContent = 'Salvando…';
   btn.disabled = true;
   const payload = {
     nome: document.getElementById('p-nome').value,
@@ -1134,10 +1134,10 @@ async function salvarPaciente(e) {
   try {
     if (editandoPacienteId) {
       await api('PUT', `/pacientes/${editandoPacienteId}`, payload);
-      showToast('â Paciente atualizado!', 'success');
+      showToast('✅ Paciente atualizado!', 'success');
     } else {
       const novo = await api('POST', '/pacientes', payload);
-      showToast('â Paciente cadastrado!', 'success');
+      showToast('✅ Paciente cadastrado!', 'success');
       closeModal('modal-cadastro');
       abrirFicha(novo.id);
       return;
@@ -1146,16 +1146,16 @@ async function salvarPaciente(e) {
     if (currentView === 'pacientes') loadPacientes();
     if (currentView === 'ficha' && pacienteAtual?.id === editandoPacienteId) abrirFicha(editandoPacienteId);
   } catch (err) {
-    showToast('â ' + err.message, 'error');
+    showToast('❌ ' + err.message, 'error');
   } finally {
     btn.textContent = 'Salvar Paciente';
     btn.disabled = false;
   }
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
-// MODAL EVOLUÃÃO
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
+// MODAL EVOLUÇÃO
+// ═══════════════════════════════════════════════
 function openModalEvolucao(pacId, pacNome) {
   document.getElementById('form-evolucao').reset();
   document.getElementById('e-id').value = '';
@@ -1168,7 +1168,7 @@ function openModalEvolucao(pacId, pacNome) {
     document.getElementById('e-paciente-id').value = pacId;
     document.getElementById('e-busca-grupo').style.display = 'none';
     document.getElementById('e-paciente-selecionado').style.display = 'block';
-    document.getElementById('e-paciente-selecionado').textContent = 'ð¤ ' + (pacNome || pacId);
+    document.getElementById('e-paciente-selecionado').textContent = '👤 ' + (pacNome || pacId);
   } else {
     document.getElementById('e-paciente-id').value = '';
     document.getElementById('e-busca-paciente').value = '';
@@ -1176,7 +1176,7 @@ function openModalEvolucao(pacId, pacNome) {
   openModal('modal-evolucao');
 }
 
-// Busca de paciente no dropdown da evoluÃ§Ã£o
+// Busca de paciente no dropdown da evolução
 const buscarPacienteEvo = debounce(async () => {
   const q = document.getElementById('e-busca-paciente').value;
   if (q.length < 2) { document.getElementById('e-busca-dropdown').style.display = 'none'; return; }
@@ -1205,7 +1205,7 @@ async function editarEvolucao(id) {
     document.getElementById('e-paciente-id').value = evo.paciente_id;
     document.getElementById('e-busca-grupo').style.display = 'none';
     document.getElementById('e-paciente-selecionado').style.display = 'block';
-    document.getElementById('e-paciente-selecionado').textContent = 'ð Editando evoluÃ§Ã£o de ' + formatDate(evo.data_consulta);
+    document.getElementById('e-paciente-selecionado').textContent = '📝 Editando evolução de ' + formatDate(evo.data_consulta);
     document.getElementById('e-data').value = evo.data_consulta || dataHoje();
     document.getElementById('e-tipo').value = evo.tipo || 'consulta';
     document.getElementById('e-queixa').value = evo.queixa_principal || '';
@@ -1221,17 +1221,17 @@ async function editarEvolucao(id) {
     document.getElementById('e-forma-pag').value = evo.forma_pagamento || '';
     openModal('modal-evolucao');
   } catch (e) {
-    showToast('â ' + e.message, 'error');
+    showToast('❌ ' + e.message, 'error');
   }
 }
 
 async function salvarEvolucao(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-salvar-evo');
-  btn.textContent = 'Salvandoâ¦';
+  btn.textContent = 'Salvando…';
   btn.disabled = true;
   const pacId = document.getElementById('e-paciente-id').value;
-  if (!pacId) { showToast('â ï¸ Selecione um paciente', 'warn'); btn.textContent = 'ð¾ Salvar EvoluÃ§Ã£o'; btn.disabled = false; return; }
+  if (!pacId) { showToast('⚠️ Selecione um paciente', 'warn'); btn.textContent = '💾 Salvar Evolução'; btn.disabled = false; return; }
   const id = document.getElementById('e-id').value;
   const payload = {
     paciente_id: pacId,
@@ -1252,40 +1252,40 @@ async function salvarEvolucao(e) {
   try {
     if (id) {
       await api('PUT', `/evolucoes/${id}`, payload);
-      showToast('â EvoluÃ§Ã£o atualizada!', 'success');
+      showToast('✅ Evolução atualizada!', 'success');
     } else {
       await api('POST', '/evolucoes', payload);
       const statusPag = payload.status_pagamento;
       const foiEnviado = payload.valor && payload.valor > 0 && statusPag !== 'pendente';
-      showToast(foiEnviado ? 'â EvoluÃ§Ã£o salva e lanÃ§amento enviado Ã  IA Financeira!' : 'â EvoluÃ§Ã£o registrada!', 'success');
+      showToast(foiEnviado ? '✅ Evolução salva e lançamento enviado à IA Financeira!' : '✅ Evolução registrada!', 'success');
     }
     closeModal('modal-evolucao');
     if (pacienteAtual?.id === pacId) abrirFicha(pacId);
   } catch (err) {
-    showToast('â ' + err.message, 'error');
+    showToast('❌ ' + err.message, 'error');
   } finally {
-    btn.textContent = 'ð¾ Salvar EvoluÃ§Ã£o';
+    btn.textContent = '💾 Salvar Evolução';
     btn.disabled = false;
   }
 }
 
 function confirmarExcluirEvolucao(id) {
-  document.getElementById('confirma-titulo').textContent = 'Excluir evoluÃ§Ã£o';
-  document.getElementById('confirma-msg').textContent = 'Esta aÃ§Ã£o nÃ£o pode ser desfeita. Deseja excluir esta evoluÃ§Ã£o?';
+  document.getElementById('confirma-titulo').textContent = 'Excluir evolução';
+  document.getElementById('confirma-msg').textContent = 'Esta ação não pode ser desfeita. Deseja excluir esta evolução?';
   document.getElementById('confirma-btn').onclick = async () => {
     try {
       await api('DELETE', `/evolucoes/${id}`);
-      showToast('ðï¸ EvoluÃ§Ã£o excluÃ­da', 'info');
+      showToast('🗑️ Evolução excluída', 'info');
       closeModal('modal-confirma');
       if (pacienteAtual) abrirFicha(pacienteAtual.id);
-    } catch (e) { showToast('â ' + e.message, 'error'); }
+    } catch (e) { showToast('❌ ' + e.message, 'error'); }
   };
   openModal('modal-confirma');
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // AGENDA
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let agendaDataBase = new Date();
 
 function agendaHoje() {
@@ -1304,7 +1304,7 @@ async function loadAgenda() {
   fim.setDate(fim.getDate() + 6);
 
   document.getElementById('agenda-titulo').textContent =
-    inicio.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }) + ' â ' +
+    inicio.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }) + ' – ' +
     fim.toLocaleDateString('pt-BR', { day:'numeric', month:'short', year:'numeric' });
 
   const el = document.getElementById('agenda-lista');
@@ -1322,7 +1322,7 @@ function renderAgendaLista(ags, semanaInicio) {
   const el = document.getElementById('agenda-lista');
   if (ags.length === 0) {
     el.innerHTML = `<div class="empty-state">
-      <div class="icon">ð</div>
+      <div class="icon">📅</div>
       <p>Nenhuma consulta esta semana</p>
       <button class="btn btn-primary" style="margin-top:14px" onclick="openModalAgendamento()">+ Agendar consulta</button>
     </div>`;
@@ -1343,11 +1343,11 @@ function renderAgendaLista(ags, semanaInicio) {
         <div class="agenda-time">${new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
         <div class="agenda-info">
           <div class="name">${ag.nome_paciente || 'Sem nome'}</div>
-          <div class="detail">${ag.tipo} Â· ${ag.duracao_minutos} min</div>
+          <div class="detail">${ag.tipo} · ${ag.duracao_minutos} min</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <span class="badge ${statusColor[ag.status]||'badge-gray'}">${ag.status}</span>
-          <button class="btn-icon" onclick="event.stopPropagation();confirmarExcluirAgendamento('${ag.id}')">ðï¸</button>
+          <button class="btn-icon" onclick="event.stopPropagation();confirmarExcluirAgendamento('${ag.id}')">🗑️</button>
         </div>
       </div>
     `).join('')}
@@ -1384,7 +1384,7 @@ function openModalAgendamento(ag) {
   document.getElementById('modal-agenda-titulo').textContent = 'Novo Agendamento';
   document.getElementById('ag-busca-dropdown').style.display = 'none';
 
-  // Default: data/hora atual arredondada para prÃ³xima meia hora
+  // Default: data/hora atual arredondada para próxima meia hora
   const now = new Date();
   now.setMinutes(now.getMinutes() >= 30 ? 60 : 30, 0, 0);
   document.getElementById('ag-data-hora').value = now.toISOString().slice(0,16);
@@ -1420,15 +1420,15 @@ async function salvarAgendamento(e) {
   try {
     if (id) {
       await api('PUT', `/agenda/${id}`, payload);
-      showToast('â Agendamento atualizado!', 'success');
+      showToast('✅ Agendamento atualizado!', 'success');
     } else {
       await api('POST', '/agenda', payload);
-      showToast('â Consulta agendada!', 'success');
+      showToast('✅ Consulta agendada!', 'success');
     }
     closeModal('modal-agendamento');
     loadAgenda();
   } catch (err) {
-    showToast('â ' + err.message, 'error');
+    showToast('❌ ' + err.message, 'error');
   }
 }
 
@@ -1438,17 +1438,17 @@ function confirmarExcluirAgendamento(id) {
   document.getElementById('confirma-btn').onclick = async () => {
     try {
       await api('DELETE', `/agenda/${id}`);
-      showToast('ðï¸ Agendamento excluÃ­do', 'info');
+      showToast('🗑️ Agendamento excluído', 'info');
       closeModal('modal-confirma');
       loadAgenda();
-    } catch (err) { showToast('â ' + err.message, 'error'); }
+    } catch (err) { showToast('❌ ' + err.message, 'error'); }
   };
   openModal('modal-confirma');
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // MODAL HELPERS
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 function openModal(id) {
   document.getElementById(id).classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1470,10 +1470,10 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // INIT
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 showView('dashboard');
 </script>
 </body>
-          </html>
+  </html>
