@@ -6,17 +6,17 @@
 <title>IA Pacientes â Dr. Victor Vaz</title>
 <style>
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #21262d;
-  --border: #30363d;
-  --accent: #00c9a7;
-  --accent2: #0077b6;
-  --text: #e6edf3;
-  --text2: #8b949e;
-  --danger: #f85149;
-  --warn: #d29922;
-  --success: #3fb950;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface2: #f8fafc;
+  --border: #e2e8f0;
+  --accent: #0d9488;
+  --accent2: #0284c7;
+  --text: #0f172a;
+  --text2: #64748b;
+  --danger: #ef4444;
+  --warn: #d97706;
+  --success: #059669;
   --sidebar-w: 220px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -56,7 +56,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
   padding:8px 16px;border-radius:8px;border:none;cursor:pointer;
   font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
 }
-.btn-primary{background:var(--accent);color:#000}
+.btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{background:#00b397}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-outline:hover{background:var(--surface2);border-color:var(--text2)}
@@ -96,7 +96,7 @@ table{width:100%;border-collapse:collapse}
 th{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
 td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
+tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .td-name{font-weight:600;color:var(--text)}
 .td-sub{font-size:12px;color:var(--text2)}
 .badge{
@@ -155,7 +155,7 @@ tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
 }
 .profile-avatar{
   width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#000;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0;
 }
 .profile-info h2{font-size:18px;font-weight:700}
 .profile-info p{color:var(--text2);font-size:13px;margin-top:2px}
@@ -191,7 +191,7 @@ tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
 /* ââ Agenda / Calendar ââ */
 .agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .agenda-nav h3{font-size:16px;font-weight:700;flex:1;text-align:center}
-.week-grid{display:grid;grid-template-columns;60px repeat(7,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .week-header{background:var(--surface2);padding:10px;text-align:center;border-bottom:1px solid var(--border)}
 .week-header .day-name{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
 .week-header .day-num{font-size:18px;font-weight:700;margin-top:2px}
@@ -244,7 +244,7 @@ tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-overlay{
-  position:absolute;inset:0;background:rgba(13,17,23,.7);
+  position:absolute;inset:0;background:rgba(248,250,252,.8);
   display:flex;align-items:center;justify-content:center;border-radius:inherit;z-index:10;
 }
 .empty-state{
@@ -261,7 +261,7 @@ tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
   background:transparent;color:var(--text2);cursor:pointer;font-size:12px;
 }
 .page-btn:hover{background:var(--surface2);color:var(--text)}
-.page-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* ââ Divider ââ */
@@ -557,7 +557,7 @@ tr:hover td{background:rgba(255,255,255,.02);cursor:pointer}
         <div class="form-grid">
           <div class="form-group form-full">
             <label>Queixa principal</label>
-            <textarea id="e-queixa" rows="2" placeholder="o que o paciente relata..."></textarea>
+            <textarea id="e-queixa" rows="2" placeholder="O que o paciente relata..."></textarea>
           </div>
           <div class="form-group form-full">
             <label>Anamnese / HistÃ³rico</label>
@@ -913,7 +913,7 @@ function renderTabelaPacientes(pacientes) {
     <tr onclick="abrirFicha('${p.id}')">
       <td>
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#000;flex-shrink:0">${iniciais(p.nome)}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">${iniciais(p.nome)}</div>
           <div>
             <div class="td-name">${p.nome}</div>
             <div class="td-sub">${p.email || ''}</div>
@@ -1476,5 +1476,4 @@ document.addEventListener('keydown', e => {
 showView('dashboard');
 </script>
 </body>
-</html>
-
+          </html>
