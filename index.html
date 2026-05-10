@@ -1662,14 +1662,17 @@ function horasFiltros(){
   };
 }
 async function renderHoras(){
+  const tb=document.getElementById('horasTb');
+  if(!tb)return;
+  tb.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:12px;color:#94a3b8">⏳ Carregando...</td></tr>`;
+  try{
   const uc=userClinic();
   const f=horasFiltros();
   let q=getSvc().from('horas_extras').select('*').order('data',{ascending:false});
   if(uc)q=q.eq('clinic',uc);
   else if(f.cl)q=q.eq('clinic',f.cl);
   const{data,error}=await q.limit(500);
-  const tb=document.getElementById('horasTb');
-  if(error){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">⚠️</div><h4>Erro ao carregar</h4></div></td></tr>`;return;}
+  if(error){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">⚠️</div><h4>Erro: ${error.message}</h4></div></td></tr>`;return;}
   let rows=(data||[]);
   // Filtros client-side
   if(f.func)rows=rows.filter(r=>r.funcionario?.toLowerCase().includes(f.func));
@@ -1730,6 +1733,7 @@ async function renderHoras(){
       <td style="white-space:nowrap">${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editHora(${h.id})" title="Editar">✏️</button><button class="btn btn-ghost btn-sm" onclick="delHora(${h.id})" title="Excluir">🗑️</button>`:''}</td>
     </tr>`;
   }).join('');
+  }catch(e){console.error('renderHoras error:',e);tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="ic">⚠️</div><h4>Erro: ${e.message}</h4></div></td></tr>`;}
 }
 async function editHora(id){
   const{data}=await getSvc().from('horas_extras').select('*').eq('id',id).single();
@@ -1784,6 +1788,10 @@ function initComFiltros(){
   if(ano&&ano.options.length<2){const cy=new Date().getFullYear();for(let y=cy;y>=cy-4;y--)ano.add(new Option(y,y));};
 }
 async function renderComissoes(){
+  const tb=document.getElementById('comTb');
+  if(!tb)return;
+  tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:12px;color:#94a3b8">⏳ Carregando...</td></tr>`;
+  try{
   const fCl=document.getElementById('fComCl')?.value||'';
   const fSt=document.getElementById('fComSt')?.value||'';
   const fMs=document.getElementById('fComMs')?.value||'';
@@ -1795,7 +1803,6 @@ async function renderComissoes(){
   else if(fCl)q=q.eq('clinic',fCl);
   if(fSt)q=q.eq('status',fSt);
   const{data,error}=await q.limit(500);
-  const tb=document.getElementById('comTb');
   let rows=data||[];
   if(fMs)rows=rows.filter(r=>r.data&&r.data.substring(5,7)===fMs);
   if(fAno)rows=rows.filter(r=>r.data&&r.data.substring(0,4)===fAno);
@@ -1846,6 +1853,7 @@ async function renderComissoes(){
       ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editCom(${c.id})" title="Editar">✏️</button><button class="btn btn-ghost btn-sm" onclick="delCom(${c.id})" title="Excluir">🗑️</button>`:''}
     </td>
   </tr>`).join('');
+  }catch(e){console.error('renderComissoes error:',e);tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ic">⚠️</div><h4>Erro: ${e.message}</h4></div></td></tr>`;}
 }
 async function editCom(id){
   const{data}=await getSvc().from('comissoes').select('*').eq('id',id).single();
