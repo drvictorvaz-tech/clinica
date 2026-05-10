@@ -1202,7 +1202,7 @@ function initSelectors(){
   ['rMes','audMes'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';MESES.forEach((m,i)=>s.add(new Option(m,i+1)));s.value=pm;});
   ['rAno','audAno'].forEach(id=>{const s=document.getElementById(id);if(!s)return;s.innerHTML='';for(let y=cy;y>=cy-4;y--)s.add(new Option(y,y));s.value=py;});
   const fMs=document.getElementById('fMs');if(fMs){MESES.forEach((m,i)=>fMs.add(new Option(m,String(i+1).padStart(2,'0'))));fMs.value='';}
-  ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value=String(cm).padStart(2,'0');});
+  ['fComMs'].forEach(id=>{const s=document.getElementById(id);if(!s)return;MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,'0'))));s.value='';});
   const fAn=document.getElementById('fAn');if(fAn){fAn.add(new Option('Todos',''));for(let y=cy;y>=cy-4;y--)fAn.add(new Option(y,y));fAn.value='';}
   // IA selectors
   const iaMes=document.getElementById('iaMes');
@@ -1761,7 +1761,7 @@ async function saveHora(){
   if(id){
     ({error}=await getSvc().from('horas_extras').update({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}).eq('id',id));
   }else{
-    ({error}=await getSvc().from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds}));
+    ({error}=await getSvc().from('horas_extras').insert({clinic:cl,funcionario:func,cargo,data:dt,horas:hrs,valor_hora:vh,total:hrs*vh,descricao:ds,created_by:currentUser?.id||null}));
   }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
@@ -1880,7 +1880,7 @@ async function saveCom(){
   if(id){
     ({error}=await getSvc().from('comissoes').update({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}).eq('id',id));
   }else{
-    ({error}=await getSvc().from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st}));
+    ({error}=await getSvc().from('comissoes').insert({clinic:cl,profissional:prof,protocolo:prot,valor_protocolo:vp,percentual:pct,valor_comissao:vc,data:dt,observacao:obs,status:st,created_by:currentUser?.id||null}));
   }
   loading(false);
   if(error){toast('Erro: '+error.message,'err');return;}
@@ -2014,7 +2014,7 @@ async function renderRel(){
     const tR=rec.reduce((s,x)=>s+parseFloat(x.valor),0);
     const tD=des.reduce((s,x)=>s+parseFloat(x.valor),0);
     const lc=tR-tD;const mg=tR>0?((lc/tR)*100).toFixed(1):0;
-    const byC=arr=>{const g={};arr.forEach(x=>{g[x.categoria]=(g[x.categoria]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
+    const byC=arr=>{const g={};arr.forEach(x=>{const cat=x.categoria&&x.categoria.trim()?x.categoria:'Sem categoria';g[cat]=(g[cat]||0)+parseFloat(x.valor);});return Object.entries(g).sort((a,b)=>b[1]-a[1]);};
     const clLbl=cl==='dtm'?'Clínica DTM & Sono':cl==='hernia'?'Dr. Hérnia SJC':'Ambas as Clínicas';
     div.innerHTML=`
       <div style="margin-bottom:16px"><h2 style="font-size:17px;font-weight:700">📊 Relatório — ${MESES[m-1]} ${y}</h2><p style="color:#64748b;font-size:12px;margin-top:2px">${clLbl}</p></div>
