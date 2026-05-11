@@ -871,6 +871,53 @@ async function loadDashboard() {
   }
 }
 
+function switchProxTab(tab) {
+  ['hoje','semana','mes'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    if (!btn) return;
+    if (t === tab) {
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'var(--accent)';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--text2)';
+      btn.style.borderColor = 'var(--border)';
+    }
+  });
+  renderProxTab(tab);
+}
+
+function renderProxTab(tab) {
+  const el = document.getElementById('proximas-consultas');
+  if (!el) return;
+  const ags = (window._dashAg && window._dashAg[tab]) || [];
+  if (ags.length === 0) {
+    const msgs = {
+      hoje: 'Nenhuma consulta agendada para hoje',
+      semana: 'Nenhuma consulta esta semana',
+      mes: 'Nenhuma consulta este mês'
+    };
+    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px">' + (msgs[tab] || 'Sem consultas') + '</div>';
+    return;
+  }
+  el.innerHTML = ags.map(a => {
+    const dt = new Date(a.data_hora || a.inicio || a.data_inicio || '');
+    const hora = (dt instanceof Date && !isNaN(dt)) ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—';
+    const dataPart = (tab !== 'hoje') ? '<span style="font-size:11px;color:var(--text2);margin-right:6px">' + ((dt instanceof Date && !isNaN(dt)) ? dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '') + '</span>' : '';
+    const nome = a.paciente_nome || a.nome || a.titulo || a.title || 'Paciente';
+    const tipo = a.tipo || a.procedimento || '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">' + iniciais(nome) + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nome + '</div>' +
+        (tipo ? '<div style="font-size:11px;color:var(--text2)">' + tipo + '</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0">' + dataPart + '<span style="font-size:12px;font-weight:600;color:var(--accent)">' + hora + '</span></div>' +
+    '</div>';
+  }).join('');
+}
+
 // ═══════════════════════════════════════════════
 // PACIENTES
 // ═══════════════════════════════════════════════
