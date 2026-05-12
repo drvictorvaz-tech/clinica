@@ -347,11 +347,11 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div class="card-title" style="margin-bottom:0">&#128197; Pr&#243;ximas consultas</div>
+            <div class="card-title" style="margin-bottom:0">📅 Próximas consultas</div>
             <div style="display:flex;gap:4px">
               <button id="tab-hoje" onclick="switchProxTab('hoje')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:600;cursor:pointer">Hoje</button>
               <button id="tab-semana" onclick="switchProxTab('semana')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">Semana</button>
-              <button id="tab-mes" onclick="switchProxTab('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">M&#234;s</button>
+              <button id="tab-mes" onclick="switchProxTab('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">Mês</button>
             </div>
           </div>
           <div id="proximas-consultas">
@@ -499,7 +499,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group form-full">
-            <label>Enderço </label>
+            <label>Endereço</label>
             <input type="text" id="p-endereco" placeholder="Rua, número, bairro, cidade">
           </div>
           <div class="form-group form-full">
@@ -843,10 +843,15 @@ async function loadDashboard() {
     fimSemana.setDate(fimSemana.getDate() + 6);
     const inicioMes = hoje.slice(0,7) + '-01';
 
-    const [pacs, agHoje, agSemana] = await Promise.all([
+    const fimMes = new Date(hoje.slice(0,7) + '-01');
+    fimMes.setMonth(fimMes.getMonth() + 1);
+    fimMes.setDate(fimMes.getDate() - 1);
+
+    const [pacs, agHoje, agSemana, agMes] = await Promise.all([
       api('GET', '/pacientes?limite=1').catch(() => ({ total: 0 })),
       api('GET', `/agenda?data_inicio=${hoje}T00:00:00&data_fim=${hoje}T23:59:59`).catch(() => ({ agendamentos: [] })),
       api('GET', `/agenda?data_inicio=${inicioSemana.toISOString()}&data_fim=${fimSemana.toISOString()}`).catch(() => ({ agendamentos: [] })),
+      api('GET', `/agenda?data_inicio=${inicioMes}T00:00:00&data_fim=${fimMes.toISOString().slice(0,10)}T23:59:59`).catch(() => ({ agendamentos: [] })),
     ]);
 
     document.getElementById('stat-pacientes').textContent = pacs.total ?? '—';
@@ -854,14 +859,18 @@ async function loadDashboard() {
     document.getElementById('stat-semana').textContent = agSemana.agendamentos?.length ?? 0;
     document.getElementById('stat-receita').textContent = '—';
 
-            // Próximas consultas — hoje/semana/mês
-    const agMes = await api('GET', `/agenda?data_inicio=${inicioMes.toISOString().slice(0,10)}T00:00:00&data_fim=${fimMes.toISOString().slice(0,10)}T23:59:59`).catch(() => ({agendamentos:[]}));
+    // Guardar dados para as abas
     window._dashAg = {
-      hoje: (agHoje.agendamentos || []),
-      semana: (agSemana.agendamentos || []),
-      mes: (agMes.agendamentos || [])
+      hoje: agHoje.agendamentos || [],
+      semana: agSemana.agendamentos || [],
+      mes: agMes.agendamentos || []
     };
-    switchProxTab('hoje');
+
+    // Renderizar aba ativa (hoje por padrão)
+    renderProxTab('hoje');
+
+    // Últimas evoluções — buscar das últimas analises como proxy
+    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluções</div>';
   } catch (e) {
     console.warn('Dashboard error:', e);
   }
@@ -889,28 +898,24 @@ function renderProxTab(tab) {
   if (!el) return;
   const ags = (window._dashAg && window._dashAg[tab]) || [];
   if (ags.length === 0) {
-    const msgs = {
-      hoje: 'Nenhuma consulta agendada para hoje',
-      semana: 'Nenhuma consulta esta semana',
-      mes: 'Nenhuma consulta este mês'
-    };
-    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px">' + (msgs[tab] || 'Sem consultas') + '</div>';
+    const msgs = { hoje: 'Nenhuma consulta agendada para hoje', semana: 'Nenhuma consulta esta semana', mes: 'Nenhuma consulta este mês' };
+    el.innerHTML = `<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px">${msgs[tab] || 'Sem consultas'}</div>`;
     return;
   }
   el.innerHTML = ags.map(a => {
     const dt = new Date(a.data_hora || a.inicio || a.data_inicio || '');
-    const hora = (dt instanceof Date && !isNaN(dt)) ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—';
-    const dataPart = (tab !== 'hoje') ? '<span style="font-size:11px;color:var(--text2);margin-right:6px">' + ((dt instanceof Date && !isNaN(dt)) ? dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '') + '</span>' : '';
+    const hora = dt instanceof Date && !isNaN(dt) ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—';
+    const dataPart = (tab !== 'hoje') ? `<span style="font-size:11px;color:var(--text2);margin-right:6px">${dt instanceof Date && !isNaN(dt) ? dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : ''}</span>` : '';
     const nome = a.paciente_nome || a.nome || a.titulo || a.title || 'Paciente';
     const tipo = a.tipo || a.procedimento || '';
-    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
-      '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">' + iniciais(nome) + '</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nome + '</div>' +
-        (tipo ? '<div style="font-size:11px;color:var(--text2)">' + tipo + '</div>' : '') +
-      '</div>' +
-      '<div style="text-align:right;flex-shrink:0">' + dataPart + '<span style="font-size:12px;font-weight:600;color:var(--accent)">' + hora + '</span></div>' +
-    '</div>';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">${iniciais(nome)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome}</div>
+        ${tipo ? `<div style="font-size:11px;color:var(--text2)">${tipo}</div>` : ''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">${dataPart}<span style="font-size:12px;font-weight:600;color:var(--accent)">${hora}</span></div>
+    </div>`;
   }).join('');
 }
 
@@ -1442,81 +1447,4 @@ function openModalAgendamento(ag) {
     document.getElementById('ag-data-hora').value = dh.toISOString().slice(0,16);
     document.getElementById('ag-duracao').value = ag.duracao_minutos || 60;
     document.getElementById('ag-tipo').value = ag.tipo || 'consulta';
-    document.getElementById('ag-status').value = ag.status || 'agendado';
-    document.getElementById('ag-obs').value = ag.observacoes || '';
-  }
-  openModal('modal-agendamento');
-}
-
-async function salvarAgendamento(e) {
-  e.preventDefault();
-  const id = document.getElementById('ag-id').value;
-  const payload = {
-    paciente_id: document.getElementById('ag-paciente-id').value || null,
-    nome_paciente: document.getElementById('ag-nome-pac').value || document.getElementById('ag-busca-pac').value,
-    data_hora: new Date(document.getElementById('ag-data-hora').value).toISOString(),
-    duracao_minutos: parseInt(document.getElementById('ag-duracao').value),
-    tipo: document.getElementById('ag-tipo').value,
-    status: document.getElementById('ag-status').value,
-    observacoes: document.getElementById('ag-obs').value,
-  };
-  try {
-    if (id) {
-      await api('PUT', `/agenda/${id}`, payload);
-      showToast('✅ Agendamento atualizado!', 'success');
-    } else {
-      await api('POST', '/agenda', payload);
-      showToast('✅ Consulta agendada!', 'success');
-    }
-    closeModal('modal-agendamento');
-    loadAgenda();
-  } catch (err) {
-    showToast('❌ ' + err.message, 'error');
-  }
-}
-
-function confirmarExcluirAgendamento(id) {
-  document.getElementById('confirma-titulo').textContent = 'Excluir agendamento';
-  document.getElementById('confirma-msg').textContent = 'Deseja excluir este agendamento?';
-  document.getElementById('confirma-btn').onclick = async () => {
-    try {
-      await api('DELETE', `/agenda/${id}`);
-      showToast('🗑️ Agendamento excluído', 'info');
-      closeModal('modal-confirma');
-      loadAgenda();
-    } catch (err) { showToast('❌ ' + err.message, 'error'); }
-  };
-  openModal('modal-confirma');
-}
-
-// ═══════════════════════════════════════════════
-// MODAL HELPERS
-// ═══════════════════════════════════════════════
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-// Fechar modal ao clicar no overlay
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => {
-    if (e.target === el) closeModal(el.id);
-  });
-});
-// ESC para fechar
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
-  }
-});
-
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-showView('dashboard');
-</script>
-</body>
-  </html>
+    document.getElem
