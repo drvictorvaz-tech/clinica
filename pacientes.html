@@ -854,9 +854,7 @@ async function loadDashboard() {
     document.getElementById('stat-semana').textContent = agSemana.agendamentos?.length ?? 0;
     document.getElementById('stat-receita').textContent = '—';
 
-        // Próximas consultas — hoje/semana/mês
-    const inicioMes = new Date(); inicioMes.setDate(1);
-    const fimMes = new Date(inicioMes.getFullYear(), inicioMes.getMonth()+1, 0, 23, 59, 59);
+            // Próximas consultas — hoje/semana/mês
     const agMes = await api('GET', `/agenda?data_inicio=${inicioMes.toISOString().slice(0,10)}T00:00:00&data_fim=${fimMes.toISOString().slice(0,10)}T23:59:59`).catch(() => ({agendamentos:[]}));
     window._dashAg = {
       hoje: (agHoje.agendamentos || []),
@@ -864,8 +862,7 @@ async function loadDashboard() {
       mes: (agMes.agendamentos || [])
     };
     switchProxTab('hoje');
-  
-} catch (e) {
+  } catch (e) {
     console.warn('Dashboard error:', e);
   }
 }
