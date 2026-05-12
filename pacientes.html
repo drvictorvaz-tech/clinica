@@ -1567,7 +1567,7 @@ function _renderGrade(ags) {
     h += '<div class="cal-hora-label">' + String(hr).padStart(2,'0') + ':00</div>';
     days.forEach(d => {
       const k = _fmtD(d) + '_' + hr, slots = map[k] || [];
-      h += '<div class="cal-slot" onclick="openModalAgendamento({data_hora:'' + _fmtD(d) + 'T' + String(hr).padStart(2,'0') + ':00'})">';
+      h += '<div class="cal-slot" onclick="openModalAgendamento({data_hora:\'' + _fmtD(d) + 'T' + String(hr).padStart(2,'0') + ':00\'})">';
       slots.forEach(ag => {
         const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         h += '<div class="cal-evento st-' + ag.status + '" onclick="event.stopPropagation();openModalAgendamento(' + JSON.stringify(ag).replace(/"/g,'&quot;') + ')"><strong>' + ag.nome_paciente + '</strong><br><span>' + t + ' · ' + ag.tipo + '</span></div>';
