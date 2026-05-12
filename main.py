@@ -35,6 +35,50 @@ def get_db():
     return _db_client
 
 
+@app.on_event("startup")
+async def startup_db_setup():
+    """Cria tabelas extras se nao existirem."""
+    db = get_db()
+    if not db:
+        return
+    # Cria tabela arquivos se nao existir usando insert tentativa
+    try:
+        db.table("arquivos").select("id").limit(1).execute()
+    except Exception:
+        # Tabela nao existe — usar Supabase Management API via requests
+        import requests as _req
+        svc_key = os.environ.get("SUPABASE_SERVICE_KEY", os.environ.get("SUPABASE_KEY", ""))
+        headers = {
+            "apikey": svc_key,
+            "Authorization": "Bearer " + svc_key,
+            "Content-Type": "application/json",
+        }
+        sql = """
+        CREATE TABLE IF NOT EXISTS public.arquivos (
+            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+            paciente_id UUID REFERENCES public.pacientes(id) ON DELETE CASCADE,
+            nome TEXT NOT NULL,
+            tipo_arquivo TEXT DEFAULT '',
+            descricao TEXT DEFAULT '',
+            conteudo_base64 TEXT DEFAULT '',
+            tamanho_bytes INTEGER DEFAULT 0,
+            criado_em TIMESTAMPTZ DEFAULT NOW(),
+            atualizado_em TIMESTAMPTZ DEFAULT NOW()
+        );
+        ALTER TABLE public.arquivos ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY IF NOT EXISTS "allow_all_arquivos" ON public.arquivos FOR ALL USING (true) WITH CHECK (true);
+        """
+        try:
+            _req.post(
+                f"{SUPABASE_URL}/rest/v1/rpc/exec_sql",
+                headers=headers,
+                json={"query": sql},
+                timeout=10
+            )
+        except Exception:
+            pass
+
+
 SYSTEM = """Você é o assistente clínico do Dr. Victor Vaz, cirurgião-dentista especialista em DTM, bruxismo, sono e dor orofacial, com pós-graduação em Dor Orofacial e foco em Saúde Integrativa e Funcional. CRO: 4923 SC — Balneário Camboriú, SC.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
