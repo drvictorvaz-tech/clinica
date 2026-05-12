@@ -853,3 +853,155 @@ def deletar_agendamento(agenda_id: str):
         raise HTTPException(503, "Banco nao configurado.")
     db.table("agenda").delete().eq("id", agenda_id).execute()
     return {"ok": True}
+
+
+# ─── Arquivos ────────────────────────────────────────────────────────────────
+
+class ArquivoCreate(BaseModel):
+    paciente_id: str
+    nome: str
+    tipo_arquivo: Optional[str] = ""
+    descricao: Optional[str] = ""
+    conteudo_base64: Optional[str] = ""
+
+@app.post("/pacientes/{paciente_id}/arquivos")
+def criar_arquivo(paciente_id: str, req: ArquivoCreate):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    dados = {
+        "paciente_id": paciente_id,
+        "nome": req.nome,
+        "tipo_arquivo": req.tipo_arquivo or "",
+        "descricao": req.descricao or "",
+        "conteudo_base64": req.conteudo_base64 or "",
+        "tamanho_bytes": int(len(req.conteudo_base64 or "") * 3 / 4),
+        "criado_em": datetime.datetime.utcnow().isoformat(),
+        "atualizado_em": datetime.datetime.utcnow().isoformat(),
+    }
+    try:
+        resp = db.table("arquivos").insert(dados).execute()
+        res = dict(resp.data[0]) if resp.data else dados
+        res.pop("conteudo_base64", None)
+        return res
+    except Exception as e:
+        raise HTTPException(500, f"Erro ao criar arquivo: {str(e)}")
+
+@app.get("/pacientes/{paciente_id}/arquivos")
+def listar_arquivos(paciente_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    try:
+        resp = db.table("arquivos").select("id,nome,tipo_arquivo,descricao,tamanho_bytes,criado_em").eq("paciente_id", paciente_id).order("criado_em", desc=True).execute()
+        return {"arquivos": resp.data or [], "total": len(resp.data or [])}
+    except Exception:
+        return {"arquivos": [], "total": 0}
+
+@app.get("/arquivos/{arquivo_id}/conteudo")
+def get_arquivo_conteudo(arquivo_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    try:
+        resp = db.table("arquivos").select("*").eq("id", arquivo_id).execute()
+        if not resp.data:
+            raise HTTPException(404, "Arquivo nao encontrado")
+        return resp.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+@app.delete("/arquivos/{arquivo_id}")
+def deletar_arquivo(arquivo_id: str):
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    try:
+        db.table("arquivos").delete().eq("id", arquivo_id).execute()
+    except Exception:
+        pass
+    return {"ok": True}
+
+# ─── Importacao em massa de evolucoes ────────────────────────────────────────
+
+class EvolucaoBulkItem(BaseModel):
+    paciente_cpf: Optional[str] = ""
+    paciente_nome: Optional[str] = ""
+    data_consulta: Optional[str] = None
+    tipo: Optional[str] = "consulta"
+    queixa_principal: Optional[str] = ""
+    anamnese: Optional[str] = ""
+    exame_clinico: Optional[str] = ""
+    diagnostico: Optional[str] = ""
+    plano_tratamento: Optional[str] = ""
+    procedimentos_realizados: Optional[str] = ""
+    orientacoes: Optional[str] = ""
+    valor: Optional[float] = None
+    status_pagamento: Optional[str] = "pendente"
+
+class EvolucaoBulkCreate(BaseModel):
+    evolucoes: List[EvolucaoBulkItem]
+
+@app.post("/evolucoes/importar")
+def importar_evolucoes_bulk(req: EvolucaoBulkCreate):
+    """Importa evolucoes em massa. Resolve paciente por CPF ou nome."""
+    db = get_db()
+    if not db:
+        raise HTTPException(503, "Banco nao configurado.")
+    ok, erros = 0, []
+    cache_pac: dict = {}
+    for i, evo in enumerate(req.evolucoes):
+        try:
+            pac_id = None
+            if evo.paciente_cpf:
+                cpf_clean = re.sub(r"\D", "", evo.paciente_cpf)
+                if cpf_clean in cache_pac:
+                    pac_id = cache_pac[cpf_clean]
+                else:
+                    res = db.table("pacientes").select("id,cpf").execute()
+                    for p in (res.data or []):
+                        if re.sub(r"\D", "", p.get("cpf","")) == cpf_clean:
+                            pac_id = p["id"]
+                            cache_pac[cpf_clean] = pac_id
+                            break
+            if not pac_id and evo.paciente_nome:
+                key = evo.paciente_nome.strip().lower()
+                if key in cache_pac:
+                    pac_id = cache_pac[key]
+                else:
+                    nome0 = evo.paciente_nome.split()[0] if evo.paciente_nome.split() else ""
+                    res = db.table("pacientes").select("id,nome").ilike("nome", f"%{nome0}%").execute()
+                    for p in (res.data or []):
+                        if p.get("nome","").strip().lower() == key:
+                            pac_id = p["id"]
+                            cache_pac[key] = pac_id
+                            break
+                    if not pac_id and res.data:
+                        pac_id = res.data[0]["id"]
+                        cache_pac[key] = pac_id
+            if not pac_id:
+                erros.append({"linha": i, "msg": f"Paciente nao encontrado: {evo.paciente_nome or evo.paciente_cpf}"})
+                continue
+            dados = {
+                "paciente_id": pac_id,
+                "data_consulta": evo.data_consulta,
+                "tipo": evo.tipo or "consulta",
+                "queixa_principal": evo.queixa_principal or "",
+                "anamnese": evo.anamnese or "",
+                "exame_clinico": evo.exame_clinico or "",
+                "diagnostico": evo.diagnostico or "",
+                "plano_tratamento": evo.plano_tratamento or "",
+                "procedimentos_realizados": evo.procedimentos_realizados or "",
+                "orientacoes": evo.orientacoes or "",
+                "valor": evo.valor,
+                "status_pagamento": evo.status_pagamento or "pendente",
+                "criado_em": datetime.datetime.utcnow().isoformat(),
+                "atualizado_em": datetime.datetime.utcnow().isoformat(),
+            }
+            db.table("evolucoes").insert(dados).execute()
+            ok += 1
+        except Exception as e:
+            erros.append({"linha": i, "msg": str(e)[:100]})
+    return {"importados": ok, "erros": len(erros), "detalhes_erros": erros[:20]}
