@@ -346,7 +346,14 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
-          <div class="card-title">📅 Próximas consultas</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div class="card-title" style="margin-bottom:0">&#128197; Pr&#243;ximas consultas</div>
+            <div style="display:flex;gap:4px">
+              <button id="tab-hoje" onclick="switchProxTab('hoje')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:600;cursor:pointer">Hoje</button>
+              <button id="tab-semana" onclick="switchProxTab('semana')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">Semana</button>
+              <button id="tab-mes" onclick="switchProxTab('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">M&#234;s</button>
+            </div>
+          </div>
           <div id="proximas-consultas">
             <div class="spinner" style="margin:20px auto;display:block"></div>
           </div>
@@ -847,26 +854,18 @@ async function loadDashboard() {
     document.getElementById('stat-semana').textContent = agSemana.agendamentos?.length ?? 0;
     document.getElementById('stat-receita').textContent = '—';
 
-    // Próximas consultas
-    const proxEl = document.getElementById('proximas-consultas');
-    const proxItems = (agHoje.agendamentos || []).slice(0, 5);
-    if (proxItems.length === 0) {
-      proxEl.innerHTML = '<div class="empty-state" style="padding:20px"><div class="icon">📅</div><p>Nenhuma consulta hoje</p></div>';
-    } else {
-      proxEl.innerHTML = proxItems.map(ag => `
-        <div class="agenda-item" style="margin-bottom:8px" onclick="openModalAgendamento(${JSON.stringify(ag).replace(/"/g,'&quot;')})">
-          <div class="agenda-time">${formatDateTime(ag.data_hora).split(',')[1]?.trim() || '—'}</div>
-          <div class="agenda-info">
-            <div class="name">${ag.nome_paciente || 'Sem nome'}</div>
-            <div class="detail">${ag.tipo} · ${ag.status}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Últimas evoluções — buscar das últimas analises como proxy
-    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluções</div>';
-  } catch (e) {
+        // Próximas consultas — hoje/semana/mês
+    const inicioMes = new Date(); inicioMes.setDate(1);
+    const fimMes = new Date(inicioMes.getFullYear(), inicioMes.getMonth()+1, 0, 23, 59, 59);
+    const agMes = await api('GET', `/agenda?data_inicio=${inicioMes.toISOString().slice(0,10)}T00:00:00&data_fim=${fimMes.toISOString().slice(0,10)}T23:59:59`).catch(() => ({agendamentos:[]}));
+    window._dashAg = {
+      hoje: (agHoje.agendamentos || []),
+      semana: (agSemana.agendamentos || []),
+      mes: (agMes.agendamentos || [])
+    };
+    switchProxTab('hoje');
+  
+} catch (e) {
     console.warn('Dashboard error:', e);
   }
 }
