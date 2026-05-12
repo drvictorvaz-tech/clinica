@@ -1007,16 +1007,16 @@ def importar_evolucoes_bulk(req: EvolucaoBulkCreate):
     return {"importados": ok, "erros": len(erros), "detalhes_erros": erros[:20]}
 
 
+
 # ─── Migração — endpoint temporário ─────────────────────────────────────────
 
 @app.post("/admin/migrate-arquivos")
 def admin_migrate_arquivos(token: str = ""):
-    """Endpoint temporario para criar tabela arquivos via Management API."""
+    """Cria tabela arquivos via pg-meta (Supabase internal) ou Management API."""
     import urllib.request as _ur
     import urllib.error as _ue
     
-    sql = """
-CREATE TABLE IF NOT EXISTS public.arquivos (
+    sql = """CREATE TABLE IF NOT EXISTS public.arquivos (
     id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     paciente_id     UUID REFERENCES public.pacientes(id) ON DELETE CASCADE,
     nome            TEXT NOT NULL,
@@ -1028,27 +1028,42 @@ CREATE TABLE IF NOT EXISTS public.arquivos (
     atualizado_em   TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_arquivos_paciente ON public.arquivos(paciente_id);
-ALTER TABLE public.arquivos ENABLE ROW LEVEL SECURITY;
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT FROM pg_policies WHERE tablename = 'arquivos' AND policyname = 'allow_all_arquivos'
-  ) THEN
-    CREATE POLICY allow_all_arquivos ON public.arquivos FOR ALL USING (true) WITH CHECK (true);
-  END IF;
-END $$;
-"""
-    results = []
+ALTER TABLE public.arquivos ENABLE ROW LEVEL SECURITY;"""
     
-    # Tenta via Supabase Management API
-    mgmt_token = token or os.environ.get("SUPABASE_MGMT_TOKEN", "")
+    results = []
     sb_url = os.environ.get("SUPABASE_URL", "")
     sb_key = os.environ.get("SUPABASE_KEY", "")
+    mgmt_token = token or os.environ.get("SUPABASE_MGMT_TOKEN", "")
     
-    # Extrai project ref da URL
     import re as _re
     proj_ref_match = _re.search(r'https://([^.]+)\.supabase\.co', sb_url)
     proj_ref = proj_ref_match.group(1) if proj_ref_match else ""
     
+    # Método 1: pg-meta v0 query endpoint (usado pelo Supabase Studio internamente)
+    for key_name, key_val in [("sb_key", sb_key), ("mgmt_token", mgmt_token)]:
+        if not key_val:
+            continue
+        try:
+            data = json.dumps({"query": sql}).encode("utf-8")
+            req = _ur.Request(
+                f"{sb_url}/pg-meta/v0/query",
+                data=data,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {key_val}",
+                }
+            )
+            with _ur.urlopen(req, timeout=15) as resp:
+                body = resp.read().decode()[:300]
+                results.append({"method": f"pg_meta/{key_name}", "ok": True, "body": body})
+                break
+        except _ue.HTTPError as e:
+            results.append({"method": f"pg_meta/{key_name}", "ok": False, "status": e.code, "error": e.read().decode()[:150]})
+        except Exception as e:
+            results.append({"method": f"pg_meta/{key_name}", "ok": False, "error": str(e)[:150]})
+    
+    # Método 2: Management API
     if proj_ref and mgmt_token:
         try:
             data = json.dumps({"query": sql}).encode("utf-8")
@@ -1062,43 +1077,49 @@ END $$;
                 }
             )
             with _ur.urlopen(req, timeout=15) as resp:
-                results.append({"method": "management_api", "ok": True, "body": resp.read().decode()[:200]})
+                results.append({"method": "mgmt_api", "ok": True, "body": resp.read().decode()[:200]})
+        except _ue.HTTPError as e:
+            results.append({"method": "mgmt_api", "ok": False, "status": e.code, "error": e.read().decode()[:150]})
         except Exception as e:
-            results.append({"method": "management_api", "ok": False, "error": str(e)[:200]})
+            results.append({"method": "mgmt_api", "ok": False, "error": str(e)[:150]})
     
-    # Tenta via Supabase service key (project key) — pode ser service_role
-    if proj_ref and sb_key:
-        try:
-            data = json.dumps({"query": sql}).encode("utf-8")
-            req = _ur.Request(
-                f"https://api.supabase.com/v1/projects/{proj_ref}/database/query",
-                data=data,
-                method="POST",
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {sb_key}",
-                }
-            )
-            with _ur.urlopen(req, timeout=15) as resp:
-                results.append({"method": "project_key_as_mgmt", "ok": True, "body": resp.read().decode()[:200]})
-        except Exception as e:
-            results.append({"method": "project_key_as_mgmt", "ok": False, "error": str(e)[:200]})
-    
-    # Verifica se a tabela foi criada
+    # Método 3: tenta via RPC (funções utilitarias que podem existir)
     db = get_db()
+    if db:
+        for fn in ["exec_sql", "query", "run_sql", "execute"]:
+            try:
+                db.rpc(fn, {"query": sql}).execute()
+                results.append({"method": f"rpc/{fn}", "ok": True})
+                break
+            except Exception as e:
+                results.append({"method": f"rpc/{fn}", "ok": False, "error": str(e)[:80]})
+    
+    # Verifica resultado
     table_exists = False
     if db:
         try:
             db.table("arquivos").select("id").limit(1).execute()
             table_exists = True
         except Exception:
-            table_exists = False
+            pass
+    
+    # Decodifica JWT para ver o role
+    jwt_role = ""
+    if sb_key:
+        try:
+            import base64
+            parts = sb_key.split(".")
+            if len(parts) == 3:
+                payload = parts[1] + "=="
+                decoded = json.loads(base64.urlsafe_b64decode(payload).decode())
+                jwt_role = decoded.get("role", "")
+        except Exception:
+            pass
     
     return {
         "proj_ref": proj_ref,
+        "jwt_role": jwt_role,
         "has_mgmt_token": bool(mgmt_token),
-        "has_sb_key": bool(sb_key),
         "results": results,
-        "table_exists_after": table_exists,
-        "sql": sql[:200] + "..."
+        "table_exists": table_exists,
     }
