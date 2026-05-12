@@ -199,39 +199,47 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .upload-area:hover,.upload-area.drag-over{border-color:var(--accent);background:rgba(13,148,136,.04);color:var(--accent)}
 
 /* ── Agenda / Calendar ── */
-.agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.agenda-nav h3{font-size:16px;font-weight:700;flex:1;text-align:center}
-.week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.week-header{background:var(--surface2);padding:10px;text-align:center;border-bottom:1px solid var(--border)}
-.week-header .day-name{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase}
-.week-header .day-num{font-size:18px;font-weight:700;margin-top:2px}
-.week-header.today .day-num{color:var(--accent)}
-.hour-label{
-  background:var(--surface2);padding:6px 8px;text-align:right;font-size:11px;
-  color:var(--text2);border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-}
-.week-cell{
-  min-height:48px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-  padding:2px;position:relative;cursor:pointer;transition:background .1s;
-}
-.week-cell:hover{background:rgba(0,201,167,.04)}
-.week-cell:last-child{border-right:none}
-.agenda-event{
-  background:linear-gradient(135deg,rgba(0,201,167,.2),rgba(0,119,182,.2));
-  border-left:3px solid var(--accent);border-radius:4px;padding:3px 6px;
-  font-size:11px;margin:1px;cursor:pointer;
-}
-.agenda-event .ev-name{font-weight:600;color:var(--text)}
-.agenda-event .ev-time{color:var(--text2)}
+.agenda-cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;gap:8px}
+.agenda-view-tabs{display:flex}
+.btn-view{padding:6px 16px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s}
+.btn-view:first-child{border-radius:6px 0 0 6px}
+.btn-view:last-child{border-radius:0 6px 6px 0}
+.btn-view-ativo{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.btn-outline-small{padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;font-size:13px;color:var(--text2)}
+.btn-outline-small:hover{background:var(--bg)}
+.cal-mes-wrap{overflow:auto}
+.cal-mes-header-dias{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);background:var(--surface)}
+.cal-mes-header-dias>div{padding:8px;text-align:center;font-size:12px;font-weight:600;color:var(--text2)}
+.cal-mes-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-mes-celula{min-height:100px;padding:4px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;box-sizing:border-box}
+.cal-mes-celula:hover{background:var(--bg)}
+.cal-mes-celula.vazia{background:#fafafa;opacity:.6;pointer-events:none}
+.cal-mes-celula.hoje-cel{background:#f0faf4}
+.cal-mes-num{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:13px;font-weight:500;margin-bottom:3px}
+.cal-mes-num.hoje-num{background:var(--accent);color:#fff}
+.cal-mes-evento{font-size:11px;background:var(--accent);color:#fff;border-radius:3px;padding:2px 5px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-mes-evento:hover{opacity:.85}
+.cal-mes-mais{font-size:11px;color:var(--text2);padding:1px 4px}
+.cal-scroll{overflow-y:auto;max-height:calc(100vh - 160px)}
+.cal-grade{display:grid;border-top:1px solid var(--border)}
+.cal-grade-corner{border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:3}
+.cal-grade-col-header{padding:6px 4px;text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:2}
+.cal-grade-col-header.hoje-col{background:#f0faf4}
+.cal-dia-nome{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;font-weight:600}
+.cal-dia-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-size:18px}
+.cal-dia-num.hoje-num{background:var(--accent);color:#fff}
+.cal-hora-label{padding:4px 8px;text-align:right;font-size:11px;color:var(--text2);border-right:1px solid var(--border);border-bottom:1px solid #eee;background:var(--surface)}
+.cal-slot{border-right:1px solid var(--border);border-bottom:1px solid #eee;min-height:56px;padding:2px;cursor:pointer;transition:background .1s;position:relative}
+.cal-slot:hover{background:var(--bg)}
+.cal-evento{border-radius:4px;padding:4px 6px;margin-bottom:2px;font-size:12px;cursor:pointer;color:#fff}
+.cal-evento:hover{opacity:.85}
+.cal-evento.st-agendado{background:var(--accent)}
+.cal-evento.st-confirmado{background:#1976D2}
+.cal-evento.st-cancelado{background:var(--danger);opacity:.75}
+.cal-evento.st-realizado{background:#388E3C}
 .agenda-list{display:flex;flex-direction:column;gap:8px}
-.agenda-item{
-  display:flex;align-items:center;gap:14px;padding:12px 16px;
-  background:var(--surface2);border-radius:8px;border:1px solid var(--border);
-}
-.agenda-time{
-  min-width:70px;text-align:center;padding:6px;background:rgba(0,201,167,.1);
-  border-radius:6px;font-size:12px;font-weight:700;color:var(--accent);
-}
+.agenda-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.agenda-time{min-width:70px;text-align:center;padding:6px;background:rgba(0,201,167,.1);border-radius:6px;font-size:12px;font-weight:700;color:var(--accent)}
 .agenda-info{flex:1}
 .agenda-info .name{font-weight:600}
 .agenda-info .detail{font-size:12px;color:var(--text2);margin-top:1px}
@@ -416,16 +424,21 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 
     <!-- ── VIEW: Agenda ── -->
     <div id="view-agenda" style="display:none">
-      <div class="agenda-nav">
-        <button class="btn-icon" onclick="agendaNavSemana(-1)">◀</button>
-        <h3 id="agenda-titulo">Agenda</h3>
-        <button class="btn-icon" onclick="agendaNavSemana(1)">▶</button>
-        <button class="btn btn-outline btn-sm" onclick="agendaHoje()">Hoje</button>
-        <button class="btn btn-primary btn-sm" onclick="openModalAgendamento()">+ Agendar</button>
+      <div class="agenda-cal-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-icon" onclick="agendaNavegar(-1)">&#8249;</button>
+          <button class="btn-outline-small" onclick="agendaHoje()">Hoje</button>
+          <button class="btn-icon" onclick="agendaNavegar(1)">&#8250;</button>
+          <span id="agenda-titulo" style="font-size:18px;font-weight:600;margin-left:8px"></span>
+        </div>
+        <div class="agenda-view-tabs">
+          <button id="btn-view-dia" class="btn-view" onclick="setAgendaView('dia')">Dia</button>
+          <button id="btn-view-semana" class="btn-view btn-view-ativo" onclick="setAgendaView('semana')">Semana</button>
+          <button id="btn-view-mes" class="btn-view" onclick="setAgendaView('mes')">Mês</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModalAgendamento({})">+ Agendar</button>
       </div>
-      <div id="agenda-lista" class="agenda-list">
-        <div class="spinner" style="margin:40px auto;display:block"></div>
-      </div>
+      <div id="agenda-cal-body"></div>
     </div>
 
   </div><!-- /content -->
@@ -1438,73 +1451,133 @@ function confirmarExcluirEvolucao(id) {
 
 // ═══════════════════════════════════════════════
 // AGENDA
-// ═══════════════════════════════════════════════
-let agendaDataBase = new Date();
+// ── Agenda Google Calendar style ──────────────────
+let _agendaView = 'semana', _agendaData = new Date();
 
-function agendaHoje() {
-  agendaDataBase = new Date();
+function setAgendaView(v) {
+  _agendaView = v;
+  ['dia','semana','mes'].forEach(m => {
+    const b = document.getElementById('btn-view-' + m);
+    if (b) b.classList.toggle('btn-view-ativo', m === v);
+  });
   loadAgenda();
 }
-function agendaNavSemana(d) {
-  agendaDataBase.setDate(agendaDataBase.getDate() + d * 7);
+
+function agendaNavegar(dir) {
+  if (_agendaView === 'dia') _agendaData.setDate(_agendaData.getDate() + dir);
+  else if (_agendaView === 'semana') _agendaData.setDate(_agendaData.getDate() + dir * 7);
+  else _agendaData.setMonth(_agendaData.getMonth() + dir);
   loadAgenda();
 }
+
+function agendaHoje() { _agendaData = new Date(); loadAgenda(); }
 
 async function loadAgenda() {
-  const inicio = new Date(agendaDataBase);
-  inicio.setDate(inicio.getDate() - inicio.getDay());
-  const fim = new Date(inicio);
-  fim.setDate(fim.getDate() + 6);
-
-  document.getElementById('agenda-titulo').textContent =
-    inicio.toLocaleDateString('pt-BR', { day:'numeric', month:'short' }) + ' – ' +
-    fim.toLocaleDateString('pt-BR', { day:'numeric', month:'short', year:'numeric' });
-
-  const el = document.getElementById('agenda-lista');
-  el.innerHTML = '<div class="spinner" style="margin:40px auto;display:block"></div>';
-
+  let ini, fim;
+  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
+  if (_agendaView === 'dia') { ini = fim = _fmtD(_agendaData); }
+  else if (_agendaView === 'semana') {
+    const dow = _agendaData.getDay();
+    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+    ini = _fmtD(seg); fim = _fmtD(dom);
+  } else { ini = _fmtD(new Date(y, mo, 1)); fim = _fmtD(new Date(y, mo + 1, 0)); }
+  const body = document.getElementById('agenda-cal-body');
+  if (body) body.innerHTML = '<div style="padding:40px;text-align:center"><div class="spinner"></div></div>';
   try {
-    const data = await api('GET', `/agenda?data_inicio=${inicio.toISOString()}&data_fim=${fim.toISOString()}`);
-    renderAgendaLista(data.agendamentos || [], inicio);
-  } catch (e) {
-    el.innerHTML = `<p style="color:var(--danger);text-align:center">${e.message}</p>`;
+    const r = await api('GET', `/agenda?inicio=${ini}&fim=${fim}`);
+    _renderAgenda(r.agendamentos || []);
+  } catch(e) {
+    if (body) body.innerHTML = '<p style="color:var(--danger);padding:20px">Erro ao carregar agenda</p>';
   }
 }
 
-function renderAgendaLista(ags, semanaInicio) {
-  const el = document.getElementById('agenda-lista');
-  if (ags.length === 0) {
-    el.innerHTML = `<div class="empty-state">
-      <div class="icon">📅</div>
-      <p>Nenhuma consulta esta semana</p>
-      <button class="btn btn-primary" style="margin-top:14px" onclick="openModalAgendamento()">+ Agendar consulta</button>
-    </div>`;
-    return;
+function _fmtD(d) { return d.toISOString().slice(0, 10); }
+
+function _renderAgenda(ags) {
+  if (_agendaView === 'mes') _renderMes(ags); else _renderGrade(ags);
+}
+
+function _renderMes(ags) {
+  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
+  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const tit = document.getElementById('agenda-titulo');
+  if (tit) tit.textContent = MES[mo] + ' de ' + y;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const p1 = new Date(y,mo,1), pn = new Date(y,mo+1,0);
+  const ini = (p1.getDay() + 6) % 7;
+  const byDate = {};
+  ags.forEach(ag => { const k = ag.data_hora.slice(0,10); (byDate[k] = byDate[k] || []).push(ag); });
+  const DSEM = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  let h = '<div class="cal-mes-wrap"><div class="cal-mes-header-dias">' + DSEM.map(d => '<div>' + d + '</div>').join('') + '</div><div class="cal-mes-grid">';
+  for (let i = 0; i < ini; i++) h += '<div class="cal-mes-celula vazia"></div>';
+  for (let d = 1; d <= pn.getDate(); d++) {
+    const dt = new Date(y,mo,d), ds = _fmtD(dt), isH = dt.getTime() === hoje.getTime();
+    const evts = byDate[ds] || [];
+    const numCls = isH ? ' hoje-num' : '';
+    const celCls = isH ? ' hoje-cel' : '';
+    h += '<div class="cal-mes-celula' + celCls + '" onclick="_agendaData=new Date(' + y + ',' + mo + ',' + d + ');setAgendaView('dia')">';
+    h += '<div class="cal-mes-num' + numCls + '">' + d + '</div>';
+    evts.slice(0,3).forEach(ag => {
+      const hh = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      h += '<div class="cal-mes-evento" onclick="event.stopPropagation();openModalAgendamento(' + JSON.stringify(ag).replace(/"/g,'&quot;') + ')">' + hh + ' ' + ag.nome_paciente + '</div>';
+    });
+    if (evts.length > 3) h += '<div class="cal-mes-mais">+' + (evts.length-3) + ' mais</div>';
+    h += '</div>';
   }
-  // Agrupar por dia
-  const porDia = {};
-  ags.forEach(ag => {
-    const d = new Date(ag.data_hora).toLocaleDateString('pt-BR');
-    if (!porDia[d]) porDia[d] = [];
-    porDia[d].push(ag);
+  h += '</div></div>';
+  const body = document.getElementById('agenda-cal-body');
+  if (body) body.innerHTML = h;
+}
+
+function _renderGrade(ags) {
+  const isSingle = _agendaView === 'dia';
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const MESC = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let days;
+  if (isSingle) {
+    days = [new Date(_agendaData)];
+    const d = days[0];
+    const DSEM2 = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const tit = document.getElementById('agenda-titulo');
+    if (tit) tit.textContent = DSEM2[d.getDay()] + ', ' + d.getDate() + ' de ' + MESC[d.getMonth()] + ' de ' + d.getFullYear();
+  } else {
+    const dow = _agendaData.getDay();
+    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
+    days = Array.from({length:7}, (_, i) => { const x = new Date(seg); x.setDate(seg.getDate() + i); return x; });
+    const a = days[0], b = days[6];
+    const tit = document.getElementById('agenda-titulo');
+    if (tit) tit.textContent = a.getMonth() === b.getMonth()
+      ? a.getDate() + ' – ' + b.getDate() + ' de ' + MES[a.getMonth()] + ' de ' + a.getFullYear()
+      : a.getDate() + ' de ' + MES[a.getMonth()] + ' – ' + b.getDate() + ' de ' + MES[b.getMonth()] + ' de ' + b.getFullYear();
+  }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const HOURS = Array.from({length:14}, (_, i) => i + 7);
+  const map = {};
+  ags.forEach(ag => { const dt = new Date(ag.data_hora); const k = _fmtD(dt) + '_' + dt.getHours(); (map[k] = map[k] || []).push(ag); });
+  const ncols = days.length;
+  let h = '<div class="cal-scroll"><div class="cal-grade" style="grid-template-columns:52px repeat(' + ncols + ',1fr)">';
+  h += '<div class="cal-grade-corner"></div>';
+  days.forEach(d => {
+    const isH = d.getTime() === hoje.getTime();
+    h += '<div class="cal-grade-col-header' + (isH ? ' hoje-col' : '') + '"><span class="cal-dia-nome">' + DABREV[d.getDay()] + '</span><span class="cal-dia-num' + (isH ? ' hoje-num' : '') + '">' + d.getDate() + '</span></div>';
   });
-  const statusColor = { agendado:'badge-blue', confirmado:'badge-green', cancelado:'badge-red', realizado:'badge-gray', falta:'badge-yellow' };
-  el.innerHTML = Object.entries(porDia).map(([dia, items]) => `
-    <div style="margin-bottom:4px;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;padding:8px 0 4px">${dia}</div>
-    ${items.map(ag => `
-      <div class="agenda-item" onclick='openModalAgendamento(${JSON.stringify(ag)})'>
-        <div class="agenda-time">${new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-        <div class="agenda-info">
-          <div class="name">${ag.nome_paciente || 'Sem nome'}</div>
-          <div class="detail">${ag.tipo} · ${ag.duracao_minutos} min</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="badge ${statusColor[ag.status]||'badge-gray'}">${ag.status}</span>
-          <button class="btn-icon" onclick="event.stopPropagation();confirmarExcluirAgendamento('${ag.id}')">🗑️</button>
-        </div>
-      </div>
-    `).join('')}
-  `).join('');
+  HOURS.forEach(hr => {
+    h += '<div class="cal-hora-label">' + String(hr).padStart(2,'0') + ':00</div>';
+    days.forEach(d => {
+      const k = _fmtD(d) + '_' + hr, slots = map[k] || [];
+      h += '<div class="cal-slot" onclick="openModalAgendamento({data_hora:'' + _fmtD(d) + 'T' + String(hr).padStart(2,'0') + ':00'})">';
+      slots.forEach(ag => {
+        const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        h += '<div class="cal-evento st-' + ag.status + '" onclick="event.stopPropagation();openModalAgendamento(' + JSON.stringify(ag).replace(/"/g,'&quot;') + ')"><strong>' + ag.nome_paciente + '</strong><br><span>' + t + ' · ' + ag.tipo + '</span></div>';
+      });
+      h += '</div>';
+    });
+  });
+  h += '</div></div>';
+  const body = document.getElementById('agenda-cal-body');
+  if (body) body.innerHTML = h;
 }
 
 // Busca de paciente no agendamento
