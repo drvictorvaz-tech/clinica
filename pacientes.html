@@ -1552,4 +1552,58 @@ function openModalAgendamento(ag) {
     document.getElementById('ag-data-hora').value = dh.toISOString().slice(0,16);
     document.getElementById('ag-duracao').value = ag.duracao_minutos || 60;
     document.getElementById('ag-tipo').value = ag.tipo || 'consulta';
-    document.getElem
+        document.getElementById('ag-status').value = ag.status || 'agendado';
+    document.getElementById('ag-obs').value = ag.obs || '';
+  }
+  document.getElementById('modal-agendamento').style.display = 'flex';
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+async function salvarAgendamento(e) {
+  e.preventDefault();
+  const id = document.getElementById('ag-id').value;
+  const pacienteId = document.getElementById('ag-paciente-id').value;
+  const dataHora = document.getElementById('ag-data-hora').value;
+  const duracao = parseInt(document.getElementById('ag-duracao').value) || 60;
+  const tipo = document.getElementById('ag-tipo').value;
+  const status = document.getElementById('ag-status').value;
+  const obs = document.getElementById('ag-obs').value;
+  const nomePac = document.getElementById('ag-nome-pac').value;
+
+  if (!pacienteId) { showToast('Selecione um paciente', 'warn'); return; }
+  if (!dataHora) { showToast('Informe a data e hora', 'warn'); return; }
+
+  const body = {
+    paciente_id: pacienteId,
+    data_hora: dataHora,
+    duracao_minutos: duracao,
+    tipo,
+    status,
+    obs,
+    nome_paciente: nomePac
+  };
+
+  try {
+    if (id) {
+      await api('PUT', `/agenda/${id}`, body);
+      showToast('Agendamento atualizado!', 'success');
+    } else {
+      await api('POST', '/agenda', body);
+      showToast('Agendamento criado!', 'success');
+    }
+    closeModal('modal-agendamento');
+    loadAgenda();
+  } catch (err) {
+    showToast('Erro ao salvar agendamento', 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  showView('dashboard');
+});
+</script>
+</body>
+</html>
