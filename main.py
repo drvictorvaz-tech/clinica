@@ -1005,3 +1005,100 @@ def importar_evolucoes_bulk(req: EvolucaoBulkCreate):
         except Exception as e:
             erros.append({"linha": i, "msg": str(e)[:100]})
     return {"importados": ok, "erros": len(erros), "detalhes_erros": erros[:20]}
+
+
+# ─── Migração — endpoint temporário ─────────────────────────────────────────
+
+@app.post("/admin/migrate-arquivos")
+def admin_migrate_arquivos(token: str = ""):
+    """Endpoint temporario para criar tabela arquivos via Management API."""
+    import urllib.request as _ur
+    import urllib.error as _ue
+    
+    sql = """
+CREATE TABLE IF NOT EXISTS public.arquivos (
+    id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    paciente_id     UUID REFERENCES public.pacientes(id) ON DELETE CASCADE,
+    nome            TEXT NOT NULL,
+    tipo_arquivo    TEXT DEFAULT '',
+    descricao       TEXT DEFAULT '',
+    conteudo_base64 TEXT DEFAULT '',
+    tamanho_bytes   INTEGER DEFAULT 0,
+    criado_em       TIMESTAMPTZ DEFAULT NOW(),
+    atualizado_em   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_arquivos_paciente ON public.arquivos(paciente_id);
+ALTER TABLE public.arquivos ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT FROM pg_policies WHERE tablename = 'arquivos' AND policyname = 'allow_all_arquivos'
+  ) THEN
+    CREATE POLICY allow_all_arquivos ON public.arquivos FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+"""
+    results = []
+    
+    # Tenta via Supabase Management API
+    mgmt_token = token or os.environ.get("SUPABASE_MGMT_TOKEN", "")
+    sb_url = os.environ.get("SUPABASE_URL", "")
+    sb_key = os.environ.get("SUPABASE_KEY", "")
+    
+    # Extrai project ref da URL
+    import re as _re
+    proj_ref_match = _re.search(r'https://([^.]+)\.supabase\.co', sb_url)
+    proj_ref = proj_ref_match.group(1) if proj_ref_match else ""
+    
+    if proj_ref and mgmt_token:
+        try:
+            data = json.dumps({"query": sql}).encode("utf-8")
+            req = _ur.Request(
+                f"https://api.supabase.com/v1/projects/{proj_ref}/database/query",
+                data=data,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {mgmt_token}",
+                }
+            )
+            with _ur.urlopen(req, timeout=15) as resp:
+                results.append({"method": "management_api", "ok": True, "body": resp.read().decode()[:200]})
+        except Exception as e:
+            results.append({"method": "management_api", "ok": False, "error": str(e)[:200]})
+    
+    # Tenta via Supabase service key (project key) — pode ser service_role
+    if proj_ref and sb_key:
+        try:
+            data = json.dumps({"query": sql}).encode("utf-8")
+            req = _ur.Request(
+                f"https://api.supabase.com/v1/projects/{proj_ref}/database/query",
+                data=data,
+                method="POST",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {sb_key}",
+                }
+            )
+            with _ur.urlopen(req, timeout=15) as resp:
+                results.append({"method": "project_key_as_mgmt", "ok": True, "body": resp.read().decode()[:200]})
+        except Exception as e:
+            results.append({"method": "project_key_as_mgmt", "ok": False, "error": str(e)[:200]})
+    
+    # Verifica se a tabela foi criada
+    db = get_db()
+    table_exists = False
+    if db:
+        try:
+            db.table("arquivos").select("id").limit(1).execute()
+            table_exists = True
+        except Exception:
+            table_exists = False
+    
+    return {
+        "proj_ref": proj_ref,
+        "has_mgmt_token": bool(mgmt_token),
+        "has_sb_key": bool(sb_key),
+        "results": results,
+        "table_exists_after": table_exists,
+        "sql": sql[:200] + "..."
+    }
