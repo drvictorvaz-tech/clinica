@@ -188,6 +188,16 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 }
 .evo-valor{font-size:15px;font-weight:700;color:var(--success)}
 
+/* ── Arquivos ── */
+.arquivo-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:border-color .15s}
+.arquivo-card:hover{border-color:var(--accent)}
+.arquivo-icon{width:44px;height:44px;border-radius:8px;background:rgba(13,148,136,.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.arquivo-info{flex:1;min-width:0}
+.arquivo-info .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arquivo-info .meta{font-size:12px;color:var(--text2);margin-top:2px}
+.upload-area{border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .15s;color:var(--text2);margin-bottom:16px}
+.upload-area:hover,.upload-area.drag-over{border-color:var(--accent);background:rgba(13,148,136,.04);color:var(--accent)}
+
 /* ── Agenda / Calendar ── */
 .agenda-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .agenda-nav h3{font-size:16px;font-weight:700;flex:1;text-align:center}
@@ -1011,19 +1021,21 @@ async function abrirFicha(id) {
   showView('ficha');
   document.getElementById('ficha-container').innerHTML = '<div class="spinner" style="margin:40px auto;display:block"></div>';
   try {
-    const [pac, evos] = await Promise.all([
+    const [pac, evos, arqs] = await Promise.all([
       api('GET', `/pacientes/${id}`),
-      api('GET', `/pacientes/${id}/evolucoes`)
+      api('GET', `/pacientes/${id}/evolucoes`),
+      api('GET', `/pacientes/${id}/arquivos`).catch(() => ({ arquivos: [] }))
     ]);
     pacienteAtual = pac;
-    renderFicha(pac, evos.evolucoes || []);
+    renderFicha(pac, evos.evolucoes || [], arqs.arquivos || []);
     showView('ficha', pac);
   } catch (e) {
     document.getElementById('ficha-container').innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
   }
 }
 
-function renderFicha(pac, evos) {
+function renderFicha(pac, evos, arqs) {
+  arqs = arqs || [];
   const idade = pac.data_nascimento
     ? Math.floor((Date.now() - new Date(pac.data_nascimento+'T00:00:00')) / (365.25 * 86400000)) + ' anos'
     : '';
@@ -1046,19 +1058,22 @@ function renderFicha(pac, evos) {
 
     <div class="profile-tabs">
       <div class="profile-tab active" id="tab-evos" onclick="switchTab('evos')">📝 Evoluções (${evos.length})</div>
-      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">👤 Dados cadastrais</div>
-      <div class="profile-tab" onclick="openModalEvolucao('${pac.id}','${pac.nome}')">+ Nova Evolução</div>
+      <div class="profile-tab" id="tab-arqs" onclick="switchTab('arqs')">📎 Arquivos (${arqs.length})</div>
+      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">👤 Dados</div>
     </div>
 
     <div id="tab-content-evos">${renderEvolucoes(evos, pac.id)}</div>
+    <div id="tab-content-arqs" style="display:none">${renderArquivos(arqs, pac.id)}</div>
     <div id="tab-content-dados" style="display:none">${renderDadosCadastrais(pac)}</div>
   `;
 }
 
 function switchTab(tab) {
-  ['evos','dados'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
-    document.getElementById('tab-content-' + t).style.display = t === tab ? '' : 'none';
+  ['evos','arqs','dados'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+    const content = document.getElementById('tab-content-' + t);
+    if (content) content.style.display = t === tab ? '' : 'none';
   });
 }
 
@@ -1114,6 +1129,96 @@ function renderDadosCadastrais(pac) {
   return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
     campos.map(([k, v]) => `<div style="padding:10px;background:var(--surface2);border-radius:8px"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:4px">${k}</div><div>${v}</div></div>`).join('') +
     `</div>`;
+}
+
+function renderArquivos(arqs, pacId) {
+  const icones = { pdf:'📄', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', mp3:'🎵', mp4:'🎬', default:'📎' };
+  function icone(nome) { const ext = (nome||'').split('.').pop().toLowerCase(); return icones[ext] || icones.default; }
+  function tamanho(b) { if (!b) return ''; if (b<1024) return b+'B'; if (b<1048576) return Math.round(b/1024)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+
+  return `
+    <div style="margin-bottom:16px">
+      <div class="upload-area" id="upload-area-${pacId}" onclick="document.getElementById('file-input-${pacId}').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event,'${pacId}')">
+        <input type="file" id="file-input-${pacId}" multiple style="display:none" onchange="uploadArquivos(this.files, '${pacId}')">
+        <div style="font-size:32px;margin-bottom:8px">📎</div>
+        <div style="font-size:14px;font-weight:600">Clique ou arraste arquivos aqui</div>
+        <div style="font-size:12px;margin-top:4px">PDF, imagens, documentos, áudios...</div>
+      </div>
+    </div>
+    ${arqs.length === 0
+      ? `<div class="empty-state"><div class="icon">📎</div><p>Nenhum arquivo</p><small>Faça upload de documentos, radiografias, laudos...</small></div>`
+      : arqs.map(a => `
+        <div class="arquivo-card" id="arq-${a.id}">
+          <div class="arquivo-icon">${icone(a.nome)}</div>
+          <div class="arquivo-info">
+            <div class="name">${a.nome}</div>
+            <div class="meta">${a.tipo_arquivo || ''} ${a.tamanho_bytes ? '· ' + tamanho(a.tamanho_bytes) : ''} · ${formatDate(a.criado_em)}</div>
+            ${a.descricao ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${a.descricao}</div>` : ''}
+          </div>
+          <button class="btn-icon" title="Baixar" onclick="downloadArquivo('${a.id}','${a.nome}')">⬇️</button>
+          <button class="btn-icon" title="Excluir" onclick="confirmarExcluirArquivo('${a.id}','${pacId}')">🗑️</button>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+async function uploadArquivos(files, pacId) {
+  if (!files || files.length === 0) return;
+  for (const file of files) {
+    try {
+      showToast('Enviando ' + file.name + '...', 'info');
+      const b64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      await api('POST', `/pacientes/${pacId}/arquivos`, {
+        paciente_id: pacId,
+        nome: file.name,
+        tipo_arquivo: file.type || '',
+        conteudo_base64: b64
+      });
+      showToast(file.name + ' enviado!', 'success');
+    } catch (e) {
+      showToast('Erro ao enviar ' + file.name + ': ' + e.message, 'error');
+    }
+  }
+  // Reload ficha
+  abrirFicha(pacId);
+}
+
+function handleDrop(event, pacId) {
+  event.preventDefault();
+  document.getElementById('upload-area-' + pacId).classList.remove('drag-over');
+  uploadArquivos(event.dataTransfer.files, pacId);
+}
+
+async function downloadArquivo(id, nome) {
+  try {
+    showToast('Baixando ' + nome + '...', 'info');
+    const data = await api('GET', `/arquivos/${id}/conteudo`);
+    if (!data.conteudo_base64) { showToast('Conteúdo não disponível', 'warn'); return; }
+    const link = document.createElement('a');
+    link.href = 'data:' + (data.tipo_arquivo || 'application/octet-stream') + ';base64,' + data.conteudo_base64;
+    link.download = nome;
+    link.click();
+  } catch (e) { showToast('Erro: ' + e.message, 'error'); }
+}
+
+function confirmarExcluirArquivo(id, pacId) {
+  document.getElementById('confirma-titulo').textContent = 'Excluir arquivo';
+  document.getElementById('confirma-msg').textContent = 'Esta ação não pode ser desfeita. Deseja excluir este arquivo?';
+  document.getElementById('confirma-btn').onclick = async () => {
+    try {
+      await api('DELETE', `/arquivos/${id}`);
+      closeModal('modal-confirma');
+      showToast('Arquivo excluído', 'success');
+      abrirFicha(pacId);
+    } catch (e) { showToast('Erro: ' + e.message, 'error'); }
+  };
+  openModal('modal-confirma');
 }
 
 function badgeTipo(tipo) {
