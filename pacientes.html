@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IA Pacientes â Dr. Victor Vaz</title>
+<title>IA Pacientes — Dr. Victor Vaz</title>
 <style>
 :root {  
   --bg: #f1f5f9;
@@ -22,7 +22,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;display:flex;min-height:100vh;font-size:14px}
 
-/* ââ Sidebar ââ */
+/* ── Sidebar ── */
 #sidebar{
   width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);
   border-right:1px solid var(--border);display:flex;flex-direction:column;
@@ -44,7 +44,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .sidebar-footer a{color:var(--text2);font-size:12px;text-decoration:none}
 .sidebar-footer a:hover{color:var(--accent)}
 
-/* ââ Main ââ */
+/* ── Main ── */
 #main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
 #topbar{
   background:var(--surface);border-bottom:1px solid var(--border);
@@ -68,17 +68,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 
 #content{padding:24px;flex:1}
 
-/* ââ Cards ââ */
+/* ── Cards ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
 .card-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 
-/* ââ Stats row ââ */
+/* ── Stats row ── */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
 .stat-num{font-size:26px;font-weight:700;color:var(--accent)}
 .stat-label{font-size:12px;color:var(--text2);margin-top:2px}
 
-/* ââ Search ââ */
+/* ── Search ── */
 .search-bar{
   display:flex;align-items:center;gap:10px;background:var(--surface2);
   border:1px solid var(--border);border-radius:8px;padding:0 12px;
@@ -90,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .search-bar input::placeholder{color:var(--text2)}
 .search-bar .icon{color:var(--text2);font-size:16px}
 
-/* ââ Table ââ */
+/* ── Table ── */
 .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse}
 th{background:var(--surface2);color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
@@ -108,7 +108,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .badge-gray{background:rgba(139,148,158,.15);color:var(--text2)}
 .badge-red{background:rgba(248,81,73,.15);color:var(--danger)}
 
-/* ââ Forms ââ */
+/* ── Forms ── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .form-full{grid-column:1/-1}
@@ -129,7 +129,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   letter-spacing:.6px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:12px;
 }
 
-/* ââ Modals ââ */
+/* ── Modals ── */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
   display:none;align-items:center;justify-content:center;
@@ -148,7 +148,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .modal-close:hover{color:var(--text)}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
 
-/* ââ Patient profile ââ */
+/* ── Patient profile ── */
 .profile-header{
   display:flex;align-items:center;gap:16px;margin-bottom:20px;
   padding-bottom:20px;border-bottom:1px solid var(--border);
@@ -169,7 +169,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .profile-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .profile-tab:hover{color:var(--text)}
 
-/* ââ EvoluÃ§Ãµes ââ */
+/* ── Evoluções ── */
 .evolucao-card{
   border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;
   transition:border-color .15s;
@@ -188,7 +188,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 }
 .evo-valor{font-size:15px;font-weight:700;color:var(--success)}
 
-/* ââ Arquivos ââ */
+/* ── Arquivos ── */
 .arquivo-card{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;transition:border-color .15s}
 .arquivo-card:hover{border-color:var(--accent)}
 .arquivo-icon{width:44px;height:44px;border-radius:8px;background:rgba(13,148,136,.1);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
@@ -198,18 +198,17 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .upload-area{border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .15s;color:var(--text2);margin-bottom:16px}
 .upload-area:hover,.upload-area.drag-over{border-color:var(--accent);background:rgba(13,148,136,.04);color:var(--accent)}
 
-/* ââ Agenda / Calendar ââ */
+/* ── Agenda / Calendar ── */
 .agenda-cal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;gap:8px}
 .agenda-nav-left{display:flex;align-items:center;gap:8px}
 .agenda-view-tabs{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
 .btn-view{padding:7px 18px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;border-right:1px solid var(--border)}
 .btn-view:last-child{border-right:none}
-.btn-view:hover{border-right:1px solid var(--border)}
-.btn-view{background:var(--bg)}
+.btn-view:hover{background:var(--bg)}
 .btn-view-ativo{background:var(--accent)!important;color:#fff!important}
 .btn-outline-small{padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s}
 .btn-outline-small:hover{background:var(--bg);border-color:var(--text2)}
-/* MÃªs */
+/* Mês */
 .cal-mes-wrap{overflow:auto}
 .cal-mes-header-dias{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--border);background:var(--surface)}
 .cal-mes-header-dias>div{padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
@@ -271,7 +270,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .agenda-info .name{font-weight:600}
 .agenda-info .detail{font-size:12px;color:var(--text2);margin-top:1px}
 
-/* ââ Toast ââ */
+/* ── Toast ── */
 #toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
   background:var(--surface);border:1px solid var(--border);border-radius:10px;
@@ -285,7 +284,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 #toast.warn{border-left:4px solid var(--warn);color:var(--warn)}
 #toast.info{border-left:4px solid #58a6ff;color:#58a6ff}
 
-/* ââ Loading ââ */
+/* ── Loading ── */
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-overlay{
@@ -299,7 +298,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .empty-state p{font-size:15px}
 .empty-state small{font-size:13px;opacity:.6}
 
-/* ââ Pagination ââ */
+/* ── Pagination ── */
 .pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:16px}
 .page-btn{
   padding:6px 12px;border-radius:6px;border:1px solid var(--border);
@@ -309,58 +308,58 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ââ Divider ââ */
+/* ── Divider ── */
 .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
 </style>
 </head>
 <body>
 
-<!-- âââââââââââââââââââââââââââ SIDEBAR âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
 <nav id="sidebar">
   <div class="sidebar-logo">
-    <h1>ð¦· IA Pacientes</h1>
-    <p>Dr. Victor Vaz â DTM & Sono</p>
+    <h1>🦷 IA Pacientes</h1>
+    <p>Dr. Victor Vaz — DTM & Sono</p>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">Principal</div>
     <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')">
-      <span class="icon">ð</span>Dashboard
+      <span class="icon">📊</span>Dashboard
     </div>
     <div class="nav-item" data-view="pacientes" onclick="showView('pacientes')">
-      <span class="icon">ð¥</span>Pacientes
+      <span class="icon">👥</span>Pacientes
     </div>
     <div class="nav-item" data-view="agenda" onclick="showView('agenda')">
-      <span class="icon">ð</span>Agenda
+      <span class="icon">📅</span>Agenda
     </div>
-    <div class="nav-section">AÃ§Ãµes</div>
+    <div class="nav-section">Ações</div>
     <div class="nav-item" onclick="openModalCadastro()">
-      <span class="icon">â</span>Novo Paciente
+      <span class="icon">➕</span>Novo Paciente
     </div>
     <div class="nav-item" onclick="openModalEvolucao(null)">
-      <span class="icon">ð</span>Nova EvoluÃ§Ã£o
+      <span class="icon">📝</span>Nova Evolução
     </div>
     <div class="nav-item" onclick="openModalAgendamento()">
-      <span class="icon">ð</span>Agendar Consulta
+      <span class="icon">🕐</span>Agendar Consulta
     </div>
     <div class="nav-section">Sistema</div>
     <div class="nav-item" onclick="window.open('dr_victor_clinica.html')">
-      <span class="icon">ð§ </span>IA ClÃ­nica
+      <span class="icon">🧠</span>IA Clínica
     </div>
     <div class="nav-item" onclick="window.open('index.html')">
-      <span class="icon">ð°</span>IA Financeira
+      <span class="icon">💰</span>IA Financeira
     </div>
     <div class="nav-item" onclick="window.open('historico.html')">
-      <span class="icon">ð</span>HistÃ³rico
+      <span class="icon">📋</span>Histórico
     </div>
   </div>
   <div class="sidebar-footer">
-    <a href="dr_victor_clinica.html">â IA ClÃ­nica</a>
+    <a href="dr_victor_clinica.html">← IA Clínica</a>
     &nbsp;|&nbsp;
-    <a href="index.html">Financeira â</a>
+    <a href="index.html">Financeira →</a>
   </div>
 </nav>
 
-<!-- âââââââââââââââââââââââââââ MAIN âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ MAIN ═══════════════════════════ -->
 <div id="main">
   <div id="topbar">
     <h2 id="topbar-title">Dashboard</h2>
@@ -368,35 +367,35 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
   <div id="content">
 
-    <!-- ââ VIEW: Dashboard ââ -->
+    <!-- ── VIEW: Dashboard ── -->
     <div id="view-dashboard">
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-num" id="stat-pacientes">â</div>
+          <div class="stat-num" id="stat-pacientes">—</div>
           <div class="stat-label">Pacientes ativos</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-hoje">â</div>
+          <div class="stat-num" id="stat-hoje">—</div>
           <div class="stat-label">Consultas hoje</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-semana">â</div>
+          <div class="stat-num" id="stat-semana">—</div>
           <div class="stat-label">Esta semana</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num" id="stat-receita">â</div>
-          <div class="stat-label">Receita do mÃªs</div>
+          <div class="stat-num" id="stat-receita">—</div>
+          <div class="stat-label">Receita do mês</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div class="card-title" style="margin-bottom:0">ð PrÃ³ximas consultas</div>
+            <div class="card-title" style="margin-bottom:0">📅 Próximas consultas</div>
             <div style="display:flex;gap:4px">
               <button id="tab-hoje" onclick="switchProxTab('hoje')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:11px;font-weight:600;cursor:pointer">Hoje</button>
               <button id="tab-semana" onclick="switchProxTab('semana')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">Semana</button>
-              <button id="tab-mes" onclick="switchProxTab('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">MÃªs</button>
+              <button id="tab-mes" onclick="switchProxTab('mes')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer">Mês</button>
             </div>
           </div>
           <div id="proximas-consultas">
@@ -404,7 +403,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
           </div>
         </div>
         <div class="card">
-          <div class="card-title">ð Ãltimas evoluÃ§Ãµes</div>
+          <div class="card-title">🕐 Últimas evoluções</div>
           <div id="ultimas-evolucoes">
             <div class="spinner" style="margin:20px auto;display:block"></div>
           </div>
@@ -412,11 +411,11 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
       </div>
     </div>
 
-    <!-- ââ VIEW: Pacientes ââ -->
+    <!-- ── VIEW: Pacientes ── -->
     <div id="view-pacientes" style="display:none">
       <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center">
         <div class="search-bar" style="flex:1">
-          <span class="icon">ð</span>
+          <span class="icon">🔍</span>
           <input type="text" id="busca-input" placeholder="Buscar paciente pelo nome..." oninput="debuscaPaciente()">
         </div>
         <button class="btn btn-primary" onclick="openModalCadastro()">+ Novo Paciente</button>
@@ -441,27 +440,27 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
       <div class="pagination" id="paginacao"></div>
     </div>
 
-    <!-- ââ VIEW: Ficha do Paciente ââ -->
+    <!-- ── VIEW: Ficha do Paciente ── -->
     <div id="view-ficha" style="display:none">
-      <button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="showView('pacientes')">â Voltar</button>
+      <button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="showView('pacientes')">← Voltar</button>
       <div class="card" id="ficha-container">
         <div class="spinner" style="margin:40px auto;display:block"></div>
       </div>
     </div>
 
-    <!-- ââ VIEW: Agenda ââ -->
+    <!-- ── VIEW: Agenda ── -->
     <div id="view-agenda" style="display:none">
       <div class="agenda-cal-header">
         <div class="agenda-nav-left">
           <button class="btn-icon" onclick="agendaNavegar(-1)" title="Anterior">&#8249;</button>
           <button class="btn-outline-small" onclick="agendaHoje()">Hoje</button>
-          <button class="btn-icon" onclick="agendaNavegar(1)" title="PrÃ³ximo">&#8250;</button>
+          <button class="btn-icon" onclick="agendaNavegar(1)" title="Próximo">&#8250;</button>
           <span id="agenda-titulo" style="font-size:17px;font-weight:600;color:var(--text);margin-left:4px"></span>
         </div>
         <div class="agenda-view-tabs">
           <button id="btn-view-dia" class="btn-view" onclick="setAgendaView('dia')">Dia</button>
           <button id="btn-view-semana" class="btn-view btn-view-ativo" onclick="setAgendaView('semana')">Semana</button>
-          <button id="btn-view-mes" class="btn-view" onclick="setAgendaView('mes')">MÃªs</button>
+          <button id="btn-view-mes" class="btn-view" onclick="setAgendaView('mes')">Mês</button>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openModalAgendamento({})">+ Agendar</button>
       </div>
@@ -471,14 +470,14 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div><!-- /content -->
 </div><!-- /main -->
 
-<!-- âââââââââââââââââââââââââââ MODALS âââââââââââââââââââââââââââ -->
+<!-- ═══════════════════════════ MODALS ═══════════════════════════ -->
 
 <!-- Modal: Cadastro de Paciente -->
 <div class="modal-overlay" id="modal-cadastro">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modal-cadastro-titulo">â Novo Paciente</h3>
-      <button class="modal-close" onclick="closeModal('modal-cadastro')">â</button>
+      <h3 id="modal-cadastro-titulo">➕ Novo Paciente</h3>
+      <button class="modal-close" onclick="closeModal('modal-cadastro')">✕</button>
     </div>
     <form id="form-cadastro" onsubmit="salvarPaciente(event)">
       <div class="form-section">
@@ -514,7 +513,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group">
-            <label>ProfissÃ£o</label>
+            <label>Profissão</label>
             <input type="text" id="p-profissao" placeholder="Ex: Professor">
           </div>
           <div class="form-group">
@@ -524,24 +523,24 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option>Solteiro(a)</option>
               <option>Casado(a)</option>
               <option>Divorciado(a)</option>
-              <option>ViÃºvo(a)</option>
-              <option>UniÃ£o estÃ¡vel</option>
+              <option>Viúvo(a)</option>
+              <option>União estável</option>
             </select>
           </div>
         </div>
       </div>
       <div class="form-section">
-        <div class="form-section-title">Dados ClÃ­nicos</div>
+        <div class="form-section-title">Dados Clínicos</div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Plano de saÃºde</label>
+            <label>Plano de saúde</label>
             <input type="text" id="p-plano" placeholder="Particular / Unimed / etc.">
           </div>
           <div class="form-group">
             <label>Como nos conheceu</label>
             <select id="p-como">
               <option value="">Selecione</option>
-              <option>IndicaÃ§Ã£o</option>
+              <option>Indicação</option>
               <option>Instagram</option>
               <option>Google</option>
               <option>Facebook</option>
@@ -549,12 +548,12 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group form-full">
-            <label>EndereÃ§o</label>
-            <input type="text" id="p-endereco" placeholder="Rua, nÃºmero, bairro, cidade">
+            <label>Endereço</label>
+            <input type="text" id="p-endereco" placeholder="Rua, número, bairro, cidade">
           </div>
           <div class="form-group form-full">
-            <label>ObservaÃ§Ãµes gerais</label>
-            <textarea id="p-obs" placeholder="Alergias, informaÃ§Ãµes relevantes..."></textarea>
+            <label>Observações gerais</label>
+            <textarea id="p-obs" placeholder="Alergias, informações relevantes..."></textarea>
           </div>
         </div>
       </div>
@@ -566,12 +565,12 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
 </div>
 
-<!-- Modal: Nova EvoluÃ§Ã£o -->
+<!-- Modal: Nova Evolução -->
 <div class="modal-overlay" id="modal-evolucao">
   <div class="modal modal-lg">
     <div class="modal-header">
-      <h3>ð Registro de EvoluÃ§Ã£o</h3>
-      <button class="modal-close" onclick="closeModal('modal-evolucao')">â</button>
+      <h3>📝 Registro de Evolução</h3>
+      <button class="modal-close" onclick="closeModal('modal-evolucao')">✕</button>
     </div>
     <form id="form-evolucao" onsubmit="salvarEvolucao(event)">
       <input type="hidden" id="e-paciente-id">
@@ -598,53 +597,53 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="consulta">Consulta</option>
               <option value="retorno">Retorno</option>
               <option value="procedimento">Procedimento</option>
-              <option value="urgencia">UrgÃªncia</option>
-              <option value="avaliacao">AvaliaÃ§Ã£o</option>
+              <option value="urgencia">Urgência</option>
+              <option value="avaliacao">Avaliação</option>
             </select>
           </div>
           <div class="form-group">
-            <label>PrÃ³xima consulta</label>
+            <label>Próxima consulta</label>
             <input type="date" id="e-proxima">
           </div>
         </div>
       </div>
 
       <div class="form-section">
-        <div class="form-section-title">Registro ClÃ­nico</div>
+        <div class="form-section-title">Registro Clínico</div>
         <div class="form-grid">
           <div class="form-group form-full">
             <label>Queixa principal</label>
             <textarea id="e-queixa" rows="2" placeholder="O que o paciente relata..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>Anamnese / HistÃ³rico</label>
-            <textarea id="e-anamnese" rows="2" placeholder="HistÃ³rico clÃ­nico relevante..."></textarea>
+            <label>Anamnese / Histórico</label>
+            <textarea id="e-anamnese" rows="2" placeholder="Histórico clínico relevante..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>Exame clÃ­nico</label>
-            <textarea id="e-exame" rows="3" placeholder="Achados do exame fÃ­sico, ATM, musculatura..."></textarea>
+            <label>Exame clínico</label>
+            <textarea id="e-exame" rows="3" placeholder="Achados do exame físico, ATM, musculatura..."></textarea>
           </div>
           <div class="form-group">
-            <label>DiagnÃ³stico</label>
-            <textarea id="e-diagnostico" rows="2" placeholder="HipÃ³teses e diagnÃ³sticos..."></textarea>
+            <label>Diagnóstico</label>
+            <textarea id="e-diagnostico" rows="2" placeholder="Hipóteses e diagnósticos..."></textarea>
           </div>
           <div class="form-group">
             <label>Plano de tratamento</label>
-            <textarea id="e-plano" rows="2" placeholder="Conduta e prÃ³ximos passos..."></textarea>
+            <textarea id="e-plano" rows="2" placeholder="Conduta e próximos passos..."></textarea>
           </div>
           <div class="form-group form-full">
             <label>Procedimentos realizados</label>
             <textarea id="e-procedimentos" rows="2" placeholder="Procedimentos executados nesta consulta..."></textarea>
           </div>
           <div class="form-group form-full">
-            <label>OrientaÃ§Ãµes ao paciente</label>
-            <textarea id="e-orientacoes" rows="2" placeholder="OrientaÃ§Ãµes dadas, prescriÃ§Ãµes..."></textarea>
+            <label>Orientações ao paciente</label>
+            <textarea id="e-orientacoes" rows="2" placeholder="Orientações dadas, prescrições..."></textarea>
           </div>
         </div>
       </div>
 
       <div class="form-section">
-        <div class="form-section-title">ð° Financeiro â IntegraÃ§Ã£o automÃ¡tica com IA Financeira</div>
+        <div class="form-section-title">💰 Financeiro — Integração automática com IA Financeira</div>
         <div class="form-grid-3">
           <div class="form-group">
             <label>Valor (R$)</label>
@@ -656,7 +655,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="pendente">Pendente</option>
               <option value="pago">Pago</option>
               <option value="particular">Particular (Pago)</option>
-              <option value="convenio">ConvÃªnio</option>
+              <option value="convenio">Convênio</option>
               <option value="cortesia">Cortesia</option>
             </select>
           </div>
@@ -666,18 +665,18 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
               <option value="">Selecione</option>
               <option>Dinheiro</option>
               <option>PIX</option>
-              <option>CartÃ£o de crÃ©dito</option>
-              <option>CartÃ£o de dÃ©bito</option>
-              <option>TransferÃªncia</option>
+              <option>Cartão de crédito</option>
+              <option>Cartão de débito</option>
+              <option>Transferência</option>
             </select>
           </div>
         </div>
-        <p style="font-size:12px;color:var(--text2);margin-top:8px">â¡ Ao salvar com valor e status diferente de "Pendente", o lanÃ§amento serÃ¡ enviado automaticamente para a IA Financeira.</p>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px">⚡ Ao salvar com valor e status diferente de "Pendente", o lançamento será enviado automaticamente para a IA Financeira.</p>
       </div>
 
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-evolucao')">Cancelar</button>
-        <button type="submit" class="btn btn-primary" id="btn-salvar-evo">ð¾ Salvar EvoluÃ§Ã£o</button>
+        <button type="submit" class="btn btn-primary" id="btn-salvar-evo">💾 Salvar Evolução</button>
       </div>
     </form>
   </div>
@@ -687,8 +686,8 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 <div class="modal-overlay" id="modal-agendamento">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h3>ð <span id="modal-agenda-titulo">Novo Agendamento</span></h3>
-      <button class="modal-close" onclick="closeModal('modal-agendamento')">â</button>
+      <h3>🕐 <span id="modal-agenda-titulo">Novo Agendamento</span></h3>
+      <button class="modal-close" onclick="closeModal('modal-agendamento')">✕</button>
     </div>
     <form id="form-agendamento" onsubmit="salvarAgendamento(event)">
       <input type="hidden" id="ag-id">
@@ -711,7 +710,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             <input type="datetime-local" id="ag-data-hora" required>
           </div>
           <div class="form-group">
-            <label>DuraÃ§Ã£o (min)</label>
+            <label>Duração (min)</label>
             <select id="ag-duracao">
               <option value="30">30 min</option>
               <option value="45">45 min</option>
@@ -741,8 +740,8 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             </select>
           </div>
           <div class="form-group form-full">
-            <label>ObservaÃ§Ãµes</label>
-            <textarea id="ag-obs" rows="2" placeholder="ObservaÃ§Ãµes do agendamento..."></textarea>
+            <label>Observações</label>
+            <textarea id="ag-obs" rows="2" placeholder="Observações do agendamento..."></textarea>
           </div>
         </div>
       </div>
@@ -754,11 +753,11 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
   </div>
 </div>
 
-<!-- Modal: ConfirmaÃ§Ã£o -->
+<!-- Modal: Confirmação -->
 <div class="modal-overlay" id="modal-confirma">
   <div class="modal modal-sm">
     <div class="modal-header">
-      <h3 id="confirma-titulo">Confirmar aÃ§Ã£o</h3>
+      <h3 id="confirma-titulo">Confirmar ação</h3>
     </div>
     <p id="confirma-msg" style="color:var(--text2);margin-bottom:20px"></p>
     <div class="modal-footer">
@@ -772,14 +771,14 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 <div id="toast"></div>
 
 <script>
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // CONFIG
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 const API = 'https://clinica-production-22e0.up.railway.app';
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // UTILS
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let toastTimer;
 function showToast(msg, type='info') {
   const t = document.getElementById('toast');
@@ -790,17 +789,17 @@ function showToast(msg, type='info') {
 }
 
 function formatDate(str) {
-  if (!str) return 'â';
+  if (!str) return '—';
   const d = new Date(str + (str.includes('T') ? '' : 'T00:00:00'));
   return d.toLocaleDateString('pt-BR');
 }
 function formatDateTime(str) {
-  if (!str) return 'â';
+  if (!str) return '—';
   const d = new Date(str);
   return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 function formatMoeda(v) {
-  if (!v && v !== 0) return 'â';
+  if (!v && v !== 0) return '—';
   return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 function iniciais(nome) {
@@ -826,9 +825,9 @@ async function api(method, path, body) {
   return r.json();
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
-// NAVEGAÃÃO
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
+// NAVEGAÇÃO
+// ═══════════════════════════════════════════════
 let currentView = 'dashboard';
 const views = ['dashboard','pacientes','ficha','agenda'];
 const viewTitles = {
@@ -845,7 +844,7 @@ function showView(view, extra) {
   });
   currentView = view;
 
-  // aÃ§Ãµes do topbar
+  // ações do topbar
   const acts = document.getElementById('topbar-actions');
   acts.innerHTML = '';
   if (view === 'pacientes') {
@@ -865,12 +864,12 @@ function showView(view, extra) {
   if (view === 'ficha' && extra) {
     const b1 = document.createElement('button');
     b1.className = 'btn btn-outline btn-sm';
-    b1.textContent = 'âï¸ Editar';
+    b1.textContent = '✏️ Editar';
     b1.onclick = () => openModalCadastro(extra);
     const b2 = document.createElement('button');
     b2.className = 'btn btn-primary btn-sm';
     b2.style.marginLeft = '8px';
-    b2.textContent = '+ EvoluÃ§Ã£o';
+    b2.textContent = '+ Evolução';
     b2.onclick = () => openModalEvolucao(extra.id, extra.nome);
     acts.appendChild(b1);
     acts.appendChild(b2);
@@ -881,9 +880,9 @@ function showView(view, extra) {
   if (view === 'agenda') loadAgenda();
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // DASHBOARD
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 async function loadDashboard() {
   try {
     const hoje = dataHoje();
@@ -904,10 +903,10 @@ async function loadDashboard() {
       api('GET', `/agenda?data_inicio=${inicioMes}T00:00:00&data_fim=${fimMes.toISOString().slice(0,10)}T23:59:59`).catch(() => ({ agendamentos: [] })),
     ]);
 
-    document.getElementById('stat-pacientes').textContent = pacs.total ?? 'â';
+    document.getElementById('stat-pacientes').textContent = pacs.total ?? '—';
     document.getElementById('stat-hoje').textContent = agHoje.agendamentos?.length ?? 0;
     document.getElementById('stat-semana').textContent = agSemana.agendamentos?.length ?? 0;
-    document.getElementById('stat-receita').textContent = 'â';
+    document.getElementById('stat-receita').textContent = '—';
 
     // Guardar dados para as abas
     window._dashAg = {
@@ -916,11 +915,11 @@ async function loadDashboard() {
       mes: agMes.agendamentos || []
     };
 
-    // Renderizar aba ativa (hoje por padrÃ£o)
+    // Renderizar aba ativa (hoje por padrão)
     renderProxTab('hoje');
 
-    // Ãltimas evoluÃ§Ãµes â buscar das Ãºltimas analises como proxy
-    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluÃ§Ãµes</div>';
+    // Últimas evoluções — buscar das últimas analises como proxy
+    document.getElementById('ultimas-evolucoes').innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Selecione um paciente para ver evoluções</div>';
   } catch (e) {
     console.warn('Dashboard error:', e);
   }
@@ -948,13 +947,13 @@ function renderProxTab(tab) {
   if (!el) return;
   const ags = (window._dashAg && window._dashAg[tab]) || [];
   if (ags.length === 0) {
-    const msgs = { hoje: 'Nenhuma consulta agendada para hoje', semana: 'Nenhuma consulta esta semana', mes: 'Nenhuma consulta este mÃªs' };
+    const msgs = { hoje: 'Nenhuma consulta agendada para hoje', semana: 'Nenhuma consulta esta semana', mes: 'Nenhuma consulta este mês' };
     el.innerHTML = `<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px">${msgs[tab] || 'Sem consultas'}</div>`;
     return;
   }
   el.innerHTML = ags.map(a => {
     const dt = new Date(a.data_hora || a.inicio || a.data_inicio || '');
-    const hora = dt instanceof Date && !isNaN(dt) ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : 'â';
+    const hora = dt instanceof Date && !isNaN(dt) ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) : '—';
     const dataPart = (tab !== 'hoje') ? `<span style="font-size:11px;color:var(--text2);margin-right:6px">${dt instanceof Date && !isNaN(dt) ? dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : ''}</span>` : '';
     const nome = a.paciente_nome || a.nome || a.titulo || a.title || 'Paciente';
     const tipo = a.tipo || a.procedimento || '';
@@ -969,9 +968,9 @@ function renderProxTab(tab) {
   }).join('');
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // PACIENTES
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let paginaAtual = 1;
 let totalPacientes = 0;
 let buscaAtual = '';
@@ -1000,9 +999,9 @@ function renderTabelaPacientes(pacientes) {
   if (!pacientes || pacientes.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6">
       <div class="empty-state">
-        <div class="icon">ð¥</div>
+        <div class="icon">👥</div>
         <p>Nenhum paciente encontrado</p>
-        <small>Cadastre um novo paciente para comeÃ§ar</small>
+        <small>Cadastre um novo paciente para começar</small>
       </div>
     </td></tr>`;
     return;
@@ -1018,12 +1017,12 @@ function renderTabelaPacientes(pacientes) {
           </div>
         </div>
       </td>
-      <td>${p.cpf || '<span style="color:var(--text2)">â</span>'}</td>
-      <td>${p.celular || '<span style="color:var(--text2)">â</span>'}</td>
+      <td>${p.cpf || '<span style="color:var(--text2)">—</span>'}</td>
+      <td>${p.celular || '<span style="color:var(--text2)">—</span>'}</td>
       <td>${p.plano_saude ? `<span class="badge badge-blue">${p.plano_saude}</span>` : '<span style="color:var(--text2)">Particular</span>'}</td>
       <td><span style="color:var(--text2);font-size:12px">${formatDate(p.criado_em)}</span></td>
       <td onclick="event.stopPropagation()">
-        <button class="btn-icon" title="Editar" onclick="openModalCadastro(null,'${p.id}')">âï¸</button>
+        <button class="btn-icon" title="Editar" onclick="openModalCadastro(null,'${p.id}')">✏️</button>
       </td>
     </tr>
   `).join('');
@@ -1033,15 +1032,15 @@ function renderPaginacao(total, pagina, limite) {
   const totalPags = Math.ceil(total / limite);
   const el = document.getElementById('paginacao');
   if (totalPags <= 1) { el.innerHTML = ''; return; }
-  let html = `<button class="page-btn" onclick="mudaPagina(${pagina-1})" ${pagina<=1?'disabled':''}>â</button>`;
+  let html = `<button class="page-btn" onclick="mudaPagina(${pagina-1})" ${pagina<=1?'disabled':''}>◀</button>`;
   for (let i = 1; i <= totalPags; i++) {
     if (i === pagina || i === 1 || i === totalPags || Math.abs(i - pagina) <= 1) {
       html += `<button class="page-btn ${i===pagina?'active':''}" onclick="mudaPagina(${i})">${i}</button>`;
     } else if (Math.abs(i - pagina) === 2) {
-      html += `<span style="color:var(--text2)">â¦</span>`;
+      html += `<span style="color:var(--text2)">…</span>`;
     }
   }
-  html += `<button class="page-btn" onclick="mudaPagina(${pagina+1})" ${pagina>=totalPags?'disabled':''}>â¶</button>`;
+  html += `<button class="page-btn" onclick="mudaPagina(${pagina+1})" ${pagina>=totalPags?'disabled':''}>▶</button>`;
   html += `<span style="font-size:12px;color:var(--text2);margin-left:8px">${total} pacientes</span>`;
   el.innerHTML = html;
 }
@@ -1052,9 +1051,9 @@ function mudaPagina(p) {
   window.scrollTo(0, 0);
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // FICHA DO PACIENTE
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let pacienteAtual = null;
 
 async function abrirFicha(id) {
@@ -1085,21 +1084,21 @@ function renderFicha(pac, evos, arqs) {
       <div class="profile-avatar">${iniciais(pac.nome)}</div>
       <div class="profile-info">
         <h2>${pac.nome}</h2>
-        <p>${[idade, pac.sexo, pac.profissao].filter(Boolean).join(' Â· ')}</p>
+        <p>${[idade, pac.sexo, pac.profissao].filter(Boolean).join(' · ')}</p>
         <div class="profile-meta">
-          ${pac.celular ? `<span>ð± ${pac.celular}</span>` : ''}
-          ${pac.email ? `<span>âï¸ ${pac.email}</span>` : ''}
-          ${pac.cpf ? `<span>ðªª ${pac.cpf}</span>` : ''}
-          ${pac.plano_saude ? `<span>ð¥ ${pac.plano_saude}</span>` : ''}
-          <span>ð Desde ${formatDate(pac.criado_em)}</span>
+          ${pac.celular ? `<span>📱 ${pac.celular}</span>` : ''}
+          ${pac.email ? `<span>✉️ ${pac.email}</span>` : ''}
+          ${pac.cpf ? `<span>🪪 ${pac.cpf}</span>` : ''}
+          ${pac.plano_saude ? `<span>🏥 ${pac.plano_saude}</span>` : ''}
+          <span>📅 Desde ${formatDate(pac.criado_em)}</span>
         </div>
       </div>
     </div>
 
     <div class="profile-tabs">
-      <div class="profile-tab active" id="tab-evos" onclick="switchTab('evos')">ð EvoluÃ§Ãµes (${evos.length})</div>
-      <div class="profile-tab" id="tab-arqs" onclick="switchTab('arqs')">ð Arquivos (${arqs.length})</div>
-      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">ð¤ Dados</div>
+      <div class="profile-tab active" id="tab-evos" onclick="switchTab('evos')">📝 Evoluções (${evos.length})</div>
+      <div class="profile-tab" id="tab-arqs" onclick="switchTab('arqs')">📎 Arquivos (${arqs.length})</div>
+      <div class="profile-tab" id="tab-dados" onclick="switchTab('dados')">👤 Dados</div>
     </div>
 
     <div id="tab-content-evos">${renderEvolucoes(evos, pac.id)}</div>
@@ -1120,32 +1119,32 @@ function switchTab(tab) {
 function renderEvolucoes(evos, pacId) {
   if (!evos || evos.length === 0) {
     return `<div class="empty-state">
-      <div class="icon">ð</div>
-      <p>Nenhuma evoluÃ§Ã£o registrada</p>
-      <button class="btn btn-primary" style="margin-top:14px" onclick="openModalEvolucao('${pacId}')">+ Registrar primeira evoluÃ§Ã£o</button>
+      <div class="icon">📝</div>
+      <p>Nenhuma evolução registrada</p>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="openModalEvolucao('${pacId}')">+ Registrar primeira evolução</button>
     </div>`;
   }
   return evos.map(evo => `
     <div class="evolucao-card">
       <div class="evolucao-header">
-        <span class="evolucao-date">ð ${formatDate(evo.data_consulta)}</span>
+        <span class="evolucao-date">📅 ${formatDate(evo.data_consulta)}</span>
         <span class="badge ${badgeTipo(evo.tipo)}">${evo.tipo}</span>
-        ${evo.enviado_financeiro ? '<span class="badge badge-green" title="LanÃ§amento enviado Ã  IA Financeira">ð° Financeiro â</span>' : ''}
+        ${evo.enviado_financeiro ? '<span class="badge badge-green" title="Lançamento enviado à IA Financeira">💰 Financeiro ✓</span>' : ''}
         <div style="flex:1"></div>
-        <button class="btn-icon" title="Editar" onclick="editarEvolucao('${evo.id}')">âï¸</button>
-        <button class="btn-icon" title="Excluir" onclick="confirmarExcluirEvolucao('${evo.id}')">ðï¸</button>
+        <button class="btn-icon" title="Editar" onclick="editarEvolucao('${evo.id}')">✏️</button>
+        <button class="btn-icon" title="Excluir" onclick="confirmarExcluirEvolucao('${evo.id}')">🗑️</button>
       </div>
       <div class="evolucao-body">
         ${evo.queixa_principal ? `<div class="evo-field evo-field-full"><strong>Queixa principal</strong>${evo.queixa_principal}</div>` : ''}
-        ${evo.exame_clinico ? `<div class="evo-field"><strong>Exame clÃ­nico</strong>${evo.exame_clinico}</div>` : ''}
-        ${evo.diagnostico ? `<div class="evo-field"><strong>DiagnÃ³stico</strong>${evo.diagnostico}</div>` : ''}
+        ${evo.exame_clinico ? `<div class="evo-field"><strong>Exame clínico</strong>${evo.exame_clinico}</div>` : ''}
+        ${evo.diagnostico ? `<div class="evo-field"><strong>Diagnóstico</strong>${evo.diagnostico}</div>` : ''}
         ${evo.plano_tratamento ? `<div class="evo-field"><strong>Plano</strong>${evo.plano_tratamento}</div>` : ''}
         ${evo.procedimentos_realizados ? `<div class="evo-field evo-field-full"><strong>Procedimentos realizados</strong>${evo.procedimentos_realizados}</div>` : ''}
-        ${evo.orientacoes ? `<div class="evo-field evo-field-full"><strong>OrientaÃ§Ãµes</strong>${evo.orientacoes}</div>` : ''}
+        ${evo.orientacoes ? `<div class="evo-field evo-field-full"><strong>Orientações</strong>${evo.orientacoes}</div>` : ''}
       </div>
       <div class="evolucao-footer">
         <div>
-          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)">ð Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
+          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)>�'🔁 Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           ${evo.valor ? `<span class="evo-valor">${formatMoeda(evo.valor)}</span>` : ''}
@@ -1160,10 +1159,10 @@ function renderDadosCadastrais(pac) {
   const campos = [
     ['CPF', pac.cpf], ['Celular', pac.celular], ['E-mail', pac.email],
     ['Data de nascimento', formatDate(pac.data_nascimento)],
-    ['Sexo', pac.sexo], ['ProfissÃ£o', pac.profissao],
-    ['Estado civil', pac.estado_civil], ['Plano de saÃºde', pac.plano_saude],
-    ['EndereÃ§o', pac.endereco], ['Como nos conheceu', pac.como_conheceu],
-    ['ObservaÃ§Ãµes', pac.observacoes],
+    ['Sexo', pac.sexo], ['Profissão', pac.profissao],
+    ['Estado civil', pac.estado_civil], ['Plano de saúde', pac.plano_saude],
+    ['Endereço', pac.endereco], ['Como nos conheceu', pac.como_conheceu],
+    ['Observações', pac.observacoes],
   ].filter(([, v]) => v);
   if (!campos.length) return '<p style="color:var(--text2)">Nenhum dado adicional cadastrado.</p>';
   return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">` +
@@ -1172,76 +1171,7 @@ function renderDadosCadastrais(pac) {
 }
 
 function renderArquivos(arqs, pacId) {
-  const icones = { pdf:'ð', jpg:'ð¼ï¸', jpeg:'ð¼ï¸', png:'ð¼ï¸', docx:'ð', doc:'ð', xlsx:'ð', xls:'ð', mp3:'ðµ', mp4:'ð¬', default:'ð' };
-  function icone(nome) { const ext = (nome||'').split('.').pop().toLowerCase(); return icones[ext] || icones.default; }
-  function tamanho(b) { if (!b) return ''; if (b<1024) return b+'B'; if (b<1048576) return Math.round(b/1024)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
-
-  return `
-    <div style="margin-bottom:16px">
-      <div class="upload-area" id="upload-area-${pacId}" onclick="document.getElementById('file-input-${pacId}').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event,'${pacId}')">
-        <input type="file" id="file-input-${pacId}" multiple style="display:none" onchange="uploadArquivos(this.files, '${pacId}')">
-        <div style="font-size:32px;margin-bottom:8px">ð</div>
-        <div style="font-size:14px;font-weight:600">Clique ou arraste arquivos aqui</div>
-        <div style="font-size:12px;margin-top:4px">PDF, imagens, documentos, Ã¡udios...</div>
-      </div>
-    </div>
-    ${arqs.length === 0
-      ? `<div class="empty-state"><div class="icon">ð</div><p>Nenhum arquivo</p><small>FaÃ§a upload de documentos, radiografias, laudos...</small></div>`
-      : arqs.map(a => `
-        <div class="arquivo-card" id="arq-${a.id}">
-          <div class="arquivo-icon">${icone(a.nome)}</div>
-          <div class="arquivo-info">
-            <div class="name">${a.nome}</div>
-            <div class="meta">${a.tipo_arquivo || ''} ${a.tamanho_bytes ? 'Â· ' + tamanho(a.tamanho_bytes) : ''} Â· ${formatDate(a.criado_em)}</div>
-            ${a.descricao ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${a.descricao}</div>` : ''}
-          </div>
-          <button class="btn-icon" title="Baixar" onclick="downloadArquivo('${a.id}','${a.nome}')">â¬ï¸</button>
-          <button class="btn-icon" title="Excluir" onclick="confirmarExcluirArquivo('${a.id}','${pacId}')">ðï¸</button>
-        </div>
-      `).join('')
-    }
-  `;
-}
-
-async function uploadArquivos(files, pacId) {
-  if (!files || files.length === 0) return;
-  for (const file of files) {
-    try {
-      showToast('Enviando ' + file.name + '...', 'info');
-      const b64 = await new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = e => res(e.target.result.split(',')[1]);
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-      await api('POST', `/pacientes/${pacId}/arquivos`, {
-        paciente_id: pacId,
-        nome: file.name,
-        tipo_arquivo: file.type || '',
-        conteudo_base64: b64
-      });
-      showToast(file.name + ' enviado!', 'success');
-    } catch (e) {
-      showToast('Erro ao enviar ' + file.name + ': ' + e.message, 'error');
-    }
-  }
-  // Reload ficha
-  abrirFicha(pacId);
-}
-
-function handleDrop(event, pacId) {
-  event.preventDefault();
-  document.getElementById('upload-area-' + pacId).classList.remove('drag-over');
-  uploadArquivos(event.dataTransfer.files, pacId);
-}
-
-async function downloadArquivo(id, nome) {
-  try {
-    showToast('Baixando ' + nome + '...', 'info');
-    const data = await api('GET', `/arquivos/${id}/conteudo`);
-    if (!data.conteudo_base64) { showToast('ConteÃºdo nÃ£o disponÃ­vel', 'warn'); return; }
-    const link = document.createElement('a');
-    link.href = 'data:' + (data.tipo_arquivo || 'application/octet-stream') + ';base64,' + data.conteudo_base64;
+  const icones = { pdf:'📄%%�peg:'🖻️', png:'	�k����r�F�7��	�9�r�F�3�	�9�r���7��	�8�r���3�	�8�r��3�	��Rr��C�	���r�FVfV�C�	�8�rӰ�gV�7F����6��R����R��6��7BW�B�����W��rr��7ƗB�r�r������F���vW$66R���&WGW&��6��W5�W�E����6��W2�FVfV�C�ТgV�7F���F���"���b�"�&WGW&�rs��b�#�#B�&WGW&�"�t"s��b�#�C�Ssb�&WGW&��F��&�V�B�"�#B��t�"s�&WGW&��"�C�Ssb��F�f��VB���t�"s�Р�&WGW&� ��F�b7G��S�&�&v���&�GF�ӣg�#��F�b6�73�'W��B�&V"�C�'W��B�&V�G�4�G�"��6Ɩ6��&F�7V�V�B�vWDV�V�V�D'��B�vf��R֖�WB�G�4�G�r��6Ɩ6���"��G&v�fW#�&WfV�B�&WfV�DFVfV�B���F��2�6�74Ɨ7B�FB�vG&r��fW"r�"��G&v�VfS�'F��2�6�74Ɨ7B�&V��fR�vG&r��fW"r�"��G&��&��F�TG&��WfV�B�rG�4�G�r�#�Ɩ�WBG�S�&f��R"�C�&f��R֖�WB�G�4�G�"�V�F��R7G��S�&F�7������R"��6��vS�'W��D'V�f�2�F��2�f��W2�rG�4�G�r�#��F�b7G��S�&f��B�6��S�3'���&v���&�GF�ӣ��#�	�8���F�c��F�b7G��S�&f��B�6��S�G��f��B�vV�v�C�c#�6ƗVR�R'&7FR'V�f�2V���F�c��F�b7G��S�&f��B�6��S�'���&v���F��G�#�Db���vV�2�F�7V�V�F�2�:VF��2�����F�c���F�c���F�c�G�'2��V�wF���� ���F�b6�73�&V�G��7FFR#��F�b6�73�&�6��#�	�8���F�c����V�V�'V�f�����6����f:vW��BFRF�7V�V�F�2�&F��w&f�2��VF�2�����6������F�c� ��'2����� ��F�b6�73�&'V�f��6&B"�C�&'�G��G�#��F�b6�73�&'V�f�֖6��#�G��6��R�����R����F�c��F�b6�73�&'V�f�֖�f�#��F�b6�73�&��R#�G�����W���F�c��F�b6�73�&�WF#�G��F���'V�f���rw�G��F����'�FW2�|+rr�F����F����'�FW2��rw�+rG�f�&�DFFR��7&�F��Vҗ���F�c�G��FW67&�6���F�b7G��S�&f��B�6��S�'��6���#�f"���FW�C"���&v���F��7�#�G��FW67&�6����F�c��rwТ��F�c��'WGF��6�73�&'F�֖6��"F�F�S�$&��""��6Ɩ6��&F�v���D'V�f�rG��G�r�rG�����W�r�#�*�~�����'WGF����'WGF��6�73�&'F�֖6��"F�F�S�$W�6�V�""��6Ɩ6��&6��f�&�$W�6�V�$'V�f�rG��G�r�rG�4�G�r�#�	�y�����'WGF�����F�c������rr��Т��Р�7��2gV�7F���W��D'V�f�2�f��W2�4�B����b�f��W2��f��W2��V�wF�����&WGW&㰢f�"�6��7Bf��R�bf��W2���G'���6��uF�7B�tV�f��F�r�f��R���R�r���r�v��f�r���6��7B#cB�v�B�Wr&�֗6R��&W2�&V������6��7B&VFW"��Wrf��U&VFW"����&VFW"�����B�R��&W2�R�F&vWB�&W7V�B�7ƗB�r�r��ғ��&VFW"���W'&�"�&V���&VFW"�&VD4FFU$f��R���ғ��v�B��u�5Br��6�V�FW2�G�4�G��'V�f�6���6�V�FU��C�4�B�����S�f��R���R��F���'V�f�f��R�G�R��rr��6��FWVF��&6ScC�#c@�ғ��6��uF�7B�f��R���R�rV�f�F�r�w7V66W72r����6F6��R���6��uF�7B�tW'&��V�f�"r�f��R���R�s�r�R��W76vR�vW'&�"r���ТТ��&V��Bf�6��'&�$f�6��4�B���Р�gV�7F�����F�TG&��WfV�B�4�B���WfV�B�&WfV�DFVfV�B����F�7V�V�B�vWDV�V�V�D'��B�wW��B�&V�r�4�B��6�74Ɨ7B�&V��fR�vG&r��fW"r���W��D'V�f�2�WfV�B�FFG&�6fW"�f��W2�4�B���Р�7��2gV�7F���F�v���D'V�f�B����R���G'���6��uF�7B�t&���F�r����R�r���r�v��f�r���6��7BFF�v�B��ttUBr��'V�f�2�G��G��6��FWVF�����b�FF�6��FWVF��&6ScB��6��uF�7B�t6��F\;�F��:6�F�7��:�fV�r�wv&�r��&WGW&�Т6��7BƖ��F�7V�V�B�7&VFTV�V�V�B�vr���Ɩ��&Vb�vFF�r��FF�F���'V�f���vƖ6F�����7FWB�7G&V�r��s�&6ScB�r�FF�6��FWVF��&a.conteudo_base64;
     link.download = nome;
     link.click();
   } catch (e) { showToast('Erro: ' + e.message, 'error'); }
@@ -1249,12 +1179,12 @@ async function downloadArquivo(id, nome) {
 
 function confirmarExcluirArquivo(id, pacId) {
   document.getElementById('confirma-titulo').textContent = 'Excluir arquivo';
-  document.getElementById('confirma-msg').textContent = 'Esta aÃ§Ã£o nÃ£o pode ser desfeita. Deseja excluir este arquivo?';
+  document.getElementById('confirma-msg').textContent = 'Esta ação não pode ser desfeita. Deseja excluir este arquivo?';
   document.getElementById('confirma-btn').onclick = async () => {
     try {
       await api('DELETE', `/arquivos/${id}`);
       closeModal('modal-confirma');
-      showToast('Arquivo excluÃ­do', 'success');
+      showToast('Arquivo excluído', 'success');
       abrirFicha(pacId);
     } catch (e) { showToast('Erro: ' + e.message, 'error'); }
   };
@@ -1270,15 +1200,15 @@ function badgePag(status) {
   return m[status] || 'badge-gray';
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 // MODAL CADASTRO PACIENTE
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 let editandoPacienteId = null;
 
 async function openModalCadastro(pac, idParaBuscar) {
   editandoPacienteId = null;
   document.getElementById('form-cadastro').reset();
-  document.getElementById('modal-cadastro-titulo').textContent = 'â Novo Paciente';
+  document.getElementById('modal-cadastro-titulo').textContent = '➕ Novo Paciente';
 
   if (idParaBuscar) {
     try {
@@ -1288,7 +1218,7 @@ async function openModalCadastro(pac, idParaBuscar) {
 
   if (pac && pac.id) {
     editandoPacienteId = pac.id;
-    document.getElementById('modal-cadastro-titulo').textContent = 'âï¸ Editar Paciente';
+    document.getElementById('modal-cadastro-titulo').textContent = '✏️ Editar Paciente';
     document.getElementById('p-nome').value = pac.nome || '';
     document.getElementById('p-cpf').value = pac.cpf || '';
     document.getElementById('p-celular').value = pac.celular || '';
@@ -1308,7 +1238,7 @@ async function openModalCadastro(pac, idParaBuscar) {
 async function salvarPaciente(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-salvar-paciente');
-  btn.textContent = 'Salvandoâ¦';
+  btn.textContent = 'Salvando…';
   btn.disabled = true;
   const payload = {
     nome: document.getElementById('p-nome').value,
@@ -1327,10 +1257,10 @@ async function salvarPaciente(e) {
   try {
     if (editandoPacienteId) {
       await api('PUT', `/pacientes/${editandoPacienteId}`, payload);
-      showToast('â Paciente atualizado!', 'success');
+      showToast('✅ Paciente atualizado!', 'success');
     } else {
       const novo = await api('POST', '/pacientes', payload);
-      showToast('â Paciente cadastrado!', 'success');
+      showToast('✅ Paciente cadastrado!', 'success');
       closeModal('modal-cadastro');
       abrirFicha(novo.id);
       return;
@@ -1339,16 +1269,16 @@ async function salvarPaciente(e) {
     if (currentView === 'pacientes') loadPacientes();
     if (currentView === 'ficha' && pacienteAtual?.id === editandoPacienteId) abrirFicha(editandoPacienteId);
   } catch (err) {
-    showToast('â ' + err.message, 'error');
+    showToast('❌ ' + err.message, 'error');
   } finally {
     btn.textContent = 'Salvar Paciente';
     btn.disabled = false;
   }
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
-// MODAL EVOLUÃÃO
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
+// MODAL EVOLUÇÃO
+// ═══════════════════════════════════════════════
 function openModalEvolucao(pacId, pacNome) {
   document.getElementById('form-evolucao').reset();
   document.getElementById('e-id').value = '';
@@ -1361,7 +1291,7 @@ function openModalEvolucao(pacId, pacNome) {
     document.getElementById('e-paciente-id').value = pacId;
     document.getElementById('e-busca-grupo').style.display = 'none';
     document.getElementById('e-paciente-selecionado').style.display = 'block';
-    document.getElementById('e-paciente-selecionado').textContent = 'ð¤ ' + (pacNome || pacId);
+    document.getElementById('e-paciente-selecionado').textContent = '👤 ' + (pacNome || pacId);
   } else {
     document.getElementById('e-paciente-id').value = '';
     document.getElementById('e-busca-paciente').value = '';
@@ -1369,7 +1299,7 @@ function openModalEvolucao(pacId, pacNome) {
   openModal('modal-evolucao');
 }
 
-// Busca de paciente no dropdown da evoluÃ§Ã£o
+// Busca de paciente no dropdown da evolução
 const buscarPacienteEvo = debounce(async () => {
   const q = document.getElementById('e-busca-paciente').value;
   if (q.length < 2) { document.getElementById('e-busca-dropdown').style.display = 'none'; return; }
@@ -1398,7 +1328,7 @@ async function editarEvolucao(id) {
     document.getElementById('e-paciente-id').value = evo.paciente_id;
     document.getElementById('e-busca-grupo').style.display = 'none';
     document.getElementById('e-paciente-selecionado').style.display = 'block';
-    document.getElementById('e-paciente-selecionado').textContent = 'ð Editando evoluÃ§Ã£o de ' + formatDate(evo.data_consulta);
+    document.getElementById('e-paciente-selecionado').textContent = '📝 Editando evolução de ' + formatDate(evo.data_consulta);
     document.getElementById('e-data').value = evo.data_consulta || dataHoje();
     document.getElementById('e-tipo').value = evo.tipo || 'consulta';
     document.getElementById('e-queixa').value = evo.queixa_principal || '';
@@ -1414,17 +1344,17 @@ async function editarEvolucao(id) {
     document.getElementById('e-forma-pag').value = evo.forma_pagamento || '';
     openModal('modal-evolucao');
   } catch (e) {
-    showToast('â ' + e.message, 'error');
+    showToast('❌ ' + e.message, 'error');
   }
 }
 
 async function salvarEvolucao(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-salvar-evo');
-  btn.textContent = 'Salvandoâ¦';
+  btn.textContent = 'Salvando…';
   btn.disabled = true;
   const pacId = document.getElementById('e-paciente-id').value;
-  if (!pacId) { showToast('â ï¸ Selecione um paciente', 'warn'); btn.textContent = 'ð¾ Salvar EvoluÃ§Ã£o'; btn.disabled = false; return; }
+  if (!pacId) { showToast('⚠️ Selecione um paciente', 'warn'); btn.textContent = '💾 Salvar Evolução'; btn.disabled = false; return; }
   const id = document.getElementById('e-id').value;
   const payload = {
     paciente_id: pacId,
@@ -1445,40 +1375,40 @@ async function salvarEvolucao(e) {
   try {
     if (id) {
       await api('PUT', `/evolucoes/${id}`, payload);
-      showToast('â EvoluÃ§Ã£o atualizada!', 'success');
+      showToast('✅ Evolução atualizada!', 'success');
     } else {
       await api('POST', '/evolucoes', payload);
       const statusPag = payload.status_pagamento;
       const foiEnviado = payload.valor && payload.valor > 0 && statusPag !== 'pendente';
-      showToast(foiEnviado ? 'â EvoluÃ§Ã£o salva e lanÃ§amento enviado Ã  IA Financeira!' : 'â EvoluÃ§Ã£o registrada!', 'success');
+      showToast(foiEnviado ? '✅ Evolução salva e lançamento enviado à IA Financeira!' : '✅ Evolução registrada!', 'success');
     }
     closeModal('modal-evolucao');
     if (pacienteAtual?.id === pacId) abrirFicha(pacId);
   } catch (err) {
-    showToast('â ' + err.message, 'error');
+    showToast('❌ ' + err.message, 'error');
   } finally {
-    btn.textContent = 'ð¾ Salvar EvoluÃ§Ã£o';
+    btn.textContent = '💾 Salvar Evolução';
     btn.disabled = false;
   }
 }
 
 function confirmarExcluirEvolucao(id) {
-  document.getElementById('confirma-titulo').textContent = 'Excluir evoluÃ§Ã£o';
-  document.getElementById('confirma-msg').textContent = 'Esta aÃ§Ã£o nÃ£o pode ser desfeita. Deseja excluir esta evoluÃ§Ã£o?';
+  document.getElementById('confirma-titulo').textContent = 'Excluir evolução';
+  document.getElementById('confirma-msg').textContent = 'Esta ação não pode ser desfeita. Deseja excluir esta evolução?';
   document.getElementById('confirma-btn').onclick = async () => {
     try {
       await api('DELETE', `/evolucoes/${id}`);
-      showToast('ðï¸ EvoluÃ§Ã£o excluÃ­da', 'info');
+      showToast('🗑️ Evolução excluída', 'info');
       closeModal('modal-confirma');
       if (pacienteAtual) abrirFicha(pacienteAtual.id);
-    } catch (e) { showToast('â ' + e.message, 'error'); }
+    } catch (e) { showToast('❌ ' + e.message, 'error'); }
   };
   openModal('modal-confirma');
 }
 
-// âââââââââââââââââââââââââââââââââââââââââââââââ
-// AGENDA â Google Calendar style (Dia / Semana / MÃªs)
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
+// AGENDA — Google Calendar style (Dia / Semana / Mês)
+// ═══════════════════════════════════════════════
 let _agendaView = 'semana', _agendaData = new Date();
 let _dragAgId = null; // ID do agendamento sendo arrastado
 
@@ -1543,10 +1473,10 @@ function _renderAgenda(ags) {
   if (_agendaView === 'mes') _renderMes(ags); else _renderGrade(ags);
 }
 
-// ââ Vista MÃªs ââââââââââââââââââââââââââââââââââ
+// ── Vista Mês ──────────────────────────────────
 function _renderMes(ags) {
   const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
-  const MES = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const tit = document.getElementById('agenda-titulo');
   if (tit) tit.textContent = MES[mo] + ' de ' + y;
   const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -1554,7 +1484,7 @@ function _renderMes(ags) {
   const ini = (p1.getDay() + 6) % 7;
   const byDate = {};
   ags.forEach(ag => { const k = ag.data_hora.slice(0,10); (byDate[k] = byDate[k] || []).push(ag); });
-  const DSEM = ['Seg','Ter','Qua','Qui','Sex','SÃ¡b','Dom'];
+  const DSEM = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   let h = '<div class="cal-mes-wrap"><div class="cal-mes-header-dias">' + DSEM.map(d => '<div>' + d + '</div>').join('') + '</div><div class="cal-mes-grid">';
   for (let i = 0; i < ini; i++) h += '<div class="cal-mes-celula vazia"></div>';
   for (let d = 1; d <= pn.getDate(); d++) {
@@ -1566,7 +1496,7 @@ function _renderMes(ags) {
       const hh = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
       const cor = _evColor(ag);
       const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-      h += '<div class="cal-mes-evento" style="background:' + cor + ';color:#fff" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')">' + hh + ' ' + (ag.nome_paciente || 'â') + '</div>';
+      h += '<div class="cal-mes-evento" style="background:' + cor + ';color:#fff" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')">' + hh + ' ' + (ag.nome_paciente || '—') + '</div>';
     });
     if (evts.length > 3) h += '<div class="cal-mes-mais">+' + (evts.length-3) + ' mais</div>';
     h += '</div>';
@@ -1576,16 +1506,16 @@ function _renderMes(ags) {
   if (body) body.innerHTML = h;
 }
 
-// ââ Vista Dia / Semana (grade horÃ¡ria) ââââââââ
+// ── Vista Dia / Semana (grade horária) ────────
 function _renderGrade(ags) {
   const isSingle = _agendaView === 'dia';
   const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const MESC = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const MESC = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   let days;
   if (isSingle) {
     days = [new Date(_agendaData)];
     const d2 = days[0];
-    const DSEM2 = ['Domingo','Segunda','TerÃ§a','Quarta','Quinta','Sexta','SÃ¡bado'];
+    const DSEM2 = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
     const tit = document.getElementById('agenda-titulo');
     if (tit) tit.textContent = DSEM2[d2.getDay()] + ', ' + d2.getDate() + ' de ' + MESC[d2.getMonth()] + ' de ' + d2.getFullYear();
   } else {
@@ -1594,12 +1524,12 @@ function _renderGrade(ags) {
     days = Array.from({length:7}, (_, i) => { const x = new Date(seg); x.setDate(seg.getDate() + i); return x; });
     const a = days[0], b = days[6], tit = document.getElementById('agenda-titulo');
     if (tit) tit.textContent = a.getMonth() === b.getMonth()
-      ? a.getDate() + ' â ' + b.getDate() + ' de ' + MES[a.getMonth()] + ' de ' + a.getFullYear()
-      : a.getDate() + ' de ' + MES[a.getMonth()] + ' â ' + b.getDate() + ' de ' + MES[b.getMonth()] + ' de ' + b.getFullYear();
+      ? a.getDate() + ' – ' + b.getDate() + ' de ' + MES[a.getMonth()] + ' de ' + a.getFullYear()
+      : a.getDate() + ' de ' + MES[a.getMonth()] + ' – ' + b.getDate() + ' de ' + MES[b.getMonth()] + ' de ' + b.getFullYear();
   }
   const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'];
-  const HOURS = Array.from({length:14}, (_, i) => i + 7); // 07:00 â 20:00
+  const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const HOURS = Array.from({length:14}, (_, i) => i + 7); // 07:00 – 20:00
   // Indexar por data_hora
   const map = {};
   ags.forEach(ag => {
@@ -1615,13 +1545,13 @@ function _renderGrade(ags) {
   const linhaPct = showLinha ? ((agoraHr - 7) / 14 * 100).toFixed(2) : -1;
 
   let h = '<div class="cal-scroll" id="cal-scroll-wrap"><div class="cal-grade" id="cal-grade-inner" style="grid-template-columns:52px repeat(' + ncols + ',1fr)">';
-  // CabeÃ§alho
+  // Cabeçalho
   h += '<div class="cal-grade-corner"></div>';
   days.forEach(d => {
     const isH = d.getTime() === hoje.getTime();
     h += '<div class="cal-grade-col-header' + (isH ? ' hoje-col' : '') + '"><span class="cal-dia-nome">' + DABREV[d.getDay()] + '</span><span class="cal-dia-num' + (isH ? ' hoje-num' : '') + '">' + d.getDate() + '</span></div>';
   });
-  // Slots horÃ¡rios
+  // Slots horários
   HOURS.forEach(hr => {
     h += '<div class="cal-hora-label">' + String(hr).padStart(2,'0') + ':00</div>';
     days.forEach(d => {
@@ -1634,7 +1564,7 @@ function _renderGrade(ags) {
         const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         const cor = _evColor(ag);
         const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor + '" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><strong>' + (ag.nome_paciente||'â') + '</strong><br><span style="opacity:.85;font-size:11px">' + t + ' Â· ' + (ag.tipo||'consulta') + '</span></div>';
+        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor + '" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><strong>' + (ag.nome_paciente||'—') + '</strong><br><span style="opacity:.85;font-size:11px">' + t + ' · ' + (ag.tipo||'consulta') + '</span></div>';
       });
       h += '</div>';
     });
@@ -1667,13 +1597,13 @@ function _renderGrade(ags) {
   }
 }
 
-// Clique em slot vazio â abre modal com data/hora prÃ©-preenchida
+// Clique em slot vazio → abre modal com data/hora pré-preenchida
 function _slotClick(event, dtStr) {
   if (event.target !== event.currentTarget) return; // clicou num evento
   openModalAgendamento({data_hora: dtStr});
 }
 
-// ââ Drag & Drop ââââââââââââââââââââââââââââââââ
+// ── Drag & Drop ────────────────────────────────
 function _dragStart(event, agId) {
   _dragAgId = agId;
   event.dataTransfer.effectAllowed = 'move';
@@ -1689,7 +1619,7 @@ async function _slotDrop(event, dtStr) {
     await api('PUT', '/agenda/' + agId, {data_hora: dtStr});
     showToast('Agendamento movido para ' + dtStr.replace('T',' ').slice(0,16), 'success');
     loadAgenda();
-  } catch(d) {
+  } catch(e) {
     showToast('Erro ao mover agendamento', 'error');
   }
 }
@@ -1726,12 +1656,12 @@ function openModalAgendamento(ag) {
   document.getElementById('modal-agenda-titulo').textContent = 'Novo Agendamento';
   document.getElementById('ag-busca-dropdown').style.display = 'none';
 
-  // Default: prÃ³xima meia hora
+  // Default: próxima meia hora
   const now = new Date();
   now.setMinutes(now.getMinutes() >= 30 ? 60 : 30, 0, 0);
   document.getElementById('ag-data-hora').value = now.toISOString().slice(0,16);
 
-  // Se veio data_hora (clique em slot vazio ou ediÃ§Ã£o), prÃ©-preenche
+  // Se veio data_hora (clique em slot vazio ou edição), pré-preenche
   if (ag && ag.data_hora) {
     // Normaliza: garante formato local sem zona
     const dh = new Date(ag.data_hora);
@@ -1740,7 +1670,7 @@ function openModalAgendamento(ag) {
   }
 
   if (ag && ag.id) {
-    // Modo ediÃ§Ã£o
+    // Modo edição
     document.getElementById('ag-id').value = ag.id;
     document.getElementById('modal-agenda-titulo').textContent = 'Editar Agendamento';
     document.getElementById('ag-busca-pac').value = ag.nome_paciente || '';
