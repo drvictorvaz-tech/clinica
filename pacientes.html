@@ -1483,9 +1483,13 @@ let _dragAgId = null; // ID do agendamento sendo arrastado
 
 // Mapeamento de cores por tipo/status
 function _evColor(ag) {
-  const statusMap = {agendado:'var(--accent)',confirmado:'#2563eb',cancelado:'#ef4444',realizado:'#16a34a'};
-  const tipoMap = {retorno:'#7c3aed',avaliacao:'#0891b2',urgencia:'#dc2626',procedimento:'#d97706',placa:'#0284c7'};
-  return statusMap[ag.status] || tipoMap[ag.tipo] || 'var(--accent)';
+  const m = {
+    agendado:  {bg:'#fef9c3',bd:'#ca8a04',tx:'#713f12'},
+    confirmado:{bg:'#d1fae5',bd:'#059669',tx:'#065f46'},
+    cancelado: {bg:'#fee2e2',bd:'#dc2626',tx:'#991b1b'},
+    realizado: {bg:'#f1f5f9',bd:'#64748b',tx:'#334155'}
+  };
+  return m[ag.status] || {bg:'#dbeafe',bd:'#2563eb',tx:'#1e40af'};
 }
 function _evClass(ag) {
   const sc = 'st-' + (ag.status || 'agendado');
@@ -1565,7 +1569,7 @@ function _renderMes(ags) {
       const hh = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
       const cor = _evColor(ag);
       const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-      h += '<div class="cal-mes-evento" style="background:' + cor + ';color:#fff" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')">' + hh + ' ' + (ag.nome_paciente || '—') + '</div>';
+      h += '<div class="cal-mes-evento" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + '" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><b>' + hh + '</b> ' + (ag.nome_paciente || '—') + '</div>';
     });
     if (evts.length > 3) h += '<div class="cal-mes-mais">+' + (evts.length-3) + ' mais</div>';
     h += '</div>';
@@ -1633,7 +1637,7 @@ function _renderGrade(ags) {
         const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         const cor = _evColor(ag);
         const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor + '" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><strong>' + (ag.nome_paciente||'—') + '</strong><br><span style="opacity:.85;font-size:11px">' + t + ' · ' + (ag.tipo||'consulta') + '</span></div>';
+        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
       });
       h += '</div>';
     });
