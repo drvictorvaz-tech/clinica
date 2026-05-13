@@ -936,7 +936,7 @@ function switchProxTab(tab) {
     } else {
       btn.style.background = 'transparent';
       btn.style.color = 'var(--text2)';
-      btn.style.borderColor = 'var(--border)';
+      btn.style.borderColor = 'var(--border)";
     }
   });
   renderProxTab(tab);
@@ -1144,7 +1144,7 @@ function renderEvolucoes(evos, pacId) {
       </div>
       <div class="evolucao-footer">
         <div>
-          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)>�'🔁 Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
+          ${evo.proxima_consulta ? `<span style="font-size:12px;color:var(--text2)">🔁 Retorno: <strong>${formatDate(evo.proxima_consulta)}</strong></span>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           ${evo.valor ? `<span class="evo-valor">${formatMoeda(evo.valor)}</span>` : ''}
@@ -1171,7 +1171,76 @@ function renderDadosCadastrais(pac) {
 }
 
 function renderArquivos(arqs, pacId) {
-  const icones = { pdf:'📄%%�peg:'🖻️', png:'	�k����r�F�7��	�9�r�F�3�	�9�r���7��	�8�r���3�	�8�r��3�	��Rr��C�	���r�FVfV�C�	�8�rӰ�gV�7F����6��R����R��6��7BW�B�����W��rr��7ƗB�r�r������F���vW$66R���&WGW&��6��W5�W�E����6��W2�FVfV�C�ТgV�7F���F���"���b�"�&WGW&�rs��b�#�#B�&WGW&�"�t"s��b�#�C�Ssb�&WGW&��F��&�V�B�"�#B��t�"s�&WGW&��"�C�Ssb��F�f��VB���t�"s�Р�&WGW&� ��F�b7G��S�&�&v���&�GF�ӣg�#��F�b6�73�'W��B�&V"�C�'W��B�&V�G�4�G�"��6Ɩ6��&F�7V�V�B�vWDV�V�V�D'��B�vf��R֖�WB�G�4�G�r��6Ɩ6���"��G&v�fW#�&WfV�B�&WfV�DFVfV�B���F��2�6�74Ɨ7B�FB�vG&r��fW"r�"��G&v�VfS�'F��2�6�74Ɨ7B�&V��fR�vG&r��fW"r�"��G&��&��F�TG&��WfV�B�rG�4�G�r�#�Ɩ�WBG�S�&f��R"�C�&f��R֖�WB�G�4�G�"�V�F��R7G��S�&F�7������R"��6��vS�'W��D'V�f�2�F��2�f��W2�rG�4�G�r�#��F�b7G��S�&f��B�6��S�3'���&v���&�GF�ӣ��#�	�8���F�c��F�b7G��S�&f��B�6��S�G��f��B�vV�v�C�c#�6ƗVR�R'&7FR'V�f�2V���F�c��F�b7G��S�&f��B�6��S�'���&v���F��G�#�Db���vV�2�F�7V�V�F�2�:VF��2�����F�c���F�c���F�c�G�'2��V�wF���� ���F�b6�73�&V�G��7FFR#��F�b6�73�&�6��#�	�8���F�c����V�V�'V�f�����6����f:vW��BFRF�7V�V�F�2�&F��w&f�2��VF�2�����6������F�c� ��'2����� ��F�b6�73�&'V�f��6&B"�C�&'�G��G�#��F�b6�73�&'V�f�֖6��#�G��6��R�����R����F�c��F�b6�73�&'V�f�֖�f�#��F�b6�73�&��R#�G�����W���F�c��F�b6�73�&�WF#�G��F���'V�f���rw�G��F����'�FW2�|+rr�F����F����'�FW2��rw�+rG�f�&�DFFR��7&�F��Vҗ���F�c�G��FW67&�6���F�b7G��S�&f��B�6��S�'��6���#�f"���FW�C"���&v���F��7�#�G��FW67&�6����F�c��rwТ��F�c��'WGF��6�73�&'F�֖6��"F�F�S�$&��""��6Ɩ6��&F�v���D'V�f�rG��G�r�rG�����W�r�#�*�~�����'WGF����'WGF��6�73�&'F�֖6��"F�F�S�$W�6�V�""��6Ɩ6��&6��f�&�$W�6�V�$'V�f�rG��G�r�rG�4�G�r�#�	�y�����'WGF�����F�c������rr��Т��Р�7��2gV�7F���W��D'V�f�2�f��W2�4�B����b�f��W2��f��W2��V�wF�����&WGW&㰢f�"�6��7Bf��R�bf��W2���G'���6��uF�7B�tV�f��F�r�f��R���R�r���r�v��f�r���6��7B#cB�v�B�Wr&�֗6R��&W2�&V������6��7B&VFW"��Wrf��U&VFW"����&VFW"�����B�R��&W2�R�F&vWB�&W7V�B�7ƗB�r�r��ғ��&VFW"���W'&�"�&V���&VFW"�&VD4FFU$f��R���ғ��v�B��u�5Br��6�V�FW2�G�4�G��'V�f�6���6�V�FU��C�4�B�����S�f��R���R��F���'V�f�f��R�G�R��rr��6��FWVF��&6ScC�#c@�ғ��6��uF�7B�f��R���R�rV�f�F�r�w7V66W72r����6F6��R���6��uF�7B�tW'&��V�f�"r�f��R���R�s�r�R��W76vR�vW'&�"r���ТТ��&V��Bf�6��'&�$f�6��4�B���Р�gV�7F�����F�TG&��WfV�B�4�B���WfV�B�&WfV�DFVfV�B����F�7V�V�B�vWDV�V�V�D'��B�wW��B�&V�r�4�B��6�74Ɨ7B�&V��fR�vG&r��fW"r���W��D'V�f�2�WfV�B�FFG&�6fW"�f��W2�4�B���Р�7��2gV�7F���F�v���D'V�f�B����R���G'���6��uF�7B�t&���F�r����R�r���r�v��f�r���6��7BFF�v�B��ttUBr��'V�f�2�G��G��6��FWVF�����b�FF�6��FWVF��&6ScB��6��uF�7B�t6��F\;�F��:6�F�7��:�fV�r�wv&�r��&WGW&�Т6��7BƖ��F�7V�V�B�7&VFTV�V�V�B�vr���Ɩ��&Vb�vFF�r��FF�F���'V�f���vƖ6F�����7FWB�7G&V�r��s�&6ScB�r�FF�6��FWVF��&a.conteudo_base64;
+  const icones = { pdf:'📄', jpg:'🖼️', jpeg:'🖼️', png:'🖼️', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', mp3:'🎵', mp4:'🎬', default:'📎' };
+  function icone(nome) { const ext = (nome||'').split('.').pop().toLowerCase(); return icones[ext] || icones.default; }
+  function tamanho(b) { if (!b) return ''; if (b<1024) return b+'B'; if (b<1048576) return Math.round(b/1024)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+
+  return `
+    <div style="margin-bottom:16px">
+      <div class="upload-area" id="upload-area-${pacId}" onclick="document.getElementById('file-input-${pacId}').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event,'${pacId}')">
+        <input type="file" id="file-input-${pacId}" multiple style="display:none" onchange="uploadArquivos(this.files, '${pacId}')">
+        <div style="font-size:32px;margin-bottom:8px">📎</div>
+        <div style="font-size:14px;font-weight:600">Clique ou arraste arquivos aqui</div>
+        <div style="font-size:12px;margin-top:4px">PDF, imagens, documentos, áudios...</div>
+      </div>
+    </div>
+    ${arqs.length === 0
+      ? `<div class="empty-state"><div class="icon">📎</div><p>Nenhum arquivo</p><small>Faça upload de documentos, radiografias, laudos...</small></div>`
+      : arqs.map(a => `
+        <div class="arquivo-card" id="arq-${a.id}">
+          <div class="arquivo-icon">${icone(a.nome)}</div>
+          <div class="arquivo-info">
+            <div class="name">${a.nome}</div>
+            <div class="meta">${a.tipo_arquivo || ''} ${a.tamanho_bytes ? '· ' + tamanho(a.tamanho_bytes) : ''} · ${formatDate(a.criado_em)}</div>
+            ${a.descricao ? `<div style="font-size:12px;color:var(--text2);margin-top:3px">${a.descricao}</div>` : ''}
+          </div>
+          <button class="btn-icon" title="Baixar" onclick="downloadArquivo('${a.id}','${a.nome}')">⬇️</button>
+          <button class="btn-icon" title="Excluir" onclick="confirmarExcluirArquivo('${a.id}','${pacId}')">🗑️</button>
+        </div>
+      `).join('')
+    }
+  `;
+}
+
+async function uploadArquivos(files, pacId) {
+  if (!files || files.length === 0) return;
+  for (const file of files) {
+    try {
+      showToast('Enviando ' + file.name + '...', 'info');
+      const b64 = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      await api('POST', `/pacientes/${pacId}/arquivos`, {
+        paciente_id: pacId,
+        nome: file.name,
+        tipo_arquivo: file.type || '',
+        conteudo_base64: b64
+      });
+      showToast(file.name + ' enviado!', 'success');
+    } catch (e) {
+      showToast('Erro ao enviar ' + file.name + ': ' + e.message, 'error');
+    }
+  }
+  // Reload ficha
+  abrirFicha(pacId);
+}
+
+function handleDrop(event, pacId) {
+  event.preventDefault();
+  document.getElementById('upload-area-' + pacId).classList.remove('drag-over');
+  uploadArquivos(event.dataTransfer.files, pacId);
+}
+
+async function downloadArquivo(id, nome) {
+  try {
+    showToast('Baixando ' + nome + '...', 'info');
+    const data = await api('GET', `/arquivos/${id}/conteudo`);
+    if (!data.conteudo_base64) { showToast('Conteúdo não disponível', 'warn'); return; }
+    const link = document.createElement('a');
+    link.href = 'data:' + (data.tipo_arquivo || 'application/octet-stream') + ';base64,' + data.conteudo_base64;
     link.download = nome;
     link.click();
   } catch (e) { showToast('Erro: ' + e.message, 'error'); }
