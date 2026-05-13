@@ -1646,16 +1646,30 @@ function _renderGrade(ags) {
   const body = document.getElementById('agenda-cal-body');
   if (body) {
     body.innerHTML = h;
-    // Adicionar linha de hora atual
+    // Adicionar linha de hora atual — apenas na coluna de hoje
     if (linhaPct >= 0) {
       const grade = document.getElementById('cal-grade-inner');
       if (grade) {
-        const linha = document.createElement('div');
-        linha.className = 'cal-hora-atual';
-        linha.style.top = linhaPct + '%';
-        linha.style.left = '52px';
-        grade.style.position = 'relative';
-        grade.appendChild(linha);
+        const todayStr = _fmtD(hoje);
+        const todayColIdx = days.findIndex(d => _fmtD(d) === todayStr);
+        if (todayColIdx >= 0) {
+          const linha = document.createElement('div');
+          linha.className = 'cal-hora-atual';
+          linha.style.top = linhaPct + '%';
+          grade.style.position = 'relative';
+          grade.appendChild(linha);
+          requestAnimationFrame(() => {
+            const gradeRect = grade.getBoundingClientRect();
+            const slots = grade.querySelectorAll('.cal-slot');
+            const todaySlot = slots[todayColIdx];
+            if (todaySlot) {
+              const r = todaySlot.getBoundingClientRect();
+              linha.style.left = (r.left - gradeRect.left) + 'px';
+              linha.style.right = 'auto';
+              linha.style.width = r.width + 'px';
+            }
+          });
+        }
       }
     }
     // Scroll para hora atual ou 08:00
