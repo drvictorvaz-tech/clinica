@@ -745,9 +745,15 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-agendamento')">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Salvar</button>
+      <div class="modal-footer" style="justify-content:space-between;align-items:center">
+        <div id="ag-footer-esq" style="display:none;gap:8px">
+          <button type="button" class="btn btn-danger" onclick="excluirAgendamento()">🗑 Excluir</button>
+          <button type="button" class="btn btn-outline" id="btn-ver-ficha" style="display:none" onclick="abrirFichaFromAg()">📋 Ver Ficha</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-agendamento')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
       </div>
     </form>
   </div>
@@ -1769,6 +1775,15 @@ function openModalAgendamento(ag) {
     document.getElementById('ag-obs').value = ag.observacoes || ag.obs || '';
   }
   document.getElementById('modal-agendamento').style.display = 'flex';
+  // Botões de ação (excluir / ver ficha) — só em modo edição
+  const _footerEsq = document.getElementById('ag-footer-esq');
+  const _btnFicha = document.getElementById('btn-ver-ficha');
+  if (ag && ag.id) {
+    if (_footerEsq) { _footerEsq.style.display = 'flex'; _footerEsq.style.gap = '8px'; }
+    if (_btnFicha) _btnFicha.style.display = ag.paciente_id ? 'inline-flex' : 'none';
+  } else {
+    if (_footerEsq) _footerEsq.style.display = 'none';
+  }
   // Foco no campo de busca de paciente
   setTimeout(() => { const el = document.getElementById('ag-busca-pac'); if (el) el.focus(); }, 100);
 }
@@ -1788,7 +1803,7 @@ async function salvarAgendamento(e) {
   const obs = document.getElementById('ag-obs').value;
   const nomePac = document.getElementById('ag-nome-pac').value;
 
-  if (!pacienteId) { showToast('Selecione um paciente', 'warn'); return; }
+  // paciente opcional — pode criar evento sem cadastro
   if (!dataHora) { showToast('Informe a data e hora', 'warn'); return; }
 
   const body = {
@@ -1814,6 +1829,30 @@ async function salvarAgendamento(e) {
   } catch (err) {
     showToast('Erro ao salvar agendamento', 'error');
   }
+}
+
+async function excluirAgendamento() {
+  const id = document.getElementById('ag-id').value;
+  if (!id) return;
+  document.getElementById('confirma-titulo').textContent = 'Excluir agendamento';
+  document.getElementById('confirma-msg').textContent = 'Tem certeza? Esta ação não pode ser desfeita.';
+  document.getElementById('confirma-btn').onclick = async () => {
+    try {
+      await api('DELETE', '/agenda/' + id);
+      showToast('Agendamento excluído!', 'success');
+      closeModal('modal-confirma');
+      closeModal('modal-agendamento');
+      loadAgenda();
+    } catch(err) { showToast('Erro ao excluir agendamento', 'error'); }
+  };
+  openModal('modal-confirma');
+}
+
+function abrirFichaFromAg() {
+  const pid = document.getElementById('ag-paciente-id').value;
+  if (!pid) return;
+  closeModal('modal-agendamento');
+  abrirFicha(pid);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
