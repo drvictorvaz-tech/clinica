@@ -1484,12 +1484,12 @@ let _dragAgId = null; // ID do agendamento sendo arrastado
 // Mapeamento de cores por tipo/status
 function _evColor(ag) {
   const m = {
-    agendado:  {bg:'#fef9c3',bd:'#ca8a04',tx:'#713f12'},
-    confirmado:{bg:'#d1fae5',bd:'#059669',tx:'#065f46'},
-    cancelado: {bg:'#fee2e2',bd:'#dc2626',tx:'#991b1b'},
-    realizado: {bg:'#f1f5f9',bd:'#64748b',tx:'#334155'}
+    agendado:  {bg:'#fffef0',bd:'#ca8a04',tx:'#92400e'},
+    confirmado:{bg:'#f0fdf8',bd:'#059669',tx:'#065f46'},
+    cancelado: {bg:'#fff5f5',bd:'#dc2626',tx:'#991b1b'},
+    realizado: {bg:'#f8fafc',bd:'#64748b',tx:'#475569'}
   };
-  return m[ag.status] || {bg:'#dbeafe',bd:'#2563eb',tx:'#1e40af'};
+  return m[ag.status] || {bg:'#f0f7ff',bd:'#2563eb',tx:'#1e40af'};
 }
 function _evClass(ag) {
   const sc = 'st-' + (ag.status || 'agendado');
