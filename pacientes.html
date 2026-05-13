@@ -232,7 +232,7 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
 .cal-dia-num{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-size:18px;font-weight:400;margin-top:2px}
 .cal-dia-num.hoje-num{background:var(--accent);color:#fff;font-weight:700}
 .cal-hora-label{padding:4px 8px;text-align:right;font-size:11px;color:var(--text2);border-right:1px solid var(--border);border-bottom:1px solid #f1f5f9;background:var(--surface);position:relative;top:-8px}
-.cal-slot{border-right:1px solid var(--border);border-bottom:1px solid #f1f5f9;min-height:56px;padding:2px 3px;cursor:pointer;transition:background .1s;position:relative}
+.cal-slot{border-right:1px solid var(--border);border-bottom:1px solid #f1f5f9;min-height:56px;padding:0;cursor:pointer;transition:background .1s;position:relative;overflow:visible}
 .cal-slot:hover{background:rgba(13,148,136,.05)}
 .cal-slot.drag-over{background:rgba(13,148,136,.12)!important;border:2px dashed var(--accent)}
 /* Eventos */
@@ -1643,7 +1643,9 @@ function _renderGrade(ags) {
         const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         const cor = _evColor(ag);
         const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
+        const _durMin = ag.duracao_minutos || 60;
+        const _evH = Math.round((_durMin / 60) * 56 - 4);
+        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px;position:absolute;left:3px;right:3px;top:2px;height:' + _evH + 'px;overflow:hidden;z-index:6;border-radius:4px;box-sizing:border-box" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
       });
       h += '</div>';
     });
