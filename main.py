@@ -211,9 +211,7 @@ def parsear_secoes(texto: str) -> dict:
     return secoes
 
 
-@app.get("/status")
-def status():
-    retur@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
     try:
         with open("pacientes.html", "r", encoding="utf-8") as f:
@@ -221,7 +219,9 @@ async def serve_frontend():
     except FileNotFoundError:
         return HTMLResponse(content="<h1>App not found</h1>", status_code=404)
 
-n {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "2.0-integrativo-stab"}
+@app.get("/status")
+def status():
+    return {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "2.0-integrativo-stab"}
 
 
 @app.post("/analisar")
