@@ -1490,12 +1490,12 @@ let _dragAgId = null; // ID do agendamento sendo arrastado
 // Mapeamento de cores por tipo/status
 function _evColor(ag) {
   const m = {
-    agendado:  {bg:'#fffef0',bd:'#ca8a04',tx:'#92400e'},
-    confirmado:{bg:'#f0fdf8',bd:'#059669',tx:'#065f46'},
-    cancelado: {bg:'#fff5f5',bd:'#dc2626',tx:'#991b1b'},
-    realizado: {bg:'#f8fafc',bd:'#64748b',tx:'#475569'}
+    agendado:  {bg:'#fef3c7',bd:'#d97706',tx:'#78350f'},
+    confirmado:{bg:'#bbf7d0',bd:'#059669',tx:'#064e3b'},
+    cancelado: {bg:'#fecaca',bd:'#dc2626',tx:'#7f1d1d'},
+    realizado: {bg:'#e2e8f0',bd:'#64748b',tx:'#1e293b'}
   };
-  return m[ag.status] || {bg:'#f0f7ff',bd:'#2563eb',tx:'#1e40af'};
+  return m[ag.status] || {bg:'#bfdbfe',bd:'#2563eb',tx:'#1e3a8a'};
 }
 function _evClass(ag) {
   const sc = 'st-' + (ag.status || 'agendado');
@@ -1819,6 +1819,9 @@ async function salvarAgendamento(e) {
 
   // paciente opcional — pode criar evento sem cadastro
   if (!dataHora) { showToast('Informe a data e hora', 'warn'); return; }
+  const _hIni = parseInt((document.getElementById('ag-hora-ini').value||'07:00').split(':')[0]);
+  const _hFim = parseInt((document.getElementById('ag-hora-fim').value||'08:00').split(':')[0]);
+  if (_hIni < 7 || _hFim > 21) { showToast('Horário fora do expediente (07:00 – 21:00)', 'warn'); return; }
 
   const body = {
     paciente_id: pacienteId,
