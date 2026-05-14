@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
@@ -212,7 +213,15 @@ def parsear_secoes(texto: str) -> dict:
 
 @app.get("/status")
 def status():
-    return {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "2.0-integrativo-stab"}
+    retur@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    try:
+        with open("pacientes.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>App not found</h1>", status_code=404)
+
+n {"status": "online", "modelo": "claude-sonnet-4-6", "versao": "2.0-integrativo-stab"}
 
 
 @app.post("/analisar")
