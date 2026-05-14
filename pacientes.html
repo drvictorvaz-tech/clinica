@@ -706,19 +706,19 @@ tr:hover td{background:rgba(13,148,136,.04);cursor:pointer}
             <input type="text" id="ag-nome-pac" placeholder="Nome do paciente">
           </div>
           <div class="form-group">
-            <label>Data e hora *</label>
-            <input type="datetime-local" id="ag-data-hora" required>
+            <label>Data *</label>
+            <input type="date" id="ag-data" required onchange="_agSyncHora()">
           </div>
           <div class="form-group">
-            <label>Duração (min)</label>
-            <select id="ag-duracao">
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60" selected>1 hora</option>
-              <option value="90">1h 30min</option>
-              <option value="120">2 horas</option>
-            </select>
+            <label>De *</label>
+            <input type="time" id="ag-hora-ini" required step="900" onchange="_agSyncHora()">
           </div>
+          <div class="form-group">
+            <label>Até *</label>
+            <input type="time" id="ag-hora-fim" required step="900" onchange="_agSyncHora()">
+          </div>
+          <input type="hidden" id="ag-data-hora">
+          <input type="hidden" id="ag-duracao">
           <div class="form-group">
             <label>Tipo</label>
             <select id="ag-tipo">
@@ -1754,15 +1754,23 @@ function openModalAgendamento(ag) {
   // Default: próxima meia hora
   const now = new Date();
   now.setMinutes(now.getMinutes() >= 30 ? 60 : 30, 0, 0);
-  document.getElementById('ag-data-hora').value = now.toISOString().slice(0,16);
+  const _pad = n => String(n).padStart(2,'0');
+  const _defDate = now.getFullYear() + '-' + _pad(now.getMonth()+1) + '-' + _pad(now.getDate());
+  const _defIni  = _pad(now.getHours()) + ':' + _pad(now.getMinutes());
+  const _defFim  = _pad(now.getHours()+1) + ':' + _pad(now.getMinutes());
+  document.getElementById('ag-data').value     = _defDate;
+  document.getElementById('ag-hora-ini').value = _defIni;
+  document.getElementById('ag-hora-fim').value = _defFim;
 
   // Se veio data_hora (clique em slot vazio ou edição), pré-preenche
   if (ag && ag.data_hora) {
-    // Normaliza: garante formato local sem zona
     const dh = new Date(ag.data_hora);
-    const local = new Date(dh.getTime() - dh.getTimezoneOffset() * 60000);
-    document.getElementById('ag-data-hora').value = local.toISOString().slice(0,16);
+    document.getElementById('ag-data').value     = dh.getFullYear() + '-' + _pad(dh.getMonth()+1) + '-' + _pad(dh.getDate());
+    document.getElementById('ag-hora-ini').value = _pad(dh.getHours()) + ':' + _pad(dh.getMinutes());
+    const fim = new Date(dh.getTime() + ((ag.duracao_minutos||60)*60000));
+    document.getElementById('ag-hora-fim').value = _pad(fim.getHours()) + ':' + _pad(fim.getMinutes());
   }
+  _agSyncHora();
 
   if (ag && ag.id) {
     // Modo edição
@@ -1771,7 +1779,6 @@ function openModalAgendamento(ag) {
     document.getElementById('ag-busca-pac').value = ag.nome_paciente || '';
     document.getElementById('ag-nome-pac').value = ag.nome_paciente || '';
     document.getElementById('ag-paciente-id').value = ag.paciente_id || '';
-    document.getElementById('ag-duracao').value = ag.duracao_minutos || 60;
     document.getElementById('ag-tipo').value = ag.tipo || 'consulta';
     document.getElementById('ag-status').value = ag.status || 'agendado';
     document.getElementById('ag-obs').value = ag.observacoes || ag.obs || '';
@@ -1798,8 +1805,13 @@ async function salvarAgendamento(e) {
   e.preventDefault();
   const id = document.getElementById('ag-id').value;
   const pacienteId = document.getElementById('ag-paciente-id').value;
-  const dataHora = document.getElementById('ag-data-hora').value;
-  const duracao = parseInt(document.getElementById('ag-duracao').value) || 60;
+  const _data = document.getElementById('ag-data').value;
+  const _ini  = document.getElementById('ag-hora-ini').value;
+  const _fim  = document.getElementById('ag-hora-fim').value;
+  const dataHora = _data && _ini ? _data + 'T' + _ini : document.getElementById('ag-data-hora').value;
+  const _iniMin = _ini ? parseInt(_ini.split(':')[0])*60 + parseInt(_ini.split(':')[1]) : 0;
+  const _fimMin = _fim ? parseInt(_fim.split(':')[0])*60 + parseInt(_fim.split(':')[1]) : _iniMin+60;
+  const duracao = _fimMin > _iniMin ? _fimMin - _iniMin : 60;
   const tipo = document.getElementById('ag-tipo').value;
   const status = document.getElementById('ag-status').value;
   const obs = document.getElementById('ag-obs').value;
@@ -1830,6 +1842,17 @@ async function salvarAgendamento(e) {
     loadAgenda();
   } catch (err) {
     showToast('Erro ao salvar agendamento', 'error');
+  }
+}
+
+function _agSyncHora() {
+  const data = document.getElementById('ag-data').value;
+  const ini  = document.getElementById('ag-hora-ini').value;
+  const fim  = document.getElementById('ag-hora-fim').value;
+  if (data && ini) document.getElementById('ag-data-hora').value = data + 'T' + ini;
+  if (ini && fim) {
+    const toMin = t => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
+    document.getElementById('ag-duracao').value = Math.max(toMin(fim) - toMin(ini), 15);
   }
 }
 
