@@ -1608,7 +1608,7 @@ function _renderGrade(ags) {
   }
   const hoje = new Date(); hoje.setHours(0,0,0,0);
   const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const HOURS = Array.from({length:14}, (_, i) => i + 7); // 07:00 – 20:00
+  const HOURS = Array.from({length:15}, (_, i) => i + 6); // 07:00 – 20:00
   // Indexar por data_hora
   const map = {};
   ags.forEach(ag => {
@@ -1645,7 +1645,7 @@ function _renderGrade(ags) {
         const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
         const _durMin = ag.duracao_minutos || 60;
         const _evH = Math.round((_durMin / 60) * 56 - 4);
-        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px;position:absolute;left:3px;right:3px;top:2px;height:' + _evH + 'px;overflow:hidden;z-index:6;border-radius:4px;box-sizing:border-box" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
+        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px;position:absolute;left:3px;right:3px;top:'+Math.round((new Date(ag.data_hora).getMinutes()/60)*56)+'px;height:' + _evH + 'px;overflow:hidden;z-index:6;border-radius:4px;box-sizing:border-box" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
       });
       h += '</div>';
     });
@@ -1821,7 +1821,7 @@ async function salvarAgendamento(e) {
   if (!dataHora) { showToast('Informe a data e hora', 'warn'); return; }
   const _hIni = parseInt((document.getElementById('ag-hora-ini').value||'07:00').split(':')[0]);
   const _hFim = parseInt((document.getElementById('ag-hora-fim').value||'08:00').split(':')[0]);
-  if (_hIni < 7 || _hFim > 21) { showToast('Horário fora do expediente (07:00 – 21:00)', 'warn'); return; }
+  if (_hIni < 6 || _hFim > 21) { showToast('Horário fora do expediente (07:00 – 21:00)', 'warn'); return; }
 
   const body = {
     paciente_id: pacienteId,
