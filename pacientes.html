@@ -1638,7 +1638,7 @@ function _renderGrade(ags) {
       const ds = _fmtD(d);
       const k = ds + '_' + hr;
       const slots = map[k] || [];
-      const dtStr = ds + 'T' + String(hr).padStart(2,'0') + ':00';
+      const _tzO = -new Date().getTimezoneOffset(), _tzS = (_tzO>=0?'+':'-') + String(Math.floor(Math.abs(_tzO)/60)).padStart(2,'0') + ':' + String(Math.abs(_tzO)%60).padStart(2,'0');      const dtStr = ds + 'T' + String(hr).padStart(2,'0') + ':00' + _tzS;
       h += '<div class="cal-slot" data-dt="' + dtStr + '" onclick="_slotClick(event,\'' + dtStr + '\')" ondragover="event.preventDefault();event.currentTarget.classList.add(\'drag-over\')" ondragleave="event.currentTarget.classList.remove(\'drag-over\')" ondrop="_slotDrop(event,\'' + dtStr + '\')">';
       slots.forEach(ag => {
         const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1809,7 +1809,7 @@ async function salvarAgendamento(e) {
   const _data = document.getElementById('ag-data').value;
   const _ini  = document.getElementById('ag-hora-ini').value;
   const _fim  = document.getElementById('ag-hora-fim').value;
-  const dataHora = _data && _ini ? _data + 'T' + _ini : document.getElementById('ag-data-hora').value;
+  const _tzOff = -new Date().getTimezoneOffset(), _tzSign = (_tzOff>=0?'+':'-') + String(Math.floor(Math.abs(_tzOff)/60)).padStart(2,'0') + ':' + String(Math.abs(_tzOff)%60).padStart(2,'0'); const dataHora = _data && _ini ? _data + 'T' + _ini + ':00' + _tzSign : document.getElementById('ag-data-hora').value;
   const _iniMin = _ini ? parseInt(_ini.split(':')[0])*60 + parseInt(_ini.split(':')[1]) : 0;
   const _fimMin = _fim ? parseInt(_fim.split(':')[0])*60 + parseInt(_fim.split(':')[1]) : _iniMin+60;
   const duracao = _fimMin > _iniMin ? _fimMin - _iniMin : 60;
