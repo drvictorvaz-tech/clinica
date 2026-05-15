@@ -218,6 +218,10 @@ tbody tr:last-child td{border-bottom:none}
 .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
 .dot-r{background:#059669}.dot-d{background:#dc2626}
 
+.er-clinica-sel{display:flex;gap:8px;margin-top:12px;margin-bottom:4px}
+.er-clin-btn{flex:1;padding:8px 12px;border-radius:8px;border:2px solid #e2e8f0;background:white;cursor:pointer;font-size:12px;font-weight:600;color:#64748b;transition:all .15s;text-align:center}
+.er-clin-btn.active.dtm{border-color:#1d4ed8;background:#dbeafe;color:#1d4ed8}
+.er-clin-btn.active.hernia{border-color:#059669;background:#d1fae5;color:#065f46}
 </style>
 </head>
 <body>
@@ -824,6 +828,10 @@ tbody tr:last-child td{border-bottom:none}
       <button class="er-ex" onclick="erEx('Aluguel clínica DTM R$ 3200 boleto')">🏢 Aluguel R$3200</button>
       <button class="er-ex" onclick="erEx('Royalties franquia hérnia R$ 1200 transferência')">💸 Royalties R$1200</button>
       <button class="er-ex" onclick="erEx('Retorno consulta sono R$ 80 pix')">🔄 Retorno R$80</button>
+    </div>
+    <div class="er-clinica-sel">
+      <button class="er-clin-btn active dtm" id="erClinDtm" onclick="erSetClinic('dtm')">🦷 DTM &amp; Sono</button>
+      <button class="er-clin-btn hernia" id="erClinHernia" onclick="erSetClinic('hernia')">⚕️ Dr. Hérnia SJC</button>
     </div>
     <div id="erPreview" class="er-preview">
       <div class="er-preview-title" id="erPreviewTitle">✅ Lançamento identificado — confira antes de salvar</div>
@@ -3709,6 +3717,13 @@ function _injetaBannerPlanilhas(){
   impSect.insertBefore(banner,impSect.firstChild);
 }
 let _erParsed=null;
+let _erClinica='dtm';
+function erSetClinic(c){
+  _erClinica=c;
+  document.getElementById('erClinDtm').className='er-clin-btn dtm'+(c==='dtm'?' active':'');
+  document.getElementById('erClinHernia').className='er-clin-btn hernia'+(c==='hernia'?' active':'');
+  if(document.getElementById('erInput').value.trim()) processarEntrada();
+}
 const ER_HIST_KEY='er_hist_';
 function erHistKey(){return ER_HIST_KEY+(currentUser?.id||'default');}
 
@@ -3727,9 +3742,7 @@ function parseEntradaRapida(txt){
   const t=txt.toLowerCase();
   const r={ok:false,clinica:'dtm',tipo:'receita',valor:0,data:'',pagamento:'pix',categoria:'',descricao:txt.trim()};
 
-  if(/hérnia|hernia|sjc|cirurgi/i.test(txt)) r.clinica='hernia';
-  else if(/dtm|sono|bruxismo|dor oral|oclusão|oclusal|miofunc/i.test(txt)) r.clinica='dtm';
-  else r.clinica=(typeof userClinic==='function'?userClinic():null)||'dtm';
+  r.clinica = _erClinica || 'dtm';
 
   if(/aluguel|paguei|pagamento de|conta |despesa|gasto|custo|imposto|royalt|material|energia|agua|luz|internet|software|contador|funcionári|salári|folha|marketing/i.test(t))
     r.tipo='despesa';
