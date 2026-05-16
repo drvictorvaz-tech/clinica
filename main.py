@@ -831,7 +831,7 @@ def criar_agendamento(req: AgendaCreate):
     return resp.data[0]
 
 @app.get("/agenda")
-def listar_agenda(data_inicio: Optional[str] = None, data_fim: Optional[str] = None):
+def listar_agenda(data_inicio: Optional[str] = None, data_fim: Optional[str] = None, paciente_id: Optional[str] = None):
     db = get_db()
     if not db:
         raise HTTPException(503, "Banco nao configurado.")
@@ -840,6 +840,8 @@ def listar_agenda(data_inicio: Optional[str] = None, data_fim: Optional[str] = N
         q = q.gte("data_hora", data_inicio)
     if data_fim:
         q = q.lte("data_hora", data_fim)
+    if paciente_id:
+        q = q.eq("paciente_id", paciente_id)
     resp = q.order("data_hora").execute()
     return {"agendamentos": resp.data, "total": len(resp.data)}
 
