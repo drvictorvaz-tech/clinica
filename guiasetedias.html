@@ -7,70 +7,162 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Georgia, sans-serif; background: #0a0f1a; color: #fff; }
-  .hero { background: linear-gradient(135deg, #0a0f1a 0%, #0f2040 50%, #0a0f1a 100%); text-align: center; padding: 70px 20px 60px; border-bottom: 1px solid #1e3a5f; }
-  .badge { display: inline-block; background: #0ea5e9; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 6px 18px; border-radius: 30px; margin-bottom: 24px; }
-  .hero h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 900; line-height: 1.1; margin-bottom: 20px; color: #fff; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0a0f1a 0%, #0f2040 50%, #0a0f1a 100%);
+    text-align: center; padding: 70px 20px 60px;
+    border-bottom: 1px solid #1e3a5f;
+  }
+  .badge {
+    display: inline-block; background: #0ea5e9; color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; padding: 6px 18px; border-radius: 30px;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 56px); font-weight: 900;
+    line-height: 1.1; margin-bottom: 20px; color: #fff;
+  }
   .hero h1 span { color: #38bdf8; }
-  .hero .sub { font-size: 19px; color: #93c5fd; max-width: 680px; margin: 0 auto 36px; line-height: 1.6; }
-  .cta-hero { display: inline-block; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #fff; font-size: 20px; font-weight: 800; padding: 18px 48px; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 30px rgba(14,165,233,0.45); transition: transform 0.2s; }
+  .hero .sub {
+    font-size: 19px; color: #93c5fd; max-width: 680px;
+    margin: 0 auto 36px; line-height: 1.6;
+  }
+  .cta-hero {
+    display: inline-block;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    color: #fff; font-size: 20px; font-weight: 800;
+    padding: 18px 48px; border-radius: 50px; text-decoration: none;
+    box-shadow: 0 8px 30px rgba(14,165,233,0.45);
+    transition: transform 0.2s;
+  }
   .cta-hero:hover { transform: scale(1.04); }
   .garantia-txt { font-size: 13px; color: #9ca3af; margin-top: 14px; }
+
+  /* SEÇÃO GENÉRICA */
   .secao { padding: 70px 20px; max-width: 860px; margin: 0 auto; }
   .secao-alt { background: #080d18; padding: 70px 20px; }
   .secao-alt-inner { max-width: 860px; margin: 0 auto; }
-  .secao-titulo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 36px; color: #fff; line-height: 1.2; }
+  .secao-titulo {
+    font-size: 34px; font-weight: 800; text-align: center;
+    margin-bottom: 36px; color: #fff; line-height: 1.2;
+  }
   .secao-titulo span { color: #38bdf8; }
-  .sintomas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 36px; }
-  .sintoma { background: #0f2040; border: 1px solid #1e3a5f; border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 12px; }
+
+  /* SINTOMAS */
+  .sintomas-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px; margin-bottom: 36px;
+  }
+  .sintoma {
+    background: #0f2040; border: 1px solid #1e3a5f;
+    border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 12px;
+  }
   .sintoma .icon { font-size: 22px; }
   .sintoma p { font-size: 14px; color: #93c5fd; line-height: 1.4; }
-  .citacao { background: #0f2040; border-left: 4px solid #0ea5e9; border-radius: 12px; padding: 28px; text-align: center; margin-top: 10px; }
+
+  /* CITAÇÃO */
+  .citacao {
+    background: #0f2040; border-left: 4px solid #0ea5e9;
+    border-radius: 12px; padding: 28px; text-align: center; margin-top: 10px;
+  }
   .citacao p { font-size: 17px; color: #bfdbfe; line-height: 1.7; }
   .citacao strong { color: #fff; }
   .citacao em { color: #38bdf8; font-style: normal; font-weight: 700; }
+
+  /* O QUE VOCÊ RECEBE */
   .recebe-lista { display: flex; flex-direction: column; gap: 14px; }
-  .recebe-item { display: flex; align-items: flex-start; gap: 16px; background: #0f2040; border: 1px solid #1e3a5f; border-radius: 12px; padding: 20px; }
-  .recebe-check { background: #0ea5e9; color: #fff; font-size: 16px; font-weight: 900; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .recebe-item {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: #0f2040; border: 1px solid #1e3a5f;
+    border-radius: 12px; padding: 20px;
+  }
+  .recebe-check {
+    background: #0ea5e9; color: #fff; font-size: 16px; font-weight: 900;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
   .recebe-txt h3 { font-size: 16px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; }
   .recebe-txt p { font-size: 14px; color: #9ca3af; line-height: 1.5; }
-  .dias-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 32px; }
-  .dia-card { background: #0f2040; border: 1px solid #1e3a5f; border-radius: 12px; padding: 18px; text-align: center; }
+
+  /* PROTOCOLO DIAS */
+  .dias-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-top: 32px;
+  }
+  .dia-card {
+    background: #0f2040; border: 1px solid #1e3a5f;
+    border-radius: 12px; padding: 18px; text-align: center;
+  }
   .dia-num { font-size: 28px; font-weight: 900; color: #0ea5e9; margin-bottom: 6px; }
   .dia-nome { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
   .dia-desc { font-size: 12px; color: #9ca3af; line-height: 1.4; }
+
+  /* AUTOR */
   .autor { padding: 70px 20px; max-width: 700px; margin: 0 auto; text-align: center; }
-  .autor-card { background: #0f2040; border: 1px solid #1e3a5f; border-radius: 20px; padding: 40px; }
-  .autor-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #0ea5e9, #38bdf8); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .autor-card {
+    background: #0f2040; border: 1px solid #1e3a5f;
+    border-radius: 20px; padding: 40px;
+  }
+  .autor-avatar {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    margin: 0 auto 16px; display: flex; align-items: center;
+    justify-content: center; font-size: 40px;
+  }
   .autor h3 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
   .autor .cargo { color: #38bdf8; font-size: 14px; margin-bottom: 16px; }
   .autor p { font-size: 15px; color: #9ca3af; line-height: 1.7; }
+
+  /* PREÇO */
   .preco-bloco { background: #080d18; padding: 70px 20px; text-align: center; }
-  .preco-card { background: linear-gradient(135deg, #0f2040, #0a2050); border: 2px solid #0ea5e9; border-radius: 24px; max-width: 480px; margin: 0 auto; padding: 48px 32px; }
+  .preco-card {
+    background: linear-gradient(135deg, #0f2040, #0a2050);
+    border: 2px solid #0ea5e9; border-radius: 24px;
+    max-width: 480px; margin: 0 auto; padding: 48px 32px;
+  }
   .preco-de { color: #6b7280; text-decoration: line-through; font-size: 16px; margin-bottom: 8px; }
   .preco-por { font-size: 64px; font-weight: 900; color: #fff; line-height: 1; }
   .preco-por span { font-size: 28px; vertical-align: top; margin-top: 10px; display: inline-block; }
   .preco-cents { font-size: 28px; }
   .preco-desc { color: #38bdf8; font-size: 14px; margin: 12px 0 28px; }
-  .cta-comprar { display: block; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #fff; font-size: 20px; font-weight: 800; padding: 18px 32px; border-radius: 50px; text-decoration: none; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(14,165,233,0.45); transition: transform 0.2s; }
+  .cta-comprar {
+    display: block;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    color: #fff; font-size: 20px; font-weight: 800;
+    padding: 18px 32px; border-radius: 50px; text-decoration: none;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(14,165,233,0.45);
+    transition: transform 0.2s;
+  }
   .cta-comprar:hover { transform: scale(1.04); }
   .garantia-info { color: #9ca3af; font-size: 13px; line-height: 1.6; }
   .garantia-info strong { color: #fff; }
-  footer { text-align: center; padding: 30px 20px; color: #4b5563; font-size: 12px; border-top: 1px solid #1f2937; }
+
+  footer {
+    text-align: center; padding: 30px 20px;
+    color: #4b5563; font-size: 12px; border-top: 1px solid #1f2937;
+  }
 </style>
 </head>
 <body>
+
+<!-- HERO -->
 <section class="hero">
   <div class="badge">Protocolo Clínico · Dr. Victor Vaz</div>
   <h1>7 Dias <span>Sem Dor</span><br>e Sem Inchaço</h1>
   <p class="sub">O protocolo anti-inflamatório completo que elimina dor e inchaço em 7 dias — alimentação, sono, suplementação e movimento. Sem dieta radical.</p>
-  <a href="#comprar" class="cta-hero">📥 Quero o Guia por R$29,90</a>
+  <a href="https://pay.kiwify.com.br/Kyn1SRD" class="cta-hero">📥 Quero o Guia por R$29,90</a>
   <p class="garantia-txt">✅ Garantia de 7 dias · Acesso imediato · PDF completo</p>
 </section>
+
+<!-- PROBLEMA -->
 <section class="secao">
-  <h2 class="secao-titulo">Você acorda com dor?<br><span>Isso não é normal — e tem solução.</span></h2>
+  <h2 class="secao-titulo">Vocë acorda com dor?<br><span>Isso não é normal — e tem solução.</span></h2>
   <div class="sintomas-grid">
     <div class="sintoma"><span class="icon">🤕</span><p>Dor de cabeça ao acordar todo dia</p></div>
-    <div class="sintoma"><span class="icon">🪶</span><p>Corpo inchado sem motivo aparente</p></div>
+    <div class="sintoma"><span class="icon">🫶</span><p>Corpo inchado sem motivo aparente</p></div>
     <div class="sintoma"><span class="icon">😴</span><p>Dorme mal há meses ou anos</p></div>
     <div class="sintoma"><span class="icon">😩</span><p>Pescoço travado ou tensão constante</p></div>
     <div class="sintoma"><span class="icon">🥱</span><p>Fadiga que não passa mesmo descansando</p></div>
@@ -80,20 +172,66 @@
     <p>Esses são sinais clássicos de <em>inflamação crônica de baixo grau</em> — um processo silencioso que acontece quando alimentação, sono e estresse estão desregulados.<br><br><strong>"A inflamação crônica é a raiz de quase toda dor persistente. E ela responde surpreendentemente rápido quando você remove os gatilhos certos."</strong><br><br>— Dr. Victor Vaz</p>
   </div>
 </section>
+
+<!-- O QUE VOCÊ RECEBE -->
 <section class="secao-alt">
   <div class="secao-alt-inner">
     <h2 class="secao-titulo">O que está dentro do guia</h2>
     <div class="recebe-lista">
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Lista completa de alimentos proibidos e permitidos</h3><p>Os alimentos que estão te inflamando agora — e os que vão te curar. Direto ao ponto, sem enrolação.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Cardápio dia a dia dos 7 dias completo</h3><p>Cada refeição, cada horário. Do protocolo da água ao chá antes de dormir.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Protocolo da água com cloreto de magnésio</h3><p>A base de tudo. 640ml em jejum — o ritual que ativa o metabolismo e hidrata os órgãos.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Rotina de sono anti-inflamatória em 7 passos</h3><p>O sono ruim inflama. O sono certo cura. Aprenda a transformar a noite em recuperação.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>6 suplementos com doses exatas</h3><p>Magnésio, Ômega-3, D3+K2, CoQ10 e mais — doses certas, horários certos, efeito real.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Exercícios para quem tem dor crônica</h3><p>Movimentos que aliviam sem agravar. Criados para quem está com dor e não pode forçar.</p></div></div>
-      <div class="recebe-item"><div class="recebe-check">✓</div><div class="recebe-txt"><h3>Checklist diário imprimível</h3><p>Um checklist por dia para você não esquecer nada e acompanhar sua evolução.</p></div></div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Lista completa de alimentos proibidos e permitidos</h3>
+          <p>Os alimentos que estão te inflamando agora — e os que vão te curar. Direto ao ponto, sem enrolação.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Cardápio dia a dia dos 7 dias completo</h3>
+          <p>Cada refeição, cada horário. Do protocolo da água ao chá antes de dormir.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Protocolo da água com cloreto de magnésio</h3>
+          <p>A base de tudo. 640ml em jejum — o ritual que ativa o metabolismo e hidrata os órgãos.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Rotina de sono anti-inflamatória em 7 passos</h3>
+          <p>O sono ruim inflama. O sono certo cura. Aprenda a transformar a noite em recuperação.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>6 suplementos com doses exatas</h3>
+          <p>Magnésio, Ômega-3, D3+K2, CoQ10 e mais — doses certas, horários certos, efeito real.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Exercícios para quem tem dor crônica</h3>
+          <p>Movimentos que aliviam sem agravar. Criados para quem está com dor e não pode forçar.</p>
+        </div>
+      </div>
+      <div class="recebe-item">
+        <div class="recebe-check">✓</div>
+        <div class="recebe-txt">
+          <h3>Checklist diário imprimível</h3>
+          <p>Um checklist por dia para você não esquecer nada e acompanhar sua evolução.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+
+<!-- OS 7 DIAS -->
 <section class="secao">
   <h2 class="secao-titulo">Os <span>7 dias</span> — cada dia tem um foco</h2>
   <div class="dias-grid">
@@ -106,6 +244,8 @@
     <div class="dia-card"><div class="dia-num">7</div><div class="dia-nome">Consolidação</div><div class="dia-desc">Transformar 7 dias em hábito permanente</div></div>
   </div>
 </section>
+
+<!-- AUTOR -->
 <section class="autor">
   <div class="autor-card">
     <div class="autor-avatar">👨‍⚕️</div>
@@ -114,17 +254,21 @@
     <p>Mais de 20 anos de clínica especializada. Este guia traz o protocolo exato que o Dr. Victor usa com seus pacientes — as mesmas orientações que custam centenas de reais em consulta, agora acessíveis para qualquer pessoa que esteja sofrendo com dor e inflamação crônica.</p>
   </div>
 </section>
+
+<!-- PREÇO -->
 <section class="preco-bloco" id="comprar">
   <div class="preco-card">
     <p class="preco-de">De R$97</p>
     <p class="preco-por"><span>R$</span>29<span class="preco-cents">,90</span></p>
     <p class="preco-desc">Pagamento único · Acesso imediato · PDF completo</p>
-    <a href="#" class="cta-comprar">📥 Quero o Guia Agora</a>
+    <a href="https://pay.kiwify.com.br/Kyn1SRD" class="cta-comprar">📥 Quero o Guia Agora</a>
     <p class="garantia-info">🛡️ Garantia incondicional de <strong>7 dias</strong>.<br>Se não gostar por qualquer motivo, devolvemos 100%.</p>
   </div>
 </section>
+
 <footer>
   <p>© 2026 Dr. Victor Vaz · Clínica Dr. Victor Vaz · Balneário Camboriú, SC<br>Este produto é educativo e não substitui consulta médica ou odontológica.</p>
 </footer>
+
 </body>
 </html>
