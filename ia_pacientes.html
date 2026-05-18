@@ -1233,5 +1233,11 @@ function exportOdonto(){
     const anyMarked=Object.values(v).some(x=>x!=='normal');
     if(anyMarked)output[k]=v;
   });
-  const blob=new Blob([JSON.stringify({odontograma:output,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
-  const a=document.cr
+  const blob=new Blob([JSON.stringify({odontograma:output,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='odontograma_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+</script>
+</body>
+</html>
