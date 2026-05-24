@@ -661,432 +661,6 @@ window._capimDataPromise = (async function(){
 })();
 
 
-// ============================================================
-// AGENDA — offline mode (CAPIM data + localStorage)
-// ============================================================
-let _agendaView = 'semana';
-let _agendaData = new Date();
-let _dragAgId = null;
-const _AG_KEY = 'ia_agenda_custom';
-
-function _agGetAll() {
-  // Merge CAPIM appointments with localStorage custom ones
-  const capim = (window.CAPIM_DATA && window.CAPIM_DATA.appointments) ? window.CAPIM_DATA.appointments : [];
-  let custom = [];
-  try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
-  // Normalize CAPIM appointments
-  const norm = capim.map(a => ({
-    id: 'capim_' + (a.id || Math.random()),
-    paciente_id: a.patientId || a.patient_id || '',
-    nome_paciente: a.patientName || a.nome_paciente || a.patient_name || '',
-    data_hora: a.dateTime || a.data_hora || a.datetime || '',
-    duracao_minutos: a.duration || a.duracao_minutos || 60,
-    tipo: (a.type || a.tipo || 'consulta').toLowerCase(),
-    status: (a.status || 'agendado').toLowerCase(),
-    obs: a.notes || a.obs || ''
-  })).filter(a => a.data_hora);
-  return [...norm, ...custom];
-}
-
-function _agSave(list) {
-  const custom = list.filter(a => !String(a.id).startsWith('capim_'));
-  localStorage.setItem(_AG_KEY, JSON.stringify(custom));
-}
-
-function _fmtD(d) { return d.toISOString().slice(0, 10); }
-
-function _evColor(ag) {
-  const m = {
-    agendado:  {bg:'rgba(13,115,119,.3)',bd:'#0d7377',tx:'#a7ffeb'},
-    confirmado:{bg:'rgba(37,99,235,.3)',bd:'#2563eb',tx:'#bfdbfe'},
-    cancelado: {bg:'rgba(220,38,38,.3)',bd:'#dc2626',tx:'#fecaca'},
-    realizado: {bg:'rgba(100,116,139,.3)',bd:'#64748b',tx:'#e2e8f0'},
-    falta:     {bg:'rgba(249,115,22,.3)',bd:'#f97316',tx:'#fed7aa'}
-  };
-  return m[(ag.status||'agendado').toLowerCase()] || {bg:'rgba(37,99,235,.3)',bd:'#2563eb',tx:'#bfdbfe'};
-}
-
-function _evClass(ag) {
-  const sc = 'st-' + (ag.status || 'agendado');
-  const tc = ag.tipo && !['consulta'].includes(ag.tipo) ? ' tp-' + ag.tipo.toLowerCase().replace(/\s+/g,'') : '';
-  return sc + tc;
-}
-
-function setAgendaView(v) {
-  _agendaView = v;
-  ['dia','semana','mes'].forEach(m => {
-    const b = document.getElementById('btn-view-' + m);
-    if (b) b.classList.toggle('btn-view-ativo', m === v);
-  });
-  loadAgenda();
-}
-
-function agendaNavegar(dir) {
-  const d = new Date(_agendaData);
-  if (_agendaView === 'dia') d.setDate(d.getDate() + dir);
-  else if (_agendaView === 'semana') d.setDate(d.getDate() + dir * 7);
-  else d.setMonth(d.getMonth() + dir);
-  _agendaData = d;
-  loadAgenda();
-}
-
-function agendaHoje() { _agendaData = new Date(); loadAgenda(); }
-
-function loadAgenda() {
-  let ini, fim;
-  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
-  if (_agendaView === 'dia') {
-    ini = fim = _fmtD(_agendaData);
-  } else if (_agendaView === 'semana') {
-    const dow = _agendaData.getDay();
-    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
-    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
-    ini = _fmtD(seg); fim = _fmtD(dom);
-  } else {
-    ini = _fmtD(new Date(y, mo, 1));
-    fim = _fmtD(new Date(y, mo + 1, 0));
-  }
-  const all = _agGetAll();
-  const filtered = all.filter(ag => {
-    const d = ag.data_hora.slice(0,10);
-    return d >= ini && d <= fim;
-  });
-  _renderAgenda(filtered);
-}
-
-function _renderAgenda(ags) {
-  if (_agendaView === 'mes') _renderMes(ags); else _renderGrade(ags);
-}
-
-function _renderMes(ags) {
-  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
-  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const tit = document.getElementById('agenda-titulo');
-  if (tit) tit.textContent = MES[mo] + ' de ' + y;
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const p1 = new Date(y,mo,1), pn = new Date(y,mo+1,0);
-  const ini = (p1.getDay() + 6) % 7;
-  const byDate = {};
-  ags.forEach(ag => { const k = ag.data_hora.slice(0,10); (byDate[k] = byDate[k] || []).push(ag); });
-  const DSEM = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-  let h = '<div class="cal-mes-wrap"><div class="cal-mes-header-dias">' + DSEM.map(d => '<div>' + d + '</div>').join('') + '</div><div class="cal-mes-grid">';
-  for (let i = 0; i < ini; i++) h += '<div class="cal-mes-celula vazia"></div>';
-  for (let d = 1; d <= pn.getDate(); d++) {
-    const dt = new Date(y,mo,d), ds = _fmtD(dt), isH = dt.getTime() === hoje.getTime();
-    const evts = (byDate[ds] || []).sort((a,b) => a.data_hora > b.data_hora ? 1 : -1);
-    h += '<div class="cal-mes-celula' + (isH ? ' hoje-cel' : '') + '" onclick="_agendaData=new Date(' + y + ',' + mo + ',' + d + ');setAgendaView(\'dia\')">';
-    h += '<div class="cal-mes-num' + (isH ? ' hoje-num' : '') + '">' + d + '</div>';
-    evts.slice(0,3).forEach(ag => {
-      const hh = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      const cor = _evColor(ag);
-      const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-      h += '<div class="cal-mes-evento" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + '" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><b>' + hh + '</b> ' + (ag.nome_paciente || '—') + '</div>';
-    });
-    if (evts.length > 3) h += '<div class="cal-mes-mais">+' + (evts.length-3) + ' mais</div>';
-    h += '</div>';
-  }
-  h += '</div></div>';
-  const body = document.getElementById('agenda-cal-body');
-  if (body) body.innerHTML = h;
-}
-
-function _renderGrade(ags) {
-  const isSingle = _agendaView === 'dia';
-  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const MESC = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  let days;
-  if (isSingle) {
-    days = [new Date(_agendaData)];
-    const d2 = days[0];
-    const DSEM2 = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-    const tit = document.getElementById('agenda-titulo');
-    if (tit) tit.textContent = DSEM2[d2.getDay()] + ', ' + d2.getDate() + ' de ' + MESC[d2.getMonth()] + ' de ' + d2.getFullYear();
-  } else {
-    const dow = _agendaData.getDay();
-    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
-    days = Array.from({length:7}, (_, i) => { const x = new Date(seg); x.setDate(seg.getDate() + i); return x; });
-    const a = days[0], b = days[6], tit = document.getElementById('agenda-titulo');
-    if (tit) tit.textContent = a.getMonth() === b.getMonth()
-      ? a.getDate() + ' – ' + b.getDate() + ' de ' + MES[a.getMonth()] + ' de ' + a.getFullYear()
-      : a.getDate() + ' de ' + MES[a.getMonth()] + ' – ' + b.getDate() + ' de ' + MES[b.getMonth()] + ' de ' + b.getFullYear();
-  }
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const HOURS = Array.from({length:15}, (_, i) => i + 7); // 07:00 – 21:00
-  const map = {};
-  ags.forEach(ag => {
-    const dt = new Date(ag.data_hora);
-    const k = _fmtD(dt) + '_' + dt.getHours();
-    (map[k] = map[k] || []).push(ag);
-  });
-  const ncols = days.length;
-  const agora = new Date();
-  const agoraHr = agora.getHours() + agora.getMinutes() / 60;
-  const showLinha = agoraHr >= 7 && agoraHr <= 21;
-  const linhaPct = showLinha ? ((agoraHr - 7) / 14 * 100).toFixed(2) : -1;
-
-  let h = '<div class="cal-scroll" id="cal-scroll-wrap"><div class="cal-grade" id="cal-grade-inner" style="grid-template-columns:52px repeat(' + ncols + ',1fr)">';
-  h += '<div class="cal-grade-corner"></div>';
-  days.forEach(d => {
-    const isH = d.getTime() === hoje.getTime();
-    h += '<div class="cal-grade-col-header' + (isH ? ' hoje-col' : '') + '"><span class="cal-dia-nome">' + DABREV[d.getDay()] + '</span><span class="cal-dia-num' + (isH ? ' hoje-num' : '') + '">' + d.getDate() + '</span></div>';
-  });
-  HOURS.forEach(hr => {
-    h += '<div class="cal-hora-label">' + String(hr).padStart(2,'0') + ':00</div>';
-    days.forEach(d => {
-      const ds = _fmtD(d);
-      const k = ds + '_' + hr;
-      const slots = map[k] || [];
-      const dtStr = ds + 'T' + String(hr).padStart(2,'0') + ':00';
-      h += '<div class="cal-slot" data-dt="' + dtStr + '" onclick="_slotClick(event,\'' + dtStr + '\')" ondragover="event.preventDefault();event.currentTarget.classList.add(\'drag-over\')" ondragleave="event.currentTarget.classList.remove(\'drag-over\')" ondrop="_slotDrop(event,\'' + dtStr + '\')">';
-      slots.forEach(ag => {
-        const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        const cor = _evColor(ag);
-        const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
-        const _durMin = ag.duracao_minutos || 60;
-        const _evH = Math.max(Math.round((_durMin / 60) * 56 - 4), 28);
-        const _topPx = Math.round((new Date(ag.data_hora).getMinutes()/60)*56);
-        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px;position:absolute;left:3px;right:3px;top:' + _topPx + 'px;height:' + _evH + 'px;overflow:hidden;z-index:6;border-radius:4px;box-sizing:border-box" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
-      });
-      h += '</div>';
-    });
-  });
-  h += '</div></div>';
-  const body = document.getElementById('agenda-cal-body');
-  if (body) {
-    body.innerHTML = h;
-    if (linhaPct >= 0) {
-      const grade = document.getElementById('cal-grade-inner');
-      if (grade) {
-        const todayStr = _fmtD(hoje);
-        const todayColIdx = days.findIndex(d => _fmtD(d) === todayStr);
-        if (todayColIdx >= 0) {
-          const linha = document.createElement('div');
-          linha.className = 'cal-hora-atual';
-          linha.style.top = linhaPct + '%';
-          grade.style.position = 'relative';
-          grade.appendChild(linha);
-          requestAnimationFrame(() => {
-            const gradeRect = grade.getBoundingClientRect();
-            const allSlots = grade.querySelectorAll('.cal-slot');
-            const todaySlot = allSlots[todayColIdx];
-            if (todaySlot) {
-              const r = todaySlot.getBoundingClientRect();
-              linha.style.left = (r.left - gradeRect.left) + 'px';
-              linha.style.right = 'auto';
-              linha.style.width = r.width + 'px';
-            }
-          });
-        }
-      }
-    }
-    setTimeout(() => {
-      const scroll = document.getElementById('cal-scroll-wrap');
-      if (scroll) {
-        const targetHr = showLinha ? Math.max(agoraHr - 1, 7) : 8;
-        const pct = (targetHr - 7) / 14;
-        scroll.scrollTop = pct * scroll.scrollHeight * 0.85;
-      }
-    }, 50);
-  }
-}
-
-function _slotClick(event, dtStr) {
-  if (event.target !== event.currentTarget) return;
-  openModalAgendamento({data_hora: dtStr});
-}
-
-function _dragStart(event, agId) {
-  _dragAgId = agId;
-  event.dataTransfer.effectAllowed = 'move';
-  setTimeout(() => { if(event.target) event.target.classList.add('dragging'); }, 0);
-}
-
-function _slotDrop(event, dtStr) {
-  event.preventDefault();
-  event.currentTarget.classList.remove('drag-over');
-  if (!_dragAgId) return;
-  const agId = _dragAgId; _dragAgId = null;
-  // Only allow moving custom appointments (not CAPIM ones)
-  if (String(agId).startsWith('capim_')) {
-    toast('Agendamentos Capim não podem ser movidos aqui');
-    return;
-  }
-  const all = _agGetAll();
-  const idx = all.findIndex(a => a.id == agId);
-  if (idx >= 0) {
-    all[idx].data_hora = dtStr;
-    _agSave(all);
-    toast('Agendamento movido!');
-    loadAgenda();
-  }
-}
-
-// Busca de paciente para agendamento — usa dados CAPIM
-const buscarPacienteAg = (function() {
-  let timer;
-  return function() {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      const q = (document.getElementById('ag-busca-pac').value || '').toLowerCase().trim();
-      const dd = document.getElementById('ag-busca-dropdown');
-      if (!dd) return;
-      if (q.length < 2) { dd.style.display = 'none'; return; }
-      const patients = (window.CAPIM_DATA && window.CAPIM_DATA.patients) ? window.CAPIM_DATA.patients : [];
-      const results = patients.filter(p => (p.name||p.nome||'').toLowerCase().includes(q)).slice(0,8);
-      dd.innerHTML = results.map(p =>
-        '<div style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)" ' +
-        'onmouseover="this.style.background=\'rgba(13,115,119,.15)\'" onmouseout="this.style.background=\'\'" ' +
-        'onclick="selecionarPacienteAg(\'' + (p.id||p._id||'') + '\',\'' + (p.name||p.nome||'').replace(/\'/g,"\\'") + '\')">' +
-        '<strong>' + (p.name||p.nome||'') + '</strong>' +
-        '</div>'
-      ).join('') || '<div style="padding:12px;color:var(--text2)">Nenhum paciente encontrado</div>';
-      dd.style.display = 'block';
-    }, 250);
-  };
-})();
-
-function selecionarPacienteAg(id, nome) {
-  document.getElementById('ag-paciente-id').value = id;
-  document.getElementById('ag-busca-pac').value = nome;
-  document.getElementById('ag-nome-pac').value = nome;
-  document.getElementById('ag-busca-dropdown').style.display = 'none';
-}
-
-function openModalAgendamento(ag) {
-  const f = document.getElementById('form-agendamento');
-  if (f) f.reset();
-  document.getElementById('ag-id').value = '';
-  document.getElementById('ag-paciente-id').value = '';
-  document.getElementById('ag-busca-pac').value = '';
-  document.getElementById('ag-nome-pac').value = '';
-  document.getElementById('modal-agenda-titulo').textContent = 'Novo Agendamento';
-  const dd = document.getElementById('ag-busca-dropdown');
-  if (dd) dd.style.display = 'none';
-
-  // Default: próxima meia hora
-  const now = new Date();
-  now.setMinutes(now.getMinutes() >= 30 ? 60 : 30, 0, 0);
-  const _pad = n => String(n).padStart(2,'0');
-  const _defDate = now.getFullYear() + '-' + _pad(now.getMonth()+1) + '-' + _pad(now.getDate());
-  const _defIni  = _pad(now.getHours()) + ':' + _pad(now.getMinutes());
-  const _defFim  = _pad(now.getHours()+1) + ':' + _pad(now.getMinutes());
-  document.getElementById('ag-data').value     = _defDate;
-  document.getElementById('ag-hora-ini').value = _defIni;
-  document.getElementById('ag-hora-fim').value = _defFim;
-
-  if (ag && ag.data_hora) {
-    const dh = new Date(ag.data_hora);
-    document.getElementById('ag-data').value     = dh.getFullYear() + '-' + _pad(dh.getMonth()+1) + '-' + _pad(dh.getDate());
-    document.getElementById('ag-hora-ini').value = _pad(dh.getHours()) + ':' + _pad(dh.getMinutes());
-    const fim = new Date(dh.getTime() + ((ag.duracao_minutos||60)*60000));
-    document.getElementById('ag-hora-fim').value = _pad(fim.getHours()) + ':' + _pad(fim.getMinutes());
-  }
-  _agSyncHora();
-
-  if (ag && ag.id) {
-    document.getElementById('ag-id').value = ag.id;
-    document.getElementById('modal-agenda-titulo').textContent = 'Editar Agendamento';
-    document.getElementById('ag-busca-pac').value = ag.nome_paciente || '';
-    document.getElementById('ag-nome-pac').value = ag.nome_paciente || '';
-    document.getElementById('ag-paciente-id').value = ag.paciente_id || '';
-    const tipoEl = document.getElementById('ag-tipo');
-    if (tipoEl) tipoEl.value = ag.tipo || 'consulta';
-    const statusEl = document.getElementById('ag-status');
-    if (statusEl) statusEl.value = ag.status || 'agendado';
-    const obsEl = document.getElementById('ag-obs');
-    if (obsEl) obsEl.value = ag.obs || '';
-  }
-
-  const footerEsq = document.getElementById('ag-footer-esq');
-  if (footerEsq) footerEsq.style.display = (ag && ag.id) ? 'flex' : 'none';
-
-  document.getElementById('modal-agendamento').style.display = 'flex';
-  setTimeout(() => { const el = document.getElementById('ag-busca-pac'); if (el) el.focus(); }, 100);
-}
-
-function closeModal(id) {
-  const el = document.getElementById(id);
-  if (el) el.style.display = 'none';
-}
-
-function _agSyncHora() {
-  const data = document.getElementById('ag-data').value;
-  const ini  = document.getElementById('ag-hora-ini').value;
-  const fim  = document.getElementById('ag-hora-fim').value;
-  if (data && ini) document.getElementById('ag-data-hora').value = data + 'T' + ini;
-  if (ini && fim) {
-    const toMin = t => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
-    const d = document.getElementById('ag-duracao');
-    if (d) d.value = Math.max(toMin(fim) - toMin(ini), 15);
-  }
-}
-
-function salvarAgendamento(e) {
-  e.preventDefault();
-  const id = document.getElementById('ag-id').value;
-  const pacienteId = document.getElementById('ag-paciente-id').value;
-  const _data = document.getElementById('ag-data').value;
-  const _ini  = document.getElementById('ag-hora-ini').value;
-  const _fim  = document.getElementById('ag-hora-fim').value;
-  const dataHora = (_data && _ini) ? _data + 'T' + _ini : document.getElementById('ag-data-hora').value;
-  const _iniMin = _ini ? parseInt(_ini.split(':')[0])*60 + parseInt(_ini.split(':')[1]) : 0;
-  const _fimMin = _fim ? parseInt(_fim.split(':')[0])*60 + parseInt(_fim.split(':')[1]) : _iniMin+60;
-  const duracao = _fimMin > _iniMin ? _fimMin - _iniMin : 60;
-  const tipo = (document.getElementById('ag-tipo').value || 'consulta');
-  const status = (document.getElementById('ag-status').value || 'agendado');
-  const obs = (document.getElementById('ag-obs').value || '');
-  const nomePac = document.getElementById('ag-nome-pac').value || document.getElementById('ag-busca-pac').value || '';
-
-  if (!dataHora) { toast('Informe a data e hora'); return; }
-
-  const all = _agGetAll();
-  if (id && !String(id).startsWith('capim_')) {
-    // Update
-    const idx = all.findIndex(a => a.id == id);
-    if (idx >= 0) {
-      all[idx] = {...all[idx], paciente_id:pacienteId, data_hora:dataHora, duracao_minutos:duracao, tipo, status, obs, nome_paciente:nomePac};
-    }
-    _agSave(all);
-    toast('Agendamento atualizado!');
-  } else if (id && String(id).startsWith('capim_')) {
-    toast('Agendamentos Capim são somente-leitura. Crie um novo agendamento.');
-    return;
-  } else {
-    // Create
-    const newAg = {
-      id: 'local_' + Date.now(),
-      paciente_id: pacienteId,
-      nome_paciente: nomePac,
-      data_hora: dataHora,
-      duracao_minutos: duracao,
-      tipo, status, obs
-    };
-    let custom = [];
-    try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
-    custom.push(newAg);
-    localStorage.setItem(_AG_KEY, JSON.stringify(custom));
-    toast('Agendamento criado!');
-  }
-  closeModal('modal-agendamento');
-  loadAgenda();
-}
-
-function excluirAgendamento() {
-  const id = document.getElementById('ag-id').value;
-  if (!id || String(id).startsWith('capim_')) {
-    toast('Agendamentos Capim não podem ser excluídos aqui');
-    return;
-  }
-  if (!confirm('Excluir este agendamento?')) return;
-  let custom = [];
-  try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
-  custom = custom.filter(a => a.id != id);
-  localStorage.setItem(_AG_KEY, JSON.stringify(custom));
-  toast('Agendamento excluído!');
-  closeModal('modal-agendamento');
-  loadAgenda();
-}
 
 // Check sessionStorage for previously loaded data
 (function(){
@@ -1423,8 +997,13 @@ function openPatient(pid){
 
   document.getElementById('patient-modal').classList.add('open');
 }
-function closeModal(){
-  document.getElementById('patient-modal').classList.remove('open');
+function closeModal(id){
+  if(id){
+    const el=document.getElementById(id);
+    if(el)el.style.display='none';
+  } else {
+    document.getElementById('patient-modal').classList.remove('open');
+  }
 }
 document.getElementById('patient-modal').addEventListener('click',e=>{
   if(e.target===e.currentTarget)closeModal();
@@ -1845,5 +1424,435 @@ function exportOdonto(){
 </div>
 
 </script>
+
+<script>
+/* ============================================================
+   AGENDA — separado para evitar conflitos de escopo
+   ============================================================ */
+// ============================================================
+// AGENDA — offline mode (CAPIM data + localStorage)
+// ============================================================
+let _agendaView = 'semana';
+let _agendaData = new Date();
+let _dragAgId = null;
+const _AG_KEY = 'ia_agenda_custom';
+
+function _agGetAll() {
+  // Merge CAPIM appointments with localStorage custom ones
+  const capim = (window.CAPIM_DATA && window.CAPIM_DATA.appointments) ? window.CAPIM_DATA.appointments : [];
+  let custom = [];
+  try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
+  // Normalize CAPIM appointments
+  const norm = capim.map(a => ({
+    id: 'capim_' + (a.id || Math.random()),
+    paciente_id: a.patientId || a.patient_id || '',
+    nome_paciente: a.patientName || a.nome_paciente || a.patient_name || '',
+    data_hora: a.dateTime || a.data_hora || a.datetime || '',
+    duracao_minutos: a.duration || a.duracao_minutos || 60,
+    tipo: (a.type || a.tipo || 'consulta').toLowerCase(),
+    status: (a.status || 'agendado').toLowerCase(),
+    obs: a.notes || a.obs || ''
+  })).filter(a => a.data_hora);
+  return [...norm, ...custom];
+}
+
+function _agSave(list) {
+  const custom = list.filter(a => !String(a.id).startsWith('capim_'));
+  localStorage.setItem(_AG_KEY, JSON.stringify(custom));
+}
+
+function _fmtD(d) { return d.toISOString().slice(0, 10); }
+
+function _evColor(ag) {
+  const m = {
+    agendado:  {bg:'rgba(13,115,119,.3)',bd:'#0d7377',tx:'#a7ffeb'},
+    confirmado:{bg:'rgba(37,99,235,.3)',bd:'#2563eb',tx:'#bfdbfe'},
+    cancelado: {bg:'rgba(220,38,38,.3)',bd:'#dc2626',tx:'#fecaca'},
+    realizado: {bg:'rgba(100,116,139,.3)',bd:'#64748b',tx:'#e2e8f0'},
+    falta:     {bg:'rgba(249,115,22,.3)',bd:'#f97316',tx:'#fed7aa'}
+  };
+  return m[(ag.status||'agendado').toLowerCase()] || {bg:'rgba(37,99,235,.3)',bd:'#2563eb',tx:'#bfdbfe'};
+}
+
+function _evClass(ag) {
+  const sc = 'st-' + (ag.status || 'agendado');
+  const tc = ag.tipo && !['consulta'].includes(ag.tipo) ? ' tp-' + ag.tipo.toLowerCase().replace(/\s+/g,'') : '';
+  return sc + tc;
+}
+
+function setAgendaView(v) {
+  _agendaView = v;
+  ['dia','semana','mes'].forEach(m => {
+    const b = document.getElementById('btn-view-' + m);
+    if (b) b.classList.toggle('btn-view-ativo', m === v);
+  });
+  loadAgenda();
+}
+
+function agendaNavegar(dir) {
+  const d = new Date(_agendaData);
+  if (_agendaView === 'dia') d.setDate(d.getDate() + dir);
+  else if (_agendaView === 'semana') d.setDate(d.getDate() + dir * 7);
+  else d.setMonth(d.getMonth() + dir);
+  _agendaData = d;
+  loadAgenda();
+}
+
+function agendaHoje() { _agendaData = new Date(); loadAgenda(); }
+
+function loadAgenda() {
+  let ini, fim;
+  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
+  if (_agendaView === 'dia') {
+    ini = fim = _fmtD(_agendaData);
+  } else if (_agendaView === 'semana') {
+    const dow = _agendaData.getDay();
+    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+    ini = _fmtD(seg); fim = _fmtD(dom);
+  } else {
+    ini = _fmtD(new Date(y, mo, 1));
+    fim = _fmtD(new Date(y, mo + 1, 0));
+  }
+  const all = _agGetAll();
+  const filtered = all.filter(ag => {
+    const d = ag.data_hora.slice(0,10);
+    return d >= ini && d <= fim;
+  });
+  _renderAgenda(filtered);
+}
+
+function _renderAgenda(ags) {
+  if (_agendaView === 'mes') _renderMes(ags); else _renderGrade(ags);
+}
+
+function _renderMes(ags) {
+  const y = _agendaData.getFullYear(), mo = _agendaData.getMonth();
+  const MES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const tit = document.getElementById('agenda-titulo');
+  if (tit) tit.textContent = MES[mo] + ' de ' + y;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const p1 = new Date(y,mo,1), pn = new Date(y,mo+1,0);
+  const ini = (p1.getDay() + 6) % 7;
+  const byDate = {};
+  ags.forEach(ag => { const k = ag.data_hora.slice(0,10); (byDate[k] = byDate[k] || []).push(ag); });
+  const DSEM = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  let h = '<div class="cal-mes-wrap"><div class="cal-mes-header-dias">' + DSEM.map(d => '<div>' + d + '</div>').join('') + '</div><div class="cal-mes-grid">';
+  for (let i = 0; i < ini; i++) h += '<div class="cal-mes-celula vazia"></div>';
+  for (let d = 1; d <= pn.getDate(); d++) {
+    const dt = new Date(y,mo,d), ds = _fmtD(dt), isH = dt.getTime() === hoje.getTime();
+    const evts = (byDate[ds] || []).sort((a,b) => a.data_hora > b.data_hora ? 1 : -1);
+    h += '<div class="cal-mes-celula' + (isH ? ' hoje-cel' : '') + '" onclick="_agendaData=new Date(' + y + ',' + mo + ',' + d + ');setAgendaView(\'dia\')">';
+    h += '<div class="cal-mes-num' + (isH ? ' hoje-num' : '') + '">' + d + '</div>';
+    evts.slice(0,3).forEach(ag => {
+      const hh = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      const cor = _evColor(ag);
+      const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
+      h += '<div class="cal-mes-evento" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + '" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><b>' + hh + '</b> ' + (ag.nome_paciente || '—') + '</div>';
+    });
+    if (evts.length > 3) h += '<div class="cal-mes-mais">+' + (evts.length-3) + ' mais</div>';
+    h += '</div>';
+  }
+  h += '</div></div>';
+  const body = document.getElementById('agenda-cal-body');
+  if (body) body.innerHTML = h;
+}
+
+function _renderGrade(ags) {
+  const isSingle = _agendaView === 'dia';
+  const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const MESC = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  let days;
+  if (isSingle) {
+    days = [new Date(_agendaData)];
+    const d2 = days[0];
+    const DSEM2 = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const tit = document.getElementById('agenda-titulo');
+    if (tit) tit.textContent = DSEM2[d2.getDay()] + ', ' + d2.getDate() + ' de ' + MESC[d2.getMonth()] + ' de ' + d2.getFullYear();
+  } else {
+    const dow = _agendaData.getDay();
+    const seg = new Date(_agendaData); seg.setDate(_agendaData.getDate() - ((dow + 6) % 7));
+    days = Array.from({length:7}, (_, i) => { const x = new Date(seg); x.setDate(seg.getDate() + i); return x; });
+    const a = days[0], b = days[6], tit = document.getElementById('agenda-titulo');
+    if (tit) tit.textContent = a.getMonth() === b.getMonth()
+      ? a.getDate() + ' – ' + b.getDate() + ' de ' + MES[a.getMonth()] + ' de ' + a.getFullYear()
+      : a.getDate() + ' de ' + MES[a.getMonth()] + ' – ' + b.getDate() + ' de ' + MES[b.getMonth()] + ' de ' + b.getFullYear();
+  }
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const DABREV = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const HOURS = Array.from({length:15}, (_, i) => i + 7); // 07:00 – 21:00
+  const map = {};
+  ags.forEach(ag => {
+    const dt = new Date(ag.data_hora);
+    const k = _fmtD(dt) + '_' + dt.getHours();
+    (map[k] = map[k] || []).push(ag);
+  });
+  const ncols = days.length;
+  const agora = new Date();
+  const agoraHr = agora.getHours() + agora.getMinutes() / 60;
+  const showLinha = agoraHr >= 7 && agoraHr <= 21;
+  const linhaPct = showLinha ? ((agoraHr - 7) / 14 * 100).toFixed(2) : -1;
+
+  let h = '<div class="cal-scroll" id="cal-scroll-wrap"><div class="cal-grade" id="cal-grade-inner" style="grid-template-columns:52px repeat(' + ncols + ',1fr)">';
+  h += '<div class="cal-grade-corner"></div>';
+  days.forEach(d => {
+    const isH = d.getTime() === hoje.getTime();
+    h += '<div class="cal-grade-col-header' + (isH ? ' hoje-col' : '') + '"><span class="cal-dia-nome">' + DABREV[d.getDay()] + '</span><span class="cal-dia-num' + (isH ? ' hoje-num' : '') + '">' + d.getDate() + '</span></div>';
+  });
+  HOURS.forEach(hr => {
+    h += '<div class="cal-hora-label">' + String(hr).padStart(2,'0') + ':00</div>';
+    days.forEach(d => {
+      const ds = _fmtD(d);
+      const k = ds + '_' + hr;
+      const slots = map[k] || [];
+      const dtStr = ds + 'T' + String(hr).padStart(2,'0') + ':00';
+      h += '<div class="cal-slot" data-dt="' + dtStr + '" onclick="_slotClick(event,\'' + dtStr + '\')" ondragover="event.preventDefault();event.currentTarget.classList.add(\'drag-over\')" ondragleave="event.currentTarget.classList.remove(\'drag-over\')" ondrop="_slotDrop(event,\'' + dtStr + '\')">';
+      slots.forEach(ag => {
+        const t = new Date(ag.data_hora).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        const cor = _evColor(ag);
+        const agJson = JSON.stringify(ag).replace(/"/g,'&quot;');
+        const _durMin = ag.duracao_minutos || 60;
+        const _evH = Math.max(Math.round((_durMin / 60) * 56 - 4), 28);
+        const _topPx = Math.round((new Date(ag.data_hora).getMinutes()/60)*56);
+        h += '<div class="cal-evento ' + _evClass(ag) + '" style="background:' + cor.bg + ';border-left:3px solid ' + cor.bd + ';color:' + cor.tx + ';padding:3px 6px;position:absolute;left:3px;right:3px;top:' + _topPx + 'px;height:' + _evH + 'px;overflow:hidden;z-index:6;border-radius:4px;box-sizing:border-box" draggable="true" data-ag-id="' + ag.id + '" ondragstart="_dragStart(event,\'' + ag.id + '\')" onclick="event.stopPropagation();openModalAgendamento(' + agJson + ')"><div style="font-size:11px;font-weight:700;line-height:1.4">' + t + '</div><div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (ag.nome_paciente||'—') + '</div></div>';
+      });
+      h += '</div>';
+    });
+  });
+  h += '</div></div>';
+  const body = document.getElementById('agenda-cal-body');
+  if (body) {
+    body.innerHTML = h;
+    if (linhaPct >= 0) {
+      const grade = document.getElementById('cal-grade-inner');
+      if (grade) {
+        const todayStr = _fmtD(hoje);
+        const todayColIdx = days.findIndex(d => _fmtD(d) === todayStr);
+        if (todayColIdx >= 0) {
+          const linha = document.createElement('div');
+          linha.className = 'cal-hora-atual';
+          linha.style.top = linhaPct + '%';
+          grade.style.position = 'relative';
+          grade.appendChild(linha);
+          requestAnimationFrame(() => {
+            const gradeRect = grade.getBoundingClientRect();
+            const allSlots = grade.querySelectorAll('.cal-slot');
+            const todaySlot = allSlots[todayColIdx];
+            if (todaySlot) {
+              const r = todaySlot.getBoundingClientRect();
+              linha.style.left = (r.left - gradeRect.left) + 'px';
+              linha.style.right = 'auto';
+              linha.style.width = r.width + 'px';
+            }
+          });
+        }
+      }
+    }
+    setTimeout(() => {
+      const scroll = document.getElementById('cal-scroll-wrap');
+      if (scroll) {
+        const targetHr = showLinha ? Math.max(agoraHr - 1, 7) : 8;
+        const pct = (targetHr - 7) / 14;
+        scroll.scrollTop = pct * scroll.scrollHeight * 0.85;
+      }
+    }, 50);
+  }
+}
+
+function _slotClick(event, dtStr) {
+  if (event.target !== event.currentTarget) return;
+  openModalAgendamento({data_hora: dtStr});
+}
+
+function _dragStart(event, agId) {
+  _dragAgId = agId;
+  event.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => { if(event.target) event.target.classList.add('dragging'); }, 0);
+}
+
+function _slotDrop(event, dtStr) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('drag-over');
+  if (!_dragAgId) return;
+  const agId = _dragAgId; _dragAgId = null;
+  // Only allow moving custom appointments (not CAPIM ones)
+  if (String(agId).startsWith('capim_')) {
+    toast('Agendamentos Capim não podem ser movidos aqui');
+    return;
+  }
+  const all = _agGetAll();
+  const idx = all.findIndex(a => a.id == agId);
+  if (idx >= 0) {
+    all[idx].data_hora = dtStr;
+    _agSave(all);
+    toast('Agendamento movido!');
+    loadAgenda();
+  }
+}
+
+// Busca de paciente para agendamento — usa dados CAPIM
+const buscarPacienteAg = (function() {
+  let timer;
+  return function() {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const q = (document.getElementById('ag-busca-pac').value || '').toLowerCase().trim();
+      const dd = document.getElementById('ag-busca-dropdown');
+      if (!dd) return;
+      if (q.length < 2) { dd.style.display = 'none'; return; }
+      const patients = (window.CAPIM_DATA && window.CAPIM_DATA.patients) ? window.CAPIM_DATA.patients : [];
+      const results = patients.filter(p => (p.name||p.nome||'').toLowerCase().includes(q)).slice(0,8);
+      dd.innerHTML = results.map(p =>
+        '<div style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)" ' +
+        'onmouseover="this.style.background=\'rgba(13,115,119,.15)\'" onmouseout="this.style.background=\'\'" ' +
+        'onclick="selecionarPacienteAg(\'' + (p.id||p._id||'') + '\',\'' + (p.name||p.nome||'').replace(/\'/g,"\\'") + '\')">' +
+        '<strong>' + (p.name||p.nome||'') + '</strong>' +
+        '</div>'
+      ).join('') || '<div style="padding:12px;color:var(--text2)">Nenhum paciente encontrado</div>';
+      dd.style.display = 'block';
+    }, 250);
+  };
+})();
+
+function selecionarPacienteAg(id, nome) {
+  document.getElementById('ag-paciente-id').value = id;
+  document.getElementById('ag-busca-pac').value = nome;
+  document.getElementById('ag-nome-pac').value = nome;
+  document.getElementById('ag-busca-dropdown').style.display = 'none';
+}
+
+function openModalAgendamento(ag) {
+  const f = document.getElementById('form-agendamento');
+  if (f) f.reset();
+  document.getElementById('ag-id').value = '';
+  document.getElementById('ag-paciente-id').value = '';
+  document.getElementById('ag-busca-pac').value = '';
+  document.getElementById('ag-nome-pac').value = '';
+  document.getElementById('modal-agenda-titulo').textContent = 'Novo Agendamento';
+  const dd = document.getElementById('ag-busca-dropdown');
+  if (dd) dd.style.display = 'none';
+
+  // Default: próxima meia hora
+  const now = new Date();
+  now.setMinutes(now.getMinutes() >= 30 ? 60 : 30, 0, 0);
+  const _pad = n => String(n).padStart(2,'0');
+  const _defDate = now.getFullYear() + '-' + _pad(now.getMonth()+1) + '-' + _pad(now.getDate());
+  const _defIni  = _pad(now.getHours()) + ':' + _pad(now.getMinutes());
+  const _defFim  = _pad(now.getHours()+1) + ':' + _pad(now.getMinutes());
+  document.getElementById('ag-data').value     = _defDate;
+  document.getElementById('ag-hora-ini').value = _defIni;
+  document.getElementById('ag-hora-fim').value = _defFim;
+
+  if (ag && ag.data_hora) {
+    const dh = new Date(ag.data_hora);
+    document.getElementById('ag-data').value     = dh.getFullYear() + '-' + _pad(dh.getMonth()+1) + '-' + _pad(dh.getDate());
+    document.getElementById('ag-hora-ini').value = _pad(dh.getHours()) + ':' + _pad(dh.getMinutes());
+    const fim = new Date(dh.getTime() + ((ag.duracao_minutos||60)*60000));
+    document.getElementById('ag-hora-fim').value = _pad(fim.getHours()) + ':' + _pad(fim.getMinutes());
+  }
+  _agSyncHora();
+
+  if (ag && ag.id) {
+    document.getElementById('ag-id').value = ag.id;
+    document.getElementById('modal-agenda-titulo').textContent = 'Editar Agendamento';
+    document.getElementById('ag-busca-pac').value = ag.nome_paciente || '';
+    document.getElementById('ag-nome-pac').value = ag.nome_paciente || '';
+    document.getElementById('ag-paciente-id').value = ag.paciente_id || '';
+    const tipoEl = document.getElementById('ag-tipo');
+    if (tipoEl) tipoEl.value = ag.tipo || 'consulta';
+    const statusEl = document.getElementById('ag-status');
+    if (statusEl) statusEl.value = ag.status || 'agendado';
+    const obsEl = document.getElementById('ag-obs');
+    if (obsEl) obsEl.value = ag.obs || '';
+  }
+
+  const footerEsq = document.getElementById('ag-footer-esq');
+  if (footerEsq) footerEsq.style.display = (ag && ag.id) ? 'flex' : 'none';
+
+  document.getElementById('modal-agendamento').style.display = 'flex';
+  setTimeout(() => { const el = document.getElementById('ag-busca-pac'); if (el) el.focus(); }, 100);
+}
+
+
+function _agSyncHora() {
+  const data = document.getElementById('ag-data').value;
+  const ini  = document.getElementById('ag-hora-ini').value;
+  const fim  = document.getElementById('ag-hora-fim').value;
+  if (data && ini) document.getElementById('ag-data-hora').value = data + 'T' + ini;
+  if (ini && fim) {
+    const toMin = t => parseInt(t.split(':')[0])*60 + parseInt(t.split(':')[1]);
+    const d = document.getElementById('ag-duracao');
+    if (d) d.value = Math.max(toMin(fim) - toMin(ini), 15);
+  }
+}
+
+function salvarAgendamento(e) {
+  e.preventDefault();
+  const id = document.getElementById('ag-id').value;
+  const pacienteId = document.getElementById('ag-paciente-id').value;
+  const _data = document.getElementById('ag-data').value;
+  const _ini  = document.getElementById('ag-hora-ini').value;
+  const _fim  = document.getElementById('ag-hora-fim').value;
+  const dataHora = (_data && _ini) ? _data + 'T' + _ini : document.getElementById('ag-data-hora').value;
+  const _iniMin = _ini ? parseInt(_ini.split(':')[0])*60 + parseInt(_ini.split(':')[1]) : 0;
+  const _fimMin = _fim ? parseInt(_fim.split(':')[0])*60 + parseInt(_fim.split(':')[1]) : _iniMin+60;
+  const duracao = _fimMin > _iniMin ? _fimMin - _iniMin : 60;
+  const tipo = (document.getElementById('ag-tipo').value || 'consulta');
+  const status = (document.getElementById('ag-status').value || 'agendado');
+  const obs = (document.getElementById('ag-obs').value || '');
+  const nomePac = document.getElementById('ag-nome-pac').value || document.getElementById('ag-busca-pac').value || '';
+
+  if (!dataHora) { toast('Informe a data e hora'); return; }
+
+  const all = _agGetAll();
+  if (id && !String(id).startsWith('capim_')) {
+    // Update
+    const idx = all.findIndex(a => a.id == id);
+    if (idx >= 0) {
+      all[idx] = {...all[idx], paciente_id:pacienteId, data_hora:dataHora, duracao_minutos:duracao, tipo, status, obs, nome_paciente:nomePac};
+    }
+    _agSave(all);
+    toast('Agendamento atualizado!');
+  } else if (id && String(id).startsWith('capim_')) {
+    toast('Agendamentos Capim são somente-leitura. Crie um novo agendamento.');
+    return;
+  } else {
+    // Create
+    const newAg = {
+      id: 'local_' + Date.now(),
+      paciente_id: pacienteId,
+      nome_paciente: nomePac,
+      data_hora: dataHora,
+      duracao_minutos: duracao,
+      tipo, status, obs
+    };
+    let custom = [];
+    try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
+    custom.push(newAg);
+    localStorage.setItem(_AG_KEY, JSON.stringify(custom));
+    toast('Agendamento criado!');
+  }
+  closeModal('modal-agendamento');
+  loadAgenda();
+}
+
+function excluirAgendamento() {
+  const id = document.getElementById('ag-id').value;
+  if (!id || String(id).startsWith('capim_')) {
+    toast('Agendamentos Capim não podem ser excluídos aqui');
+    return;
+  }
+  if (!confirm('Excluir este agendamento?')) return;
+  let custom = [];
+  try { custom = JSON.parse(localStorage.getItem(_AG_KEY) || '[]'); } catch(e){}
+  custom = custom.filter(a => a.id != id);
+  localStorage.setItem(_AG_KEY, JSON.stringify(custom));
+  toast('Agendamento excluído!');
+  closeModal('modal-agendamento');
+  loadAgenda();
+}
+
+</script>
+
 </body>
 </html>
