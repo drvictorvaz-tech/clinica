@@ -1973,7 +1973,7 @@ function IAS_tooth(f){
   st[f]=IAS_curCond; IAS_lsSet(key,st); IAS_paintTeeth();
 }
 function IAS_anotacoesHtml(pid){
-  var orig=((window.data&&data.annotations)||{})[String(pid)]||[];
+  var orig=(data.annotations||{})[String(pid)]||[];
   var extra=IAS_lsGet('iasaude_anotacoes_'+pid,[]);
   var all=[];
   extra.forEach(function(a){all.push({d:a.d,u:a.u||'Dr. Victor Vaz',t:a.t});});
@@ -1990,7 +1990,7 @@ function IAS_addAnotacao(){
   arr.unshift({id:Date.now(),d:new Date().toISOString(),u:'Dr. Victor Vaz',t:t.trim()});
   IAS_lsSet(k,arr);
   if(window.toast)toast('Anotacao adicionada');
-  var p=(window.allPatients||[]).filter(function(x){return String(x.id)===String(IAS_curPid);})[0];
+  var p=(allPatients||[]).filter(function(x){return String(x.id)===String(IAS_curPid);})[0];
   if(p)IAS_renderFichaClinica(p,IAS_curPid);
 }
 
@@ -2088,7 +2088,7 @@ function IAS_printDocumento(i){
 
 /* ---------- ARQUIVOS (pastas + documentos) ---------- */
 function IAS_buildFolders(pid){
-  var real=((window.data&&data.documents)||{})[String(pid)]||[];
+  var real=(data.documents||{})[String(pid)]||[];
   var custFiles=IAS_lsGet('iasaude_files_'+pid,[]);
   var custFolders=IAS_lsGet('iasaude_folders_'+pid,[]);
   var map={};
