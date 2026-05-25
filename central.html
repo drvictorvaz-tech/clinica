@@ -519,23 +519,7 @@ tbody tr:last-child{border-bottom:none}
 
 
   <!-- AGENDA -->
-  <section id="agenda" class="section">
-    <div class="agenda-cal-header">
-      <div class="agenda-nav-left">
-        <button class="btn-icon" onclick="agendaNavegar(-1)" title="Anterior" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);cursor:pointer;font-size:18px">&#8249;</button>
-        <button class="btn-outline-small" onclick="agendaHoje()">Hoje</button>
-        <button class="btn-icon" onclick="agendaNavegar(1)" title="Próximo" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);cursor:pointer;font-size:18px">&#8250;</button>
-        <span id="agenda-titulo" style="font-size:17px;font-weight:600;color:var(--text);margin-left:8px"></span>
-      </div>
-      <div class="agenda-view-tabs">
-        <button id="btn-view-dia" class="btn-view" onclick="setAgendaView('dia')">Dia</button>
-        <button id="btn-view-semana" class="btn-view btn-view-ativo" onclick="setAgendaView('semana')">Semana</button>
-        <button id="btn-view-mes" class="btn-view" onclick="setAgendaView('mes')">Mês</button>
-      </div>
-      <button onclick="openModalAgendamento({})" style="padding:8px 16px;background:var(--primary);border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:13px;font-weight:600">+ Agendar</button>
-    </div>
-    <div id="agenda-cal-body" style="flex:1;overflow:auto"></div>
-  </section>
+  <section id="agenda" class="section"><div id="iasag"></div></section>
 
 <!-- ===== IA CLINICA (embutida) ===== -->
 <section id="ia-clinica" class="section">
@@ -2084,7 +2068,7 @@ function IAS_printDocumento(i){
    +'<div class="hd"><h1>Dr. Victor Vaz</h1><div style="font-size:12px;color:#666">DTM &middot; Sono &middot; Bruxismo &middot; Dor Orofacial</div></div>'
    +'<p><strong>'+IAS_esc(d.tipo)+'</strong></p><p><strong>Paciente:</strong> '+IAS_esc(pn)+'<br><strong>Data:</strong> '+IAS_fd(d.date)+'</p>'
    +'<h2>'+IAS_esc(d.nome)+'</h2><div class="bd">'+IAS_esc(d.conteudo)+'</div>'
-   +'<div class="ft">Documento gerado pela IA SAUDE</div></body></html>');
+   +'<div class="ft">Documento gerado pela IA SAUDE</div></bo'+'dy></html>');
   w.document.close(); w.focus(); setTimeout(function(){try{w.print();}catch(e){}},350);
 }
 
@@ -2183,6 +2167,274 @@ function IAS_renderConsultas(p,pid){
   inp.type='file'; inp.id='ias-file-input'; inp.style.display='none';
   inp.addEventListener('change',IAS_onFilePicked);
   (document.body||document.documentElement).appendChild(inp);
+})();
+</script>
+
+
+<style>
+/* ===== IA SAUDE - Agenda estilo Capim ===== */
+#agenda.section{padding:0}
+#agenda.section.active{position:fixed;left:240px;top:0;right:0;bottom:0;display:flex;flex-direction:column;background:#eef2f6;z-index:40}
+#iasag{display:flex;flex-direction:column;height:100%;font-size:13px;overflow:hidden}
+.ag-top{display:flex;align-items:center;gap:9px;padding:11px 18px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0}
+.ag-nav{display:flex;align-items:center;gap:5px}
+.ag-ic{width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:7px;cursor:pointer;font-size:16px;color:var(--text);display:flex;align-items:center;justify-content:center;line-height:1}
+.ag-ic:hover{border-color:var(--primary);color:var(--primary)}
+.ag-today{padding:6px 13px;border:1px solid var(--border);background:#fff;border-radius:7px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text)}
+.ag-today:hover{border-color:var(--primary);color:var(--primary)}
+.ag-title{font-size:16px;font-weight:700;color:var(--text);margin-left:6px;text-transform:capitalize}
+.ag-spacer{flex:1}
+.ag-views{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.ag-view{padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer;background:#fff;color:var(--text-muted);border:none}
+.ag-view.active{background:var(--primary);color:#fff}
+.ag-add{padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.ag-add:hover{background:var(--primary-dark)}
+.ag-body{flex:1;overflow:auto;background:#fff}
+.ag-wk-head{display:grid;position:sticky;top:0;z-index:3;background:#fff;border-bottom:1px solid var(--border)}
+.ag-dh{padding:7px 4px;text-align:center;border-left:1px solid var(--border)}
+.ag-dh .dn{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700}
+.ag-dh .dd{font-size:17px;font-weight:700;color:var(--text);margin-top:2px;width:30px;height:30px;line-height:30px;display:inline-block}
+.ag-dh.today .dd{background:var(--primary);color:#fff;border-radius:50%}
+.ag-dh.wknd .dn{color:#e53935}
+.ag-wk-grid{display:grid}
+.ag-gut{border-right:1px solid var(--border)}
+.ag-hr{font-size:10px;color:var(--text-muted);text-align:right;padding-right:6px;box-sizing:border-box}
+.ag-col{position:relative;border-left:1px solid var(--border);background-repeat:repeat}
+.ag-appt{position:absolute;border-radius:5px;padding:3px 6px;font-size:10.5px;overflow:hidden;cursor:pointer;color:#fff;background:var(--primary);border-left:3px solid rgba(0,0,0,.22);line-height:1.3;box-sizing:border-box}
+.ag-appt:hover{filter:brightness(1.08)}
+.ag-appt .at{font-weight:700}
+.ag-appt.done{background:#90a4ae}
+.ag-nowline{position:absolute;left:0;right:0;height:2px;background:#e53935;z-index:2}
+.ag-nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:#e53935}
+.ag-mhead{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
+.ag-mhead div{padding:7px;text-align:center;font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase}
+.ag-mth{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:96px}
+.ag-mc{border:1px solid var(--border);padding:4px 5px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.ag-mc:hover{background:#f4f8f9}
+.ag-mc .md{font-size:12px;font-weight:600;color:var(--text);align-self:flex-start}
+.ag-mc.out{background:#f8fafc}.ag-mc.out .md{color:#cbd5e1}
+.ag-mc.today .md{background:var(--primary);color:#fff;border-radius:50%;width:21px;height:21px;line-height:21px;text-align:center}
+.ag-chip{font-size:9.5px;background:rgba(13,115,119,.14);color:var(--primary-dark);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-chip.done{background:#eceff1;color:#607d8b}
+.ag-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center}
+.ag-ov.open{display:flex}
+.ag-md{background:#fff;border-radius:14px;width:min(440px,94vw);max-height:90vh;overflow:auto;padding:22px}
+.ag-md h3{font-size:16px;margin-bottom:8px;color:var(--text)}
+.ag-md label{display:block;font-size:11.5px;font-weight:600;color:var(--text-muted);margin:10px 0 3px}
+.ag-md input,.ag-md textarea{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box}
+.ag-md input:focus,.ag-md textarea:focus{border-color:var(--primary)}
+.ag-md textarea{resize:vertical;min-height:54px}
+.ag-mrow{display:flex;gap:10px}.ag-mrow>div{flex:1}
+.ag-mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.ag-empty{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
+</style>
+<script>
+/* ============================================================
+   IA SAUDE - Agenda estilo Capim (modulo isolado)
+   ============================================================ */
+var IASAG_cur=new Date(), IASAG_view='semana';
+var IASAG_MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+var IASAG_MESAB=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var IASAG_DSEM=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+var IASAG_HS=7, IASAG_HE=21, IASAG_HPX=52;
+
+function IASAG_esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function IASAG_pad(n){return (n<10?'0':'')+n;}
+function IASAG_hm(d){return IASAG_pad(d.getHours())+':'+IASAG_pad(d.getMinutes());}
+function IASAG_lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function IASAG_lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){if(window.toast)toast('Nao foi possivel salvar');return false;}}
+function IASAG_val(id){var e=document.getElementById(id);return e?e.value:'';}
+function IASAG_sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function IASAG_d0(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function IASAG_weekStart(d){var x=IASAG_d0(d);var dow=(x.getDay()+6)%7;x.setDate(x.getDate()-dow);return x;}
+function IASAG_dataBr(d){return IASAG_pad(d.getDate())+'/'+IASAG_pad(d.getMonth()+1)+'/'+d.getFullYear();}
+
+function IASAG_all(){
+  var out=[];
+  (data.appointments||[]).forEach(function(a,i){
+    var at=a.attributes||{}; if(!at.start_date)return;
+    var s=new Date(at.start_date); if(isNaN(s))return;
+    var e=at.end_date?new Date(at.end_date):null;
+    if(!e||isNaN(e)||e<=s)e=new Date(s.getTime()+30*60000);
+    out.push({id:'c'+i,start:s,end:e,title:at.title||'Consulta',patient:at.patient_name||'',obs:at.observation||'',done:!!at.attended,allday:!!at.all_day,custom:false});
+  });
+  IASAG_lsGet('iasaude_agenda',[]).forEach(function(c,i){
+    var s=new Date(c.start); if(isNaN(s))return;
+    var e=new Date(c.end); if(isNaN(e)||e<=s)e=new Date(s.getTime()+30*60000);
+    out.push({id:'u'+i,_idx:i,start:s,end:e,title:c.title||'Agendamento',patient:c.patient||'',obs:c.obs||'',done:false,allday:false,custom:true});
+  });
+  return out;
+}
+
+function IASAG_periodLabel(){
+  if(IASAG_view==='mes')return IASAG_MES[IASAG_cur.getMonth()]+' '+IASAG_cur.getFullYear();
+  if(IASAG_view==='dia')return IASAG_DSEM[IASAG_cur.getDay()]+', '+IASAG_cur.getDate()+' de '+IASAG_MES[IASAG_cur.getMonth()];
+  var a=IASAG_weekStart(IASAG_cur), b=new Date(a); b.setDate(a.getDate()+6);
+  if(a.getMonth()===b.getMonth())return a.getDate()+' a '+b.getDate()+' de '+IASAG_MESAB[a.getMonth()]+' '+a.getFullYear();
+  return a.getDate()+' '+IASAG_MESAB[a.getMonth()]+' a '+b.getDate()+' '+IASAG_MESAB[b.getMonth()]+' '+b.getFullYear();
+}
+function IASAG_toolbar(){
+  function v(k,l){return '<button class="ag-view'+(IASAG_view===k?' active':'')+'" onclick="IASAG_setView(\''+k+'\')">'+l+'</button>';}
+  return '<div class="ag-top">'
+   +'<div class="ag-nav"><button class="ag-ic" onclick="IASAG_nav(-1)">&#8249;</button>'
+   +'<button class="ag-today" onclick="IASAG_hoje()">Hoje</button>'
+   +'<button class="ag-ic" onclick="IASAG_nav(1)">&#8250;</button></div>'
+   +'<div class="ag-title">'+IASAG_esc(IASAG_periodLabel())+'</div>'
+   +'<div class="ag-spacer"></div>'
+   +'<div class="ag-views">'+v('dia','Dia')+v('semana','Semana')+v('mes','Mês')+'</div>'
+   +'<button class="ag-add" onclick="IASAG_novo()">+ Agendar</button></div>';
+}
+function IASAG_render(){
+  var root=document.getElementById('iasag'); if(!root)return;
+  root.innerHTML=IASAG_toolbar()+'<div class="ag-body" id="iasag-body"></div>';
+  if(IASAG_view==='mes')IASAG_renderMonth();
+  else IASAG_renderTime(IASAG_view==='dia'?1:7);
+}
+function IASAG_lanes(list){
+  var ends=[];
+  list.forEach(function(a){
+    var placed=false;
+    for(var i=0;i<ends.length;i++){if(a.start>=ends[i]){a._lane=i;ends[i]=a.end;placed=true;break;}}
+    if(!placed){a._lane=ends.length;ends.push(a.end);}
+  });
+  return Math.max(ends.length,1);
+}
+function IASAG_renderTime(ndays){
+  var HS=IASAG_HS,HE=IASAG_HE,HPX=IASAG_HPX;
+  var base=ndays===7?IASAG_weekStart(IASAG_cur):IASAG_d0(IASAG_cur);
+  var days=[],i; for(i=0;i<ndays;i++){var d=new Date(base);d.setDate(base.getDate()+i);days.push(d);}
+  var appts=IASAG_all();
+  var today=IASAG_d0(new Date());
+  var DOW=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+  var cols='56px repeat('+ndays+',1fr)';
+  var head='<div class="ag-wk-head" style="grid-template-columns:'+cols+'"><div></div>';
+  days.forEach(function(d){
+    var isT=d.getTime()===today.getTime(), wk=(d.getDay()===0||d.getDay()===6);
+    head+='<div class="ag-dh'+(isT?' today':'')+(wk?' wknd':'')+'"><div class="dn">'+DOW[(d.getDay()+6)%7]+'</div><div class="dd">'+d.getDate()+'</div></div>';
+  });
+  head+='</div>';
+  var gridH=(HE-HS)*HPX;
+  var gut='<div class="ag-gut" style="height:'+gridH+'px">';
+  for(i=HS;i<HE;i++)gut+='<div class="ag-hr" style="height:'+HPX+'px;line-height:'+HPX+'px">'+i+':00</div>';
+  gut+='</div>';
+  var lineBg='repeating-linear-gradient(180deg,transparent,transparent '+(HPX-1)+'px,#eef2f6 '+(HPX-1)+'px,#eef2f6 '+HPX+'px)';
+  var body='<div class="ag-wk-grid" style="grid-template-columns:'+cols+'">'+gut;
+  days.forEach(function(d,di){
+    body+='<div class="ag-col" id="iasag-col-'+di+'" style="height:'+gridH+'px;background-image:'+lineBg+'"></div>';
+  });
+  body+='</div>';
+  document.getElementById('iasag-body').innerHTML='<div style="min-width:'+(ndays===7?720:460)+'px">'+head+body+'</div>';
+  days.forEach(function(d,di){
+    var col=document.getElementById('iasag-col-'+di);
+    var da=appts.filter(function(a){return IASAG_sameDay(a.start,d)&&!a.allday;}).sort(function(x,y){return x.start-y.start;});
+    var nl=IASAG_lanes(da), w=100/nl;
+    da.forEach(function(a){
+      var sh=a.start.getHours()+a.start.getMinutes()/60, eh=a.end.getHours()+a.end.getMinutes()/60;
+      if(sh<HS)sh=HS; if(eh>HE)eh=HE; if(eh<sh+0.25)eh=sh+0.25;
+      var el=document.createElement('div');
+      el.className='ag-appt'+(a.done?' done':'');
+      el.style.top=((sh-HS)*HPX)+'px';
+      el.style.height=Math.max((eh-sh)*HPX-2,16)+'px';
+      el.style.left='calc('+(a._lane*w)+'% + 2px)';
+      el.style.width='calc('+w+'% - 4px)';
+      el.innerHTML='<span class="at">'+IASAG_hm(a.start)+'</span> '+IASAG_esc(a.patient||a.title);
+      el.title=a.title+(a.patient?' - '+a.patient:'');
+      el.onclick=function(){IASAG_detalhe(a);};
+      col.appendChild(el);
+    });
+    if(d.getTime()===today.getTime()){
+      var now=new Date(), nh=now.getHours()+now.getMinutes()/60;
+      if(nh>=HS&&nh<=HE){var ln=document.createElement('div');ln.className='ag-nowline';ln.style.top=((nh-HS)*HPX)+'px';col.appendChild(ln);}
+    }
+  });
+}
+function IASAG_renderMonth(){
+  var y=IASAG_cur.getFullYear(), m=IASAG_cur.getMonth();
+  var start=IASAG_weekStart(new Date(y,m,1));
+  var appts=IASAG_all(), today=IASAG_d0(new Date());
+  var DOW=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  var html='<div class="ag-mhead">'+DOW.map(function(x){return '<div>'+x+'</div>';}).join('')+'</div><div class="ag-mth">';
+  for(var i=0;i<42;i++){
+    var d=new Date(start); d.setDate(start.getDate()+i);
+    var out=(d.getMonth()!==m), isT=d.getTime()===today.getTime();
+    var da=appts.filter(function(a){return IASAG_sameDay(a.start,d);}).sort(function(x,y){return x.start-y.start;});
+    var chips=da.slice(0,3).map(function(a){return '<div class="ag-chip'+(a.done?' done':'')+'">'+IASAG_hm(a.start)+' '+IASAG_esc(a.patient||a.title)+'</div>';}).join('');
+    if(da.length>3)chips+='<div class="ag-chip" style="background:none;color:var(--text-muted)">+'+(da.length-3)+' mais</div>';
+    html+='<div class="ag-mc'+(out?' out':'')+(isT?' today':'')+'" data-d="'+d.getFullYear()+'_'+d.getMonth()+'_'+d.getDate()+'"><div class="md">'+d.getDate()+'</div>'+chips+'</div>';
+  }
+  html+='</div>';
+  document.getElementById('iasag-body').innerHTML=html;
+  document.querySelectorAll('#iasag-body .ag-mc').forEach(function(c){
+    c.onclick=function(){var p=c.getAttribute('data-d').split('_');IASAG_cur=new Date(+p[0],+p[1],+p[2]);IASAG_view='dia';IASAG_render();};
+  });
+}
+function IASAG_nav(dir){
+  if(IASAG_view==='mes')IASAG_cur=new Date(IASAG_cur.getFullYear(),IASAG_cur.getMonth()+dir,1);
+  else{var step=IASAG_view==='dia'?1:7;IASAG_cur=new Date(IASAG_cur.getFullYear(),IASAG_cur.getMonth(),IASAG_cur.getDate()+dir*step);}
+  IASAG_render();
+}
+function IASAG_hoje(){IASAG_cur=new Date();IASAG_render();}
+function IASAG_setView(v){IASAG_view=v;IASAG_render();}
+function IASAG_open(){IASAG_render();}
+
+function IASAG_close(){var ov=document.getElementById('iasag-ov');if(ov)ov.classList.remove('open');}
+function IASAG_novo(){
+  var ov=document.getElementById('iasag-ov'); if(!ov)return;
+  var pacs=(typeof allPatients!=='undefined'?allPatients:[]).map(function(p){return '<option value="'+IASAG_esc(p.name)+'">';}).join('');
+  var d=IASAG_cur, dstr=d.getFullYear()+'-'+IASAG_pad(d.getMonth()+1)+'-'+IASAG_pad(d.getDate());
+  ov.querySelector('.ag-md').innerHTML=
+   '<h3>Novo agendamento</h3>'
+   +'<label>Paciente</label><input id="iasag-f-pac" list="iasag-pac-list" placeholder="Nome do paciente"><datalist id="iasag-pac-list">'+pacs+'</datalist>'
+   +'<label>Tipo / título</label><input id="iasag-f-tit" placeholder="ex: Avaliação DTM, Retorno, Placa miorrelaxante">'
+   +'<div class="ag-mrow"><div><label>Data</label><input type="date" id="iasag-f-data" value="'+dstr+'"></div>'
+   +'<div><label>Início</label><input type="time" id="iasag-f-ini" value="09:00"></div>'
+   +'<div><label>Fim</label><input type="time" id="iasag-f-fim" value="09:30"></div></div>'
+   +'<label>Observação</label><textarea id="iasag-f-obs"></textarea>'
+   +'<div class="ag-mfoot"><button class="ag-today" onclick="IASAG_close()">Cancelar</button><button class="ag-add" onclick="IASAG_salvar()">Salvar</button></div>';
+  ov.classList.add('open');
+}
+function IASAG_salvar(){
+  var pac=IASAG_val('iasag-f-pac'),tit=IASAG_val('iasag-f-tit'),dt=IASAG_val('iasag-f-data'),ini=IASAG_val('iasag-f-ini'),fim=IASAG_val('iasag-f-fim'),obs=IASAG_val('iasag-f-obs');
+  if(!dt||!ini){alert('Informe data e hora de início');return;}
+  if(!fim||fim<=ini)fim=ini;
+  var arr=IASAG_lsGet('iasaude_agenda',[]);
+  arr.push({start:dt+'T'+ini,end:dt+'T'+fim,title:tit||'Agendamento',patient:pac,obs:obs});
+  IASAG_lsSet('iasaude_agenda',arr);
+  IASAG_close();
+  if(window.toast)toast('Agendamento criado');
+  IASAG_render();
+}
+function IASAG_detalhe(a){
+  var ov=document.getElementById('iasag-ov'); if(!ov)return;
+  var del=a.custom?'<button class="ag-today" style="color:var(--danger);border-color:var(--danger)" onclick="IASAG_excluir('+a._idx+')">Excluir</button>':'';
+  ov.querySelector('.ag-md').innerHTML=
+   '<h3>'+IASAG_esc(a.title)+'</h3>'
+   +'<p style="font-size:13px;color:var(--text);line-height:1.8">'
+   +'<strong>Paciente:</strong> '+IASAG_esc(a.patient||'—')+'<br>'
+   +'<strong>Data:</strong> '+IASAG_dataBr(a.start)+'<br>'
+   +'<strong>Horário:</strong> '+IASAG_hm(a.start)+' às '+IASAG_hm(a.end)+'<br>'
+   +'<strong>Status:</strong> '+(a.done?'Realizada':'Agendada')
+   +(a.obs?'<br><strong>Observação:</strong> '+IASAG_esc(a.obs):'')+'</p>'
+   +'<div class="ag-mfoot">'+del+'<button class="ag-add" onclick="IASAG_close()">Fechar</button></div>';
+  ov.classList.add('open');
+}
+function IASAG_excluir(idx){
+  if(!confirm('Excluir este agendamento?'))return;
+  var arr=IASAG_lsGet('iasaude_agenda',[]); arr.splice(idx,1); IASAG_lsSet('iasaude_agenda',arr);
+  IASAG_close(); IASAG_render();
+}
+/* override do antigo loadAgenda */
+function loadAgenda(){IASAG_render();}
+
+(function(){
+  if(!document.getElementById('iasag-ov')){
+    var ov=document.createElement('div');
+    ov.className='ag-ov'; ov.id='iasag-ov';
+    ov.innerHTML='<div class="ag-md"></div>';
+    ov.addEventListener('click',function(e){if(e.target===ov)IASAG_close();});
+    (document.body||document.documentElement).appendChild(ov);
+  }
+  try{IASAG_render();}catch(e){}
 })();
 </script>
 
