@@ -535,8 +535,9 @@ tbody tr:last-child{border-bottom:none}
 <div class="modal-overlay" id="patient-modal">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="modal-patient-name">—</h2>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <button class="ias-voltar" onclick="closeModal()">&#8592; Pacientes</button>
+      <div class="ias-pavatar" id="ias-pavatar">—</div>
+      <div class="ias-phead"><h2 id="modal-patient-name">—</h2><div id="ias-psub"></div></div>
     </div>
     <div class="modal-body">
       <div class="modal-tabs">
@@ -1804,8 +1805,14 @@ function excluirAgendamento() {
 
 <style>
 /* ===== IA SAUDE - Ficha clinica do paciente ===== */
-#patient-modal .modal{background:#fff;width:min(1060px,96vw);max-width:none;max-height:92vh;border-radius:16px;padding:0;border:none;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.28)}
-#patient-modal .modal-header{padding:18px 24px;border-bottom:1px solid var(--border);margin:0;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+#patient-modal.open{position:fixed;left:240px;top:0;right:0;bottom:0;display:block;background:#eef2f6;z-index:45}
+#patient-modal .modal{background:#fff;width:100%;max-width:none;height:100%;max-height:none;border-radius:0;padding:0;border:none;display:flex;flex-direction:column;overflow:hidden;box-shadow:none}
+.ias-voltar{padding:7px 14px;border:1px solid var(--border);background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer}
+.ias-voltar:hover{border-color:var(--primary);color:var(--primary)}
+.ias-pavatar{width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.ias-phead h2{font-size:17px;font-weight:700;color:var(--text);margin:0}
+.ias-phead #ias-psub{font-size:12.5px;color:var(--text-muted);margin-top:1px}
+#patient-modal .modal-header{padding:14px 22px;border-bottom:1px solid var(--border);margin:0;flex-shrink:0;display:flex;align-items:center;gap:14px}
 #patient-modal .modal-body{padding:20px 24px;overflow-y:auto;flex:1}
 #patient-modal .modal-tabs{display:flex;flex-wrap:wrap;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px}
 .fi-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 18px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
@@ -1888,6 +1895,8 @@ function IAS_safe(fn){try{fn();}catch(e){if(window.console)console.error('[IA SA
 /* ---------- entrada principal ---------- */
 function IAS_renderFicha(p,pid){
   IAS_curPid=String(pid); IAS_curFolder=null;
+  var _av=document.getElementById("ias-pavatar"); if(_av)_av.textContent=(((p.name||"?").trim()[0])||"?").toUpperCase();
+  var _sb=document.getElementById("ias-psub"); if(_sb)_sb.textContent=(window.fmtPhone?fmtPhone(p.phone):(p.phone||""))||"";
   IAS_setupTabs();
   IAS_safe(function(){IAS_renderFichaClinica(p,IAS_curPid);});
   IAS_safe(function(){IAS_renderAnamnese(IAS_curPid);});
@@ -2167,6 +2176,9 @@ function IAS_renderConsultas(p,pid){
   inp.type='file'; inp.id='ias-file-input'; inp.style.display='none';
   inp.addEventListener('change',IAS_onFilePicked);
   (document.body||document.documentElement).appendChild(inp);
+  document.querySelectorAll(".nav-item").forEach(function(_n){
+    _n.addEventListener("click",function(){ if(_n.getAttribute("data-section")){ try{closeModal();}catch(e){} } });
+  });
 })();
 </script>
 
