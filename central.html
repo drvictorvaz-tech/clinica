@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central Clínica — Dr. Victor Vaz</title>
+<title>IA SAÚDE — Dr. Victor Vaz</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -360,8 +360,8 @@ tbody tr:last-child{border-bottom:none}
 <aside id="sidebar">
   <div class="sidebar-logo">
     <span class="logo-icon">🦷</span>
-    <h2>Dr. Victor Vaz</h2>
-    <p>DTM · Sono · Bruxismo</p>
+    <h2>IA SAÚDE</h2>
+    <p>Dr. Victor Vaz · DTM · Sono</p>
   </div>
   <nav>
     <div class="nav-item active" data-section="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
@@ -369,13 +369,13 @@ tbody tr:last-child{border-bottom:none}
     <div class="nav-item" data-section="inativos"><span class="nav-icon">🔴</span>Inativos (+6 meses)</div>
     <div class="nav-item" data-section="aniversariantes"><span class="nav-icon">🎂</span>Aniversariantes</div>
     <div class="nav-item" data-section="retorno"><span class="nav-icon">🔄</span>Retorno / Controle</div>
-    <div class="nav-item" data-section="arquivos"><span class="nav-icon">📁</span>Arquivos</div>
+    
     <div class="nav-item" data-section="odontograma"><span class="nav-icon">🦷</span>Odontograma</div>
     <div class="nav-item" data-section="agenda"><span class="nav-icon">🗓️</span>Agenda</div>
   </nav>
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
-    <div class="sidebar-footer">Central Clínica v1.0</div>
+    <div class="sidebar-footer">IA SAÚDE</div>
 </aside>
 
 <!-- MAIN -->
@@ -556,15 +556,19 @@ tbody tr:last-child{border-bottom:none}
     </div>
     <div class="modal-body">
       <div class="modal-tabs">
-        <div class="modal-tab active" data-tab="dados">Dados</div>
-        <div class="modal-tab" data-tab="anotacoes">Anotações</div>
+        <div class="modal-tab active" data-tab="ficha">Ficha clínica</div>
+        <div class="modal-tab" data-tab="anamnese">Anamnese</div>
+        <div class="modal-tab" data-tab="evolucoes">Evoluções</div>
         <div class="modal-tab" data-tab="documentos">Documentos</div>
-        <div class="modal-tab" data-tab="odontomod">Odontograma</div>
+        <div class="modal-tab" data-tab="arquivos">Arquivos</div>
+        <div class="modal-tab" data-tab="consultas">Consultas</div>
       </div>
-      <div class="modal-tab-content active" id="tab-dados"></div>
-      <div class="modal-tab-content" id="tab-anotacoes"></div>
+      <div class="modal-tab-content active" id="tab-ficha"></div>
+      <div class="modal-tab-content" id="tab-anamnese"></div>
+      <div class="modal-tab-content" id="tab-evolucoes"></div>
       <div class="modal-tab-content" id="tab-documentos"></div>
-      <div class="modal-tab-content" id="tab-odontomod"></div>
+      <div class="modal-tab-content" id="tab-arquivos"></div>
+      <div class="modal-tab-content" id="tab-consultas"></div>
     </div>
   </div>
 </div>
@@ -600,7 +604,7 @@ function initDashboard(){
   document.getElementById('data-loader').classList.add('hidden');
   // Update sidebar footer with patient count
   document.querySelector('.sidebar-footer').textContent=
-    `IA Pacientes v1.0 · ${data.patients.length} pacientes`;
+    `IA SAÚDE · ${data.patients.length} pacientes`;
 }
 
 function loadDemoData(){
@@ -936,74 +940,7 @@ function openPatient(pid){
   if(!p)return;
   document.getElementById('modal-patient-name').textContent=p.name;
 
-  // DADOS
-  const age=calcAge(p.birthdate);
-  document.getElementById('tab-dados').innerHTML=`
-    <div class="detail-grid">
-      <div class="detail-item"><label>Nome Completo</label><span>${p.name||'—'}</span></div>
-      <div class="detail-item"><label>Telefone</label><span>${fmtPhone(p.phone)}</span></div>
-      <div class="detail-item"><label>E-mail</label><span>${p.email||'—'}</span></div>
-      <div class="detail-item"><label>Data de Nascimento</label><span>${fmtDate(p.birthdate)}${age?' ('+age+' anos)':''}</span></div>
-      <div class="detail-item"><label>Cadastrado em</label><span>${fmtDate(p.created_at)}</span></div>
-      <div class="detail-item"><label>Total de Consultas</label><span>${p.apptCount}</span></div>
-      <div class="detail-item"><label>Última Consulta</label><span>${fmtDate(p.last)||'—'}</span></div>
-      <div class="detail-item"><label>Próxima Consulta</label><span>${fmtDate(p.next)||'—'}</span></div>
-    </div>
-    <div style="margin-top:20px">
-      <div class="section-title">Histórico de Consultas</div>
-      ${p.allAppts.length===0?'<p style="color:var(--text-muted);font-size:13.5px">Nenhuma consulta registrada.</p>':
-        p.allAppts.slice().sort((a,b)=>new Date(b.attributes?.start_date||0)-new Date(a.attributes?.start_date||0))
-        .map(a=>`<div class="doc-item">
-          <div class="ai-left">
-            <div class="doc-name">${a.attributes?.title||'Consulta'}</div>
-            <div class="doc-meta">${fmtDate(a.attributes?.start_date)} · ${a.attributes?.observation||''}</div>
-          </div>
-          <span class="badge ${a.attributes?.attended?'badge-green':'badge-gray'}">${a.attributes?.attended?'Realizada':'Agendada'}</span>
-        </div>`).join('')
-      }
-    </div>`;
-
-  // ANOTAÇÕES
-  const anns=(data.annotations||{})[String(pid)]||[];
-  document.getElementById('tab-anotacoes').innerHTML=anns.length===0
-    ?'<div class="empty-state"><div class="es-icon">📝</div><p>Nenhuma anotação</p></div>'
-    :anns.map(an=>`<div class="annotation-item">
-        <div class="ann-content">${(an.attributes?.content||an.content||'').replace(/\n/g,'<br>')}</div>
-        <div class="ann-meta">Por ${an.attributes?.user_name||an.user_name||'—'} em ${fmtDate(an.attributes?.created_at||an.created_at)}</div>
-      </div>`).join('');
-
-  // DOCUMENTOS
-  const docs=(data.documents||{})[String(pid)]||[];
-  document.getElementById('tab-documentos').innerHTML=docs.length===0
-    ?'<div class="empty-state"><div class="es-icon">📂</div><p>Nenhum documento</p></div>'
-    :docs.map(d=>`<div class="archive-item">
-        <div class="ai-left">
-          <div class="ai-name">${d.attributes?.name||d.name||'—'}</div>
-          <div class="ai-meta">${d.attributes?.folder_name||d.folder_name||'—'} · ${fmtDate(d.attributes?.created_at||d.created_at)}</div>
-        </div>
-        ${(d.attributes?.url||d.url)?`<a href="${d.attributes?.url||d.url}" target="_blank" class="btn btn-outline btn-sm">Abrir</a>`:''}
-      </div>`).join('');
-
-  // ODONTOGRAMA placeholder
-  document.getElementById('tab-odontomod').innerHTML=`
-    <div style="text-align:center;padding:24px 0">
-      <p style="color:var(--text-muted);font-size:13.5px">Para registrar o odontograma deste paciente, utilize a seção <strong>🦷 Odontograma</strong> no menu lateral.</p>
-    </div>`;
-
-  // Tab switching inside modal
-  document.querySelectorAll('.modal-tab').forEach(t=>{
-    t.onclick=()=>{
-      document.querySelectorAll('.modal-tab').forEach(x=>x.classList.remove('active'));
-      document.querySelectorAll('.modal-tab-content').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      document.getElementById('tab-'+t.dataset.tab).classList.add('active');
-    };
-  });
-  // Reset tabs
-  document.querySelectorAll('.modal-tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.modal-tab-content').forEach(x=>x.classList.remove('active'));
-  document.querySelector('.modal-tab[data-tab="dados"]').classList.add('active');
-  document.getElementById('tab-dados').classList.add('active');
+  IAS_renderFicha(p, String(pid));
 
   document.getElementById('patient-modal').classList.add('open');
 }
@@ -1877,6 +1814,373 @@ function excluirAgendamento() {
   var loaded={};
   function load(frameId,b64){if(loaded[frameId]){return;}loaded[frameId]=true;var fr=document.getElementById(frameId);if(fr){fr.srcdoc=dec(b64);}}
   document.querySelectorAll(".nav-item").forEach(function(el){el.addEventListener("click",function(){var s=el.getAttribute("data-section");if(s==="ia-clinica"){load("if-clinica",B64C);}if(s==="ia-financeira"){load("if-financeira",B64F);}});});
+})();
+</script>
+
+
+<style>
+/* ===== IA SAUDE - Ficha clinica do paciente ===== */
+#patient-modal .modal{width:min(1080px,96vw)}
+#patient-modal .modal-tabs{flex-wrap:wrap}
+.fi-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 18px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.fi-info div{font-size:13px;color:var(--text)}
+.fi-info label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700;margin-bottom:2px}
+.fi-sec-title{font-size:13.5px;font-weight:700;color:var(--text);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.fi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.fi-tile{border:1px solid var(--border);border-radius:12px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;background:var(--card);transition:.15s;text-align:center}
+.fi-tile:hover{border-color:var(--primary);box-shadow:var(--shadow);transform:translateY(-1px)}
+.fi-tile .fi-ic{font-size:30px;line-height:1}
+.fi-tile .fi-nm{font-size:12.5px;font-weight:600;color:var(--text);word-break:break-word}
+.fi-tile .fi-ct{font-size:11px;color:var(--text-muted)}
+.fi-tile.fi-add{border-style:dashed;background:#f8fafc}
+.fi-file-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border:1px solid var(--border);border-radius:9px;margin-bottom:8px}
+.fi-file-row .fi-fn{font-size:13px;font-weight:600;color:var(--text)}
+.fi-file-row .fi-fm{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.fi-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.fi-fg{display:flex;flex-direction:column;gap:4px}
+.fi-fg.full{grid-column:1/-1}
+.fi-fg label{font-size:11.5px;font-weight:600;color:var(--text-muted)}
+.fi-fg input,.fi-fg textarea,.fi-fg select{padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:#fff;color:var(--text)}
+.fi-fg input:focus,.fi-fg textarea:focus,.fi-fg select:focus{border-color:var(--primary)}
+.fi-fg textarea{resize:vertical;min-height:62px}
+.fi-btn{padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.fi-btn:hover{background:var(--primary-dark)}
+.fi-btn-out{padding:6px 13px;background:transparent;color:var(--primary);border:1.5px solid var(--primary);border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer}
+.fi-btn-sm{padding:5px 11px;font-size:11.5px}
+.fi-entry{border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:10px}
+.fi-entry .fi-ed{font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:5px}
+.fi-entry .fi-et{font-size:13px;color:var(--text);white-space:pre-wrap;line-height:1.55}
+.fi-empty{text-align:center;padding:28px 0;color:var(--text-muted);font-size:13px}
+.fi-empty .fi-ei{font-size:34px;display:block;margin-bottom:6px}
+.fi-tooth{display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;width:32px}
+.fi-tooth .fi-tnum{font-size:9px;color:var(--text-muted)}
+.fi-tooth .fi-tbox{width:24px;height:28px;border:1.5px solid #cbd5e1;border-radius:4px;margin-top:2px;transition:.1s}
+.fi-tooth:hover .fi-tbox{border-color:var(--primary)}
+.fi-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.fi-cond{padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;background:var(--card);color:var(--text)}
+.fi-cond.active{border-color:var(--primary);background:rgba(13,115,119,.12)}
+.fi-cond .fi-dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.2)}
+.fi-arch{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-bottom:8px}
+</style>
+<script>
+/* ============================================================
+   IA SAUDE - Ficha clinica do paciente (modulo isolado)
+   ============================================================ */
+var IAS_curPid=null, IAS_curCond='carie', IAS_folderList=[], IAS_curFolder=null, IAS_uploadFolder='Sem pasta';
+var IAS_CONDS=[
+ {k:'normal',n:'Normal',c:'#ffffff'},
+ {k:'carie',n:'Carie',c:'#e53935'},
+ {k:'restau',n:'Restauracao',c:'#1e88e5'},
+ {k:'coroa',n:'Coroa',c:'#fbc02d'},
+ {k:'canal',n:'Canal',c:'#43a047'},
+ {k:'implan',n:'Implante',c:'#6d4c41'},
+ {k:'ausente',n:'Ausente',c:'#9e9e9e'}
+];
+var IAS_UPPER=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+var IAS_LOWER=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+var IAS_ANAM=[
+ {k:'queixa',l:'Queixa principal',t:'ta'},
+ {k:'hda',l:'Historia da doenca atual',t:'ta'},
+ {k:'medico',l:'Antecedentes medicos / doencas sistemicas',t:'ta'},
+ {k:'medic',l:'Medicacoes em uso',t:'ta'},
+ {k:'alergia',l:'Alergias',t:'in'},
+ {k:'bruxismo',l:'Bruxismo do sono',t:'sel',o:['Nao avaliado','Ausente','Suspeita','Confirmado']},
+ {k:'apert',l:'Apertamento diurno',t:'sel',o:['Nao avaliado','Ausente','Suspeita','Confirmado']},
+ {k:'dtm',l:'Sintomas de DTM (dor ATM, estalido, limitacao)',t:'ta'},
+ {k:'sono',l:'Sono / ronco / suspeita de apneia',t:'ta'},
+ {k:'eva',l:'Dor orofacial - EVA (0-10)',t:'sel',o:['-','0','1','2','3','4','5','6','7','8','9','10']},
+ {k:'cefaleia',l:'Cefaleia / dor cervical',t:'in'},
+ {k:'obs',l:'Observacoes',t:'ta'}
+];
+
+function IAS_esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function IAS_lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function IAS_lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){if(window.toast)toast('Nao foi possivel salvar (armazenamento cheio)');return false;}}
+function IAS_fd(d){if(!d)return '-';try{return (window.fmtDate?fmtDate(d):d)||'-';}catch(e){return d;}}
+function IAS_safe(fn){try{fn();}catch(e){if(window.console)console.error('[IA SAUDE]',e);}}
+
+/* ---------- entrada principal ---------- */
+function IAS_renderFicha(p,pid){
+  IAS_curPid=String(pid); IAS_curFolder=null;
+  IAS_setupTabs();
+  IAS_safe(function(){IAS_renderFichaClinica(p,IAS_curPid);});
+  IAS_safe(function(){IAS_renderAnamnese(IAS_curPid);});
+  IAS_safe(function(){IAS_renderEvolucoes(IAS_curPid);});
+  IAS_safe(function(){IAS_renderDocumentos(IAS_curPid);});
+  IAS_safe(function(){IAS_renderArquivos(IAS_curPid);});
+  IAS_safe(function(){IAS_renderConsultas(p,IAS_curPid);});
+}
+function IAS_setupTabs(){
+  var tabs=document.querySelectorAll('#patient-modal .modal-tab');
+  tabs.forEach(function(t){
+    t.onclick=function(){
+      document.querySelectorAll('#patient-modal .modal-tab').forEach(function(x){x.classList.remove('active');});
+      document.querySelectorAll('#patient-modal .modal-tab-content').forEach(function(x){x.classList.remove('active');});
+      t.classList.add('active');
+      var el=document.getElementById('tab-'+t.getAttribute('data-tab'));
+      if(el)el.classList.add('active');
+    };
+  });
+  document.querySelectorAll('#patient-modal .modal-tab').forEach(function(x){x.classList.remove('active');});
+  document.querySelectorAll('#patient-modal .modal-tab-content').forEach(function(x){x.classList.remove('active');});
+  var t0=document.querySelector('#patient-modal .modal-tab[data-tab="ficha"]'); if(t0)t0.classList.add('active');
+  var c0=document.getElementById('tab-ficha'); if(c0)c0.classList.add('active');
+}
+
+/* ---------- FICHA CLINICA: info + odontograma + anotacoes ---------- */
+function IAS_renderFichaClinica(p,pid){
+  var age=window.calcAge?calcAge(p.birthdate):'';
+  var info='<div class="fi-info">'
+   +'<div><label>Telefone</label>'+IAS_esc(window.fmtPhone?fmtPhone(p.phone):(p.phone||'-'))+'</div>'
+   +'<div><label>E-mail</label>'+IAS_esc(p.email||'-')+'</div>'
+   +'<div><label>Nascimento</label>'+IAS_fd(p.birthdate)+(age?' ('+age+' anos)':'')+'</div>'
+   +'<div><label>Cadastrado</label>'+IAS_fd(p.created_at)+'</div>'
+   +'<div><label>Total de consultas</label>'+(p.apptCount||0)+'</div>'
+   +'<div><label>Ultima consulta</label>'+IAS_fd(p.last)+'</div>'
+   +'</div>';
+  document.getElementById('tab-ficha').innerHTML=info
+   +'<div class="fi-sec-title">&#129463; Odontograma</div>'+IAS_odontoHtml()
+   +'<div class="fi-sec-title">&#128221; Anotacoes</div>'+IAS_anotacoesHtml(pid);
+  IAS_paintTeeth();
+}
+function IAS_odontoHtml(){
+  var tb=IAS_CONDS.map(function(c){
+    return '<div class="fi-cond'+(c.k===IAS_curCond?' active':'')+'" onclick="IAS_setCond(this,\''+c.k+'\')"><span class="fi-dot" style="background:'+c.c+'"></span>'+c.n+'</div>';
+  }).join('');
+  function arch(list){
+    return '<div class="fi-arch">'+list.map(function(f){
+      return '<div class="fi-tooth" onclick="IAS_tooth('+f+')"><span class="fi-tnum">'+f+'</span><span class="fi-tbox" id="ias-t-'+f+'"></span></div>';
+    }).join('')+'</div>';
+  }
+  return '<div class="fi-toolbar">'+tb+'</div>'+arch(IAS_UPPER)+arch(IAS_LOWER)
+   +'<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Escolha uma condicao e clique nos dentes. Salvo automaticamente neste navegador.</div>';
+}
+function IAS_paintTeeth(){
+  var st=IAS_lsGet('iasaude_odonto_'+IAS_curPid,{});
+  IAS_UPPER.concat(IAS_LOWER).forEach(function(f){
+    var box=document.getElementById('ias-t-'+f); if(!box)return;
+    var k=st[f]||'normal';
+    var c=IAS_CONDS.filter(function(x){return x.k===k;})[0]||IAS_CONDS[0];
+    box.style.background=c.c; box.title='Dente '+f+' - '+c.n;
+  });
+}
+function IAS_setCond(el,k){
+  IAS_curCond=k;
+  if(el&&el.parentNode){el.parentNode.querySelectorAll('.fi-cond').forEach(function(x){x.classList.remove('active');});el.classList.add('active');}
+}
+function IAS_tooth(f){
+  var key='iasaude_odonto_'+IAS_curPid; var st=IAS_lsGet(key,{});
+  st[f]=IAS_curCond; IAS_lsSet(key,st); IAS_paintTeeth();
+}
+function IAS_anotacoesHtml(pid){
+  var orig=((window.data&&data.annotations)||{})[String(pid)]||[];
+  var extra=IAS_lsGet('iasaude_anotacoes_'+pid,[]);
+  var all=[];
+  extra.forEach(function(a){all.push({d:a.d,u:a.u||'Dr. Victor Vaz',t:a.t});});
+  orig.forEach(function(a){var at=a.attributes||{};all.push({d:at.created_at||a.created_at,u:at.user_name||a.user_name||'-',t:at.content||a.content||''});});
+  var rows='<div style="margin-bottom:10px"><button class="fi-btn fi-btn-sm" onclick="IAS_addAnotacao()">+ Anotacao</button></div>';
+  if(all.length===0)rows+='<div class="fi-empty"><span class="fi-ei">&#128221;</span>Nenhuma anotacao</div>';
+  else rows+=all.map(function(a){return '<div class="fi-entry"><div class="fi-ed">'+IAS_fd(a.d)+' &middot; '+IAS_esc(a.u)+'</div><div class="fi-et">'+IAS_esc(a.t)+'</div></div>';}).join('');
+  return rows;
+}
+function IAS_addAnotacao(){
+  var t=prompt('Nova anotacao para este paciente:');
+  if(!t||!t.trim())return;
+  var k='iasaude_anotacoes_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
+  arr.unshift({id:Date.now(),d:new Date().toISOString(),u:'Dr. Victor Vaz',t:t.trim()});
+  IAS_lsSet(k,arr);
+  if(window.toast)toast('Anotacao adicionada');
+  var p=(window.allPatients||[]).filter(function(x){return String(x.id)===String(IAS_curPid);})[0];
+  if(p)IAS_renderFichaClinica(p,IAS_curPid);
+}
+
+/* ---------- ANAMNESE ---------- */
+function IAS_renderAnamnese(pid){
+  var v=IAS_lsGet('iasaude_anamnese_'+pid,{});
+  var html='<div class="fi-sec-title">&#128203; Anamnese</div><div class="fi-form-grid">';
+  IAS_ANAM.forEach(function(f){
+    var val=v[f.k]||''; var full=(f.t==='ta')?' full':''; var ctl;
+    if(f.t==='ta')ctl='<textarea id="ias-an-'+f.k+'">'+IAS_esc(val)+'</textarea>';
+    else if(f.t==='sel')ctl='<select id="ias-an-'+f.k+'">'+f.o.map(function(o){return '<option'+(o===val?' selected':'')+'>'+IAS_esc(o)+'</option>';}).join('')+'</select>';
+    else ctl='<input id="ias-an-'+f.k+'" value="'+IAS_esc(val)+'">';
+    html+='<div class="fi-fg'+full+'"><label>'+IAS_esc(f.l)+'</label>'+ctl+'</div>';
+  });
+  html+='</div><div style="margin-top:14px;display:flex;align-items:center;gap:12px"><button class="fi-btn" onclick="IAS_saveAnamnese()">Salvar anamnese</button>';
+  if(v._saved)html+='<span style="font-size:11.5px;color:var(--text-muted)">Atualizada em '+IAS_fd(v._saved)+'</span>';
+  html+='</div>';
+  document.getElementById('tab-anamnese').innerHTML=html;
+}
+function IAS_saveAnamnese(){
+  var o={};
+  IAS_ANAM.forEach(function(f){var el=document.getElementById('ias-an-'+f.k);if(el)o[f.k]=el.value;});
+  o._saved=new Date().toISOString();
+  IAS_lsSet('iasaude_anamnese_'+IAS_curPid,o);
+  if(window.toast)toast('Anamnese salva');
+  IAS_renderAnamnese(IAS_curPid);
+}
+
+/* ---------- EVOLUCOES ---------- */
+function IAS_renderEvolucoes(pid){
+  var arr=IAS_lsGet('iasaude_evolucoes_'+pid,[]);
+  var list=arr.length===0?'<div class="fi-empty"><span class="fi-ei">&#128200;</span>Nenhuma evolucao registrada</div>'
+   :arr.map(function(e,i){return '<div class="fi-entry"><div class="fi-ed">'+IAS_fd(e.date)+' &middot; '+IAS_esc(e.autor||'Dr. Victor Vaz')
+     +'<span style="float:right;cursor:pointer;color:var(--danger)" onclick="IAS_delEvolucao('+i+')">excluir</span></div><div class="fi-et">'+IAS_esc(e.texto)+'</div></div>';}).join('');
+  document.getElementById('tab-evolucoes').innerHTML=
+   '<div class="fi-sec-title">&#128200; Evolucao clinica</div>'
+   +'<div class="fi-fg full" style="margin-bottom:10px"><textarea id="ias-evo-txt" placeholder="Descreva a evolucao do paciente nesta data..."></textarea></div>'
+   +'<button class="fi-btn" onclick="IAS_addEvolucao()">+ Registrar evolucao</button>'
+   +'<div style="margin-top:16px">'+list+'</div>';
+}
+function IAS_addEvolucao(){
+  var el=document.getElementById('ias-evo-txt'); var t=el?el.value:'';
+  if(!t||!t.trim()){if(window.toast)toast('Escreva a evolucao');return;}
+  var k='iasaude_evolucoes_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
+  arr.unshift({date:new Date().toISOString(),texto:t.trim(),autor:'Dr. Victor Vaz'});
+  IAS_lsSet(k,arr);
+  if(window.toast)toast('Evolucao registrada');
+  IAS_renderEvolucoes(IAS_curPid);
+}
+function IAS_delEvolucao(i){
+  if(!confirm('Excluir esta evolucao?'))return;
+  var k='iasaude_evolucoes_'+IAS_curPid; var arr=IAS_lsGet(k,[]); arr.splice(i,1); IAS_lsSet(k,arr); IAS_renderEvolucoes(IAS_curPid);
+}
+
+/* ---------- DOCUMENTOS ---------- */
+function IAS_renderDocumentos(pid){
+  var arr=IAS_lsGet('iasaude_documentos_'+pid,[]);
+  var list=arr.length===0?'<div class="fi-empty"><span class="fi-ei">&#128196;</span>Nenhum documento gerado</div>'
+   :arr.map(function(d,i){return '<div class="fi-entry"><div class="fi-ed">'+IAS_esc(d.tipo)+' &middot; '+IAS_fd(d.date)
+     +'<span style="float:right"><span style="cursor:pointer;color:var(--primary)" onclick="IAS_printDocumento('+i+')">imprimir</span> &nbsp; <span style="cursor:pointer;color:var(--danger)" onclick="IAS_delDocumento('+i+')">excluir</span></span></div>'
+     +'<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+IAS_esc(d.nome)+'</div><div class="fi-et">'+IAS_esc(d.conteudo)+'</div></div>';}).join('');
+  document.getElementById('tab-documentos').innerHTML=
+   '<div class="fi-sec-title">&#128196; Documentos (receitas, atestados)</div>'
+   +'<div class="fi-form-grid">'
+   +'<div class="fi-fg"><label>Tipo</label><select id="ias-doc-tipo"><option>Receita</option><option>Atestado</option><option>Encaminhamento</option><option>Orientacoes</option><option>Outro</option></select></div>'
+   +'<div class="fi-fg"><label>Titulo / nome</label><input id="ias-doc-nome" placeholder="ex: Receita - relaxante muscular"></div>'
+   +'<div class="fi-fg full"><label>Conteudo</label><textarea id="ias-doc-conteudo" placeholder="Texto do documento..."></textarea></div>'
+   +'</div><div style="margin:12px 0"><button class="fi-btn" onclick="IAS_addDocumento()">+ Gerar documento</button></div>'
+   +list;
+}
+function IAS_addDocumento(){
+  var tp=document.getElementById('ias-doc-tipo'), nm=document.getElementById('ias-doc-nome'), ct=document.getElementById('ias-doc-conteudo');
+  if(!nm||!nm.value.trim()){if(window.toast)toast('Informe o titulo do documento');return;}
+  var k='iasaude_documentos_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
+  arr.unshift({date:new Date().toISOString(),tipo:tp?tp.value:'Outro',nome:nm.value.trim(),conteudo:ct?ct.value:''});
+  IAS_lsSet(k,arr);
+  if(window.toast)toast('Documento gerado');
+  IAS_renderDocumentos(IAS_curPid);
+}
+function IAS_delDocumento(i){
+  if(!confirm('Excluir este documento?'))return;
+  var k='iasaude_documentos_'+IAS_curPid; var arr=IAS_lsGet(k,[]); arr.splice(i,1); IAS_lsSet(k,arr); IAS_renderDocumentos(IAS_curPid);
+}
+function IAS_printDocumento(i){
+  var arr=IAS_lsGet('iasaude_documentos_'+IAS_curPid,[]); var d=arr[i]; if(!d)return;
+  var pn=(document.getElementById('modal-patient-name')||{}).textContent||'';
+  var w=window.open('','_blank'); if(!w){if(window.toast)toast('Permita pop-ups para imprimir');return;}
+  w.document.write('<html><head><title>'+IAS_esc(d.nome)+'</title><meta charset="utf-8"><style>body{font-family:system-ui,Segoe UI,sans-serif;padding:48px;color:#1a2535;line-height:1.65}h1{font-size:19px;margin:0}h2{font-size:14px;color:#0d7377;margin:18px 0 6px}.hd{border-bottom:2px solid #0d7377;padding-bottom:10px;margin-bottom:18px}.ft{margin-top:64px;font-size:11px;color:#888;border-top:1px solid #ccc;padding-top:10px}.bd{white-space:pre-wrap}</style></head><body>'
+   +'<div class="hd"><h1>Dr. Victor Vaz</h1><div style="font-size:12px;color:#666">DTM &middot; Sono &middot; Bruxismo &middot; Dor Orofacial</div></div>'
+   +'<p><strong>'+IAS_esc(d.tipo)+'</strong></p><p><strong>Paciente:</strong> '+IAS_esc(pn)+'<br><strong>Data:</strong> '+IAS_fd(d.date)+'</p>'
+   +'<h2>'+IAS_esc(d.nome)+'</h2><div class="bd">'+IAS_esc(d.conteudo)+'</div>'
+   +'<div class="ft">Documento gerado pela IA SAUDE</div></body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){try{w.print();}catch(e){}},350);
+}
+
+/* ---------- ARQUIVOS (pastas + documentos) ---------- */
+function IAS_buildFolders(pid){
+  var real=((window.data&&data.documents)||{})[String(pid)]||[];
+  var custFiles=IAS_lsGet('iasaude_files_'+pid,[]);
+  var custFolders=IAS_lsGet('iasaude_folders_'+pid,[]);
+  var map={};
+  function ensure(n){n=(n&&String(n).trim())||'Sem pasta';if(!map[n])map[n]={name:n,files:[]};return map[n];}
+  custFolders.forEach(function(n){ensure(n);});
+  real.forEach(function(d){var a=d.attributes||{};ensure(a.folder_name).files.push({name:a.name||'Documento',date:a.created_at,url:a.url||a.signature_url||'',real:1});});
+  custFiles.forEach(function(f){ensure(f.folder).files.push({name:f.name,date:f.date,dataUrl:f.dataUrl,real:0});});
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
+}
+function IAS_renderArquivos(pid){
+  IAS_curFolder=null;
+  IAS_folderList=IAS_buildFolders(pid);
+  var tiles='<div class="fi-tile fi-add" onclick="IAS_addPasta()"><span class="fi-ic">&#128193;</span><span class="fi-nm">Adicionar pasta</span></div>'
+   +'<div class="fi-tile fi-add" onclick="IAS_novoDoc(null)"><span class="fi-ic">&#10133;</span><span class="fi-nm">Novo Documento</span></div>';
+  IAS_folderList.forEach(function(f,i){
+    tiles+='<div class="fi-tile" onclick="IAS_openFolderIdx('+i+')"><span class="fi-ic">&#128194;</span><span class="fi-nm">'+IAS_esc(f.name)+'</span><span class="fi-ct">'+f.files.length+' arquivo(s)</span></div>';
+  });
+  var total=IAS_folderList.reduce(function(s,f){return s+f.files.length;},0);
+  document.getElementById('tab-arquivos').innerHTML=
+   '<div class="fi-sec-title">&#128193; Arquivos do paciente <span style="font-weight:500;color:var(--text-muted)">&middot; '+total+' no total</span></div>'
+   +'<div class="fi-grid">'+tiles+'</div>';
+}
+function IAS_openFolderIdx(i){
+  var f=IAS_folderList[i]; if(!f)return;
+  IAS_curFolder=f;
+  var rows=f.files.length===0?'<div class="fi-empty"><span class="fi-ei">&#128194;</span>Pasta vazia</div>'
+   :f.files.map(function(file,j){
+      var open=file.real
+       ?(file.url?'<a class="fi-btn-out fi-btn-sm" href="'+IAS_esc(file.url)+'" target="_blank" rel="noopener">Abrir</a>':'<span style="font-size:11px;color:var(--text-muted)">Sem link</span>')
+       :'<button class="fi-btn-out fi-btn-sm" onclick="IAS_openCustom('+j+')">Abrir</button>';
+      return '<div class="fi-file-row"><div><div class="fi-fn">'+IAS_esc(file.name)+'</div><div class="fi-fm">'+IAS_fd(file.date)+(file.real?' &middot; Capim':' &middot; adicionado')+'</div></div>'+open+'</div>';
+   }).join('');
+  document.getElementById('tab-arquivos').innerHTML=
+   '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap">'
+   +'<div class="fi-sec-title" style="margin:0">&#128194; '+IAS_esc(f.name)+'</div>'
+   +'<div style="display:flex;gap:8px"><button class="fi-btn-out fi-btn-sm" onclick="IAS_renderArquivos(IAS_curPid)">&#8592; Voltar</button>'
+   +'<button class="fi-btn fi-btn-sm" onclick="IAS_novoDocFolder()">+ Novo Documento</button></div></div>'+rows;
+}
+function IAS_openCustom(j){
+  var f=IAS_curFolder&&IAS_curFolder.files[j];
+  if(f&&f.dataUrl){var w=window.open();if(w){w.document.write('<iframe src="'+f.dataUrl+'" style="border:0;position:fixed;inset:0;width:100%;height:100%"></iframe>');w.document.close();}}
+}
+function IAS_addPasta(){
+  var n=prompt('Nome da nova pasta:'); if(!n||!n.trim())return;
+  var k='iasaude_folders_'+IAS_curPid; var f=IAS_lsGet(k,[]);
+  if(f.indexOf(n.trim())<0)f.push(n.trim());
+  IAS_lsSet(k,f);
+  if(window.toast)toast('Pasta criada');
+  IAS_renderArquivos(IAS_curPid);
+}
+function IAS_novoDoc(folder){
+  IAS_uploadFolder=folder||'Sem pasta';
+  var inp=document.getElementById('ias-file-input'); if(inp)inp.click();
+}
+function IAS_novoDocFolder(){IAS_novoDoc(IAS_curFolder?IAS_curFolder.name:'Sem pasta');}
+function IAS_onFilePicked(e){
+  var inp=e.target; var file=inp.files&&inp.files[0]; inp.value='';
+  if(!file)return;
+  if(file.size>1800000){if(window.toast)toast('Arquivo muito grande (max ~1,8 MB para salvar offline)');return;}
+  var r=new FileReader();
+  r.onload=function(){
+    var k='iasaude_files_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
+    arr.push({folder:IAS_uploadFolder,name:file.name,date:new Date().toISOString(),dataUrl:r.result});
+    if(!IAS_lsSet(k,arr))return;
+    if(window.toast)toast('Documento adicionado');
+    var target=IAS_uploadFolder;
+    IAS_folderList=IAS_buildFolders(IAS_curPid);
+    var idx=-1; for(var i=0;i<IAS_folderList.length;i++){if(IAS_folderList[i].name===target){idx=i;break;}}
+    if(idx>=0)IAS_openFolderIdx(idx); else IAS_renderArquivos(IAS_curPid);
+  };
+  r.readAsDataURL(file);
+}
+
+/* ---------- CONSULTAS ---------- */
+function IAS_renderConsultas(p,pid){
+  var appts=(p.allAppts||[]).slice().sort(function(a,b){return new Date((b.attributes&&b.attributes.start_date)||0)-new Date((a.attributes&&a.attributes.start_date)||0);});
+  var html='<div class="fi-sec-title">&#128197; Consultas <span style="font-weight:500;color:var(--text-muted)">&middot; '+appts.length+'</span></div>';
+  if(appts.length===0)html+='<div class="fi-empty"><span class="fi-ei">&#128197;</span>Nenhuma consulta registrada</div>';
+  else html+=appts.map(function(a){var at=a.attributes||{};
+    return '<div class="fi-file-row"><div><div class="fi-fn">'+IAS_esc(at.title||'Consulta')+'</div><div class="fi-fm">'+IAS_fd(at.start_date)+(at.observation?' &middot; '+IAS_esc(at.observation):'')+'</div></div>'
+     +'<span class="badge '+(at.attended?'badge-green':'badge-gray')+'">'+(at.attended?'Realizada':'Agendada')+'</span></div>';
+  }).join('');
+  document.getElementById('tab-consultas').innerHTML=html;
+}
+
+/* ---------- init: input de arquivo oculto ---------- */
+(function(){
+  if(document.getElementById('ias-file-input'))return;
+  var inp=document.createElement('input');
+  inp.type='file'; inp.id='ias-file-input'; inp.style.display='none';
+  inp.addEventListener('change',IAS_onFilePicked);
+  (document.body||document.documentElement).appendChild(inp);
 })();
 </script>
 
