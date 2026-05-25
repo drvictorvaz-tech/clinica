@@ -1923,70 +1923,112 @@ function IAS_setupTabs(){
 }
 
 /* ---------- FICHA CLINICA: info + odontograma + anotacoes ---------- */
+function IAS_odoTeeth(){
+  if((window.IAS_odoMode||'perm')==='deci')
+    return {u:[55,54,53,52,51,61,62,63,64,65],l:[85,84,83,82,81,71,72,73,74,75]};
+  return {u:IAS_UPPER,l:IAS_LOWER};
+}
+function IAS_toothSvg(f){
+  return '<svg class="tsvg" viewBox="0 0 30 34"><path id="ias-t-'+f+'" d="M15 3 C9 3 5 7 5 13 C5 18 7 21 8 29 C8.3 31.5 11 31.5 11.4 29 L13 21.5 C13.4 19.5 16.6 19.5 17 21.5 L18.6 29 C19 31.5 21.7 31.5 22 29 C23 21 25 18 25 13 C25 7 21 3 15 3 Z" fill="#ffffff" stroke="#b9c4d0" stroke-width="1.5"/></svg>';
+}
 function IAS_renderFichaClinica(p,pid){
-  var age=window.calcAge?calcAge(p.birthdate):'';
-  var info='<div class="fi-info">'
-   +'<div><label>Telefone</label>'+IAS_esc(window.fmtPhone?fmtPhone(p.phone):(p.phone||'-'))+'</div>'
-   +'<div><label>E-mail</label>'+IAS_esc(p.email||'-')+'</div>'
-   +'<div><label>Nascimento</label>'+IAS_fd(p.birthdate)+(age?' ('+age+' anos)':'')+'</div>'
-   +'<div><label>Cadastrado</label>'+IAS_fd(p.created_at)+'</div>'
-   +'<div><label>Total de consultas</label>'+(p.apptCount||0)+'</div>'
-   +'<div><label>Ultima consulta</label>'+IAS_fd(p.last)+'</div>'
-   +'</div>';
-  document.getElementById('tab-ficha').innerHTML=info
-   +'<div class="fi-sec-title">&#129463; Odontograma</div>'+IAS_odontoHtml()
-   +'<div class="fi-sec-title">&#128221; Anotacoes</div>'+IAS_anotacoesHtml(pid);
+  document.getElementById('tab-ficha').innerHTML=
+    '<div class="fc-cols"><div class="fc-left">'+IAS_odontoHtml()+'</div>'
+    +'<div class="fc-right">'+IAS_anotacoesHtml(pid)+'</div></div>';
   IAS_paintTeeth();
 }
 function IAS_odontoHtml(){
-  var tb=IAS_CONDS.map(function(c){
-    return '<div class="fi-cond'+(c.k===IAS_curCond?' active':'')+'" onclick="IAS_setCond(this,\''+c.k+'\')"><span class="fi-dot" style="background:'+c.c+'"></span>'+c.n+'</div>';
-  }).join('');
+  var mode=window.IAS_odoMode||'perm';
+  var head='<div class="fc-head"><h3>Odontograma</h3>'
+    +'<div class="odo-toggle">'
+    +'<button class="odo-tg'+(mode==='perm'?' active':'')+'" onclick="IAS_odoSet(\'perm\')">Permanente</button>'
+    +'<button class="odo-tg'+(mode==='deci'?' active':'')+'" onclick="IAS_odoSet(\'deci\')">Decídua</button>'
+    +'</div></div>';
+  var t=IAS_odoTeeth();
   function arch(list){
-    return '<div class="fi-arch">'+list.map(function(f){
-      return '<div class="fi-tooth" onclick="IAS_tooth('+f+')"><span class="fi-tnum">'+f+'</span><span class="fi-tbox" id="ias-t-'+f+'"></span></div>';
+    return '<div class="odo-arch">'+list.map(function(f){
+      return '<div class="tooth" onclick="IAS_tooth('+f+')" title="Dente '+f+'">'+IAS_toothSvg(f)+'<span class="tnum">'+f+'</span></div>';
     }).join('')+'</div>';
   }
-  return '<div class="fi-toolbar">'+tb+'</div>'+arch(IAS_UPPER)+arch(IAS_LOWER)
-   +'<div style="font-size:11px;color:var(--text-muted);margin-top:2px">Escolha uma condicao e clique nos dentes. Salvo automaticamente neste navegador.</div>';
+  var chart='<div class="odo-chart">'+arch(t.u)+arch(t.l)+'</div>';
+  var picker='<div class="odo-picker">'+IAS_CONDS.map(function(c){
+    return '<div class="oc-pill'+(c.k===IAS_curCond?' active':'')+'" onclick="IAS_setCond(this,\''+c.k+'\')"><span class="oc-dot" style="background:'+c.c+'"></span>'+c.n+'</div>';
+  }).join('')+'</div>';
+  return head+chart
+    +'<div class="odo-hint">Selecione uma condição abaixo e clique nos dentes para marcar.</div>'
+    +picker+IAS_odontoTable();
 }
 function IAS_paintTeeth(){
   var st=IAS_lsGet('iasaude_odonto_'+IAS_curPid,{});
-  IAS_UPPER.concat(IAS_LOWER).forEach(function(f){
-    var box=document.getElementById('ias-t-'+f); if(!box)return;
+  var t=IAS_odoTeeth();
+  t.u.concat(t.l).forEach(function(f){
+    var el=document.getElementById('ias-t-'+f); if(!el)return;
     var k=st[f]||'normal';
     var c=IAS_CONDS.filter(function(x){return x.k===k;})[0]||IAS_CONDS[0];
-    box.style.background=c.c; box.title='Dente '+f+' - '+c.n;
+    el.setAttribute('fill',c.c);
   });
+}
+function IAS_odontoTable(){
+  var st=IAS_lsGet('iasaude_odonto_'+IAS_curPid,{});
+  var rows=[];
+  Object.keys(st).forEach(function(f){
+    var k=st[f];
+    if(k&&k!=='normal'){
+      var c=IAS_CONDS.filter(function(x){return x.k===k;})[0];
+      if(c)rows.push({f:parseInt(f,10),n:c.n,c:c.c});
+    }
+  });
+  rows.sort(function(a,b){return a.f-b.f;});
+  var body=rows.length===0
+    ?'<tr><td colspan="3" class="odo-empty">Nenhum procedimento marcado.</td></tr>'
+    :rows.map(function(r){
+      return '<tr><td><strong>Dente '+r.f+'</strong></td><td><span class="odo-tag" style="background:'+r.c+'">'+IAS_esc(r.n)+'</span></td><td><span class="odo-rm" onclick="IAS_toothClear('+r.f+')">remover</span></td></tr>';
+    }).join('');
+  return '<div class="fc-subh">Ficha Geral</div>'
+    +'<table class="odo-tbl"><thead><tr><th>Dente</th><th>Estado</th><th>Ações</th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 function IAS_setCond(el,k){
   IAS_curCond=k;
-  if(el&&el.parentNode){el.parentNode.querySelectorAll('.fi-cond').forEach(function(x){x.classList.remove('active');});el.classList.add('active');}
+  if(el&&el.parentNode){el.parentNode.querySelectorAll('.oc-pill').forEach(function(x){x.classList.remove('active');});el.classList.add('active');}
 }
+function IAS_odoSet(m){ window.IAS_odoMode=m; IAS_reFicha(); }
 function IAS_tooth(f){
   var key='iasaude_odonto_'+IAS_curPid; var st=IAS_lsGet(key,{});
-  st[f]=IAS_curCond; IAS_lsSet(key,st); IAS_paintTeeth();
+  st[f]=IAS_curCond; IAS_lsSet(key,st); IAS_reFicha();
+}
+function IAS_toothClear(f){
+  var key='iasaude_odonto_'+IAS_curPid; var st=IAS_lsGet(key,{});
+  delete st[f]; IAS_lsSet(key,st); IAS_reFicha();
+}
+function IAS_reFicha(){
+  var p=(allPatients||[]).filter(function(x){return String(x.id)===String(IAS_curPid);})[0];
+  if(p)IAS_renderFichaClinica(p,IAS_curPid);
 }
 function IAS_anotacoesHtml(pid){
   var orig=(data.annotations||{})[String(pid)]||[];
   var extra=IAS_lsGet('iasaude_anotacoes_'+pid,[]);
   var all=[];
   extra.forEach(function(a){all.push({d:a.d,u:a.u||'Dr. Victor Vaz',t:a.t});});
-  orig.forEach(function(a){var at=a.attributes||{};all.push({d:at.created_at||a.created_at,u:at.user_name||a.user_name||'-',t:at.content||a.content||''});});
-  var rows='<div style="margin-bottom:10px"><button class="fi-btn fi-btn-sm" onclick="IAS_addAnotacao()">+ Anotacao</button></div>';
-  if(all.length===0)rows+='<div class="fi-empty"><span class="fi-ei">&#128221;</span>Nenhuma anotacao</div>';
-  else rows+=all.map(function(a){return '<div class="fi-entry"><div class="fi-ed">'+IAS_fd(a.d)+' &middot; '+IAS_esc(a.u)+'</div><div class="fi-et">'+IAS_esc(a.t)+'</div></div>';}).join('');
-  return rows;
+  orig.forEach(function(a){var at=a.attributes||{};all.push({d:at.created_at||a.created_at,u:at.user_name||a.user_name||'—',t:at.content||a.content||''});});
+  all.sort(function(a,b){return new Date(b.d||0)-new Date(a.d||0);});
+  var head='<div class="fc-head"><h3>Anotações</h3><button class="oc-add" onclick="IAS_addAnotacao()">+ Adicionar anotação</button></div>';
+  var body=all.length===0
+    ?'<div class="fi-empty"><span class="fi-ei">&#128221;</span>Nenhuma anotação</div>'
+    :all.map(function(a){
+      return '<div class="an-card"><div class="an-top"><span class="an-date">'+IAS_fd(a.d)+'</span></div>'
+       +'<div class="an-auth">&#129463; '+IAS_esc(a.u)+'</div>'
+       +'<div class="an-txt">'+IAS_esc(a.t)+'</div></div>';
+    }).join('');
+  return head+'<div class="an-list">'+body+'</div>';
 }
 function IAS_addAnotacao(){
-  var t=prompt('Nova anotacao para este paciente:');
+  var t=prompt('Nova anotação para este paciente:');
   if(!t||!t.trim())return;
   var k='iasaude_anotacoes_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
   arr.unshift({id:Date.now(),d:new Date().toISOString(),u:'Dr. Victor Vaz',t:t.trim()});
   IAS_lsSet(k,arr);
-  if(window.toast)toast('Anotacao adicionada');
-  var p=(allPatients||[]).filter(function(x){return String(x.id)===String(IAS_curPid);})[0];
-  if(p)IAS_renderFichaClinica(p,IAS_curPid);
+  if(window.toast)toast('Anotação adicionada');
+  IAS_reFicha();
 }
 
 /* ---------- ANAMNESE ---------- */
@@ -2449,6 +2491,46 @@ function loadAgenda(){IASAG_render();}
   try{IASAG_render();}catch(e){}
 })();
 </script>
+
+
+<style>
+/* ===== Ficha clinica estilo Capim ===== */
+.fc-cols{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:start}
+.fc-left,.fc-right{min-width:0}
+.fc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.fc-head h3{font-size:16px;font-weight:700;color:var(--text);margin:0}
+.fc-subh{font-size:13.5px;font-weight:700;color:var(--text);margin:18px 0 8px}
+.odo-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.odo-tg{padding:6px 13px;font-size:12px;font-weight:600;background:#fff;color:var(--text-muted);border:none;cursor:pointer}
+.odo-tg.active{background:var(--primary);color:#fff}
+.odo-chart{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px 8px}
+.odo-arch{display:flex;justify-content:center;gap:2px;flex-wrap:nowrap}
+.odo-arch+.odo-arch{margin-top:12px}
+.tooth{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex:1;min-width:0}
+.tsvg{width:100%;max-width:32px;height:auto;display:block;transition:transform .1s}
+.tooth:hover .tsvg{transform:scale(1.14)}
+.tnum{font-size:8.5px;color:var(--text-muted);margin-top:2px;font-weight:600}
+.odo-hint{font-size:11.5px;color:var(--text-muted);margin:12px 0 8px}
+.odo-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.oc-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:11.5px;font-weight:600;color:var(--text);cursor:pointer;background:#fff}
+.oc-pill.active{border-color:var(--primary);background:rgba(13,115,119,.1)}
+.oc-dot{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.2)}
+.odo-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.odo-tbl th{text-align:left;padding:7px 10px;background:#f1f5f9;color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;border-bottom:1px solid var(--border)}
+.odo-tbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.odo-tag{display:inline-block;padding:2px 9px;border-radius:12px;color:#fff;font-size:11px;font-weight:600;text-shadow:0 1px 1px rgba(0,0,0,.2)}
+.odo-rm{color:var(--danger);cursor:pointer;font-size:11.5px;font-weight:600}
+.odo-empty{text-align:center;color:var(--text-muted);padding:16px;font-size:12px}
+.oc-add{padding:7px 13px;border:1.5px solid var(--primary);background:#fff;color:var(--primary);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.oc-add:hover{background:var(--primary);color:#fff}
+.an-list{display:flex;flex-direction:column;gap:10px}
+.an-card{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff}
+.an-top{display:flex;justify-content:space-between;align-items:center}
+.an-date{font-size:12.5px;font-weight:700;color:var(--text)}
+.an-auth{font-size:11.5px;color:var(--text-muted);margin:5px 0 6px}
+.an-txt{font-size:13px;color:var(--text);line-height:1.55;white-space:pre-wrap}
+@media(max-width:880px){.fc-cols{grid-template-columns:1fr}}
+</style>
 
 </body>
 </html>
