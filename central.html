@@ -2009,7 +2009,7 @@ function IAS_anotacoesHtml(pid){
   var extra=IAS_lsGet('iasaude_anotacoes_'+pid,[]);
   var all=[];
   extra.forEach(function(a){all.push({d:a.d,u:a.u||'Dr. Victor Vaz',t:a.t});});
-  orig.forEach(function(a){var at=a.attributes||{};all.push({d:at.created_at||a.created_at,u:at.user_name||a.user_name||'—',t:at.content||a.content||''});});
+  orig.forEach(function(a){var at=a.attributes||{};all.push({d:at.created_at||a.created_at,u:(at.dentist&&at.dentist.name)||a.user_name||'—',t:at.comments||at.content||a.content||''});});
   all.sort(function(a,b){return new Date(b.d||0)-new Date(a.d||0);});
   var head='<div class="fc-head"><h3>Anotações</h3><button class="oc-add" onclick="IAS_addAnotacao()">+ Adicionar anotação</button></div>';
   var body=all.length===0
