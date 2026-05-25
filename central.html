@@ -2243,17 +2243,40 @@ function IAS_renderConsultas(p,pid){
 .ag-view.active{background:var(--primary);color:#fff}
 .ag-add{padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
 .ag-add:hover{background:var(--primary-dark)}
+.ag-wrap{display:flex;flex:1;overflow:hidden}
+.ag-rail{width:236px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);padding:14px 12px;overflow-y:auto}
 .ag-body{flex:1;overflow:auto;background:#fff}
-.ag-wk-head{display:grid;position:sticky;top:0;z-index:3;background:#fff;border-bottom:1px solid var(--border)}
+.mc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mc-title{font-size:13px;font-weight:700;color:var(--text);text-transform:capitalize}
+.mc-nav{width:24px;height:24px;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer;color:var(--text);font-size:13px;line-height:1}
+.mc-nav:hover{border-color:var(--primary);color:var(--primary)}
+.mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.mc-dow{text-align:center;font-size:9.5px;font-weight:700;color:var(--text-muted);padding:3px 0}
+.mc-day{position:relative;text-align:center;font-size:11px;padding:5px 0;cursor:pointer;border-radius:6px;color:var(--text)}
+.mc-day:hover{background:#eef2f6}
+.mc-day.out{color:#cbd5e1}
+.mc-day.today{font-weight:800;color:var(--primary)}
+.mc-day.sel{background:var(--primary);color:#fff}
+.mc-dot{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--secondary)}
+.mc-day.sel .mc-dot{background:#fff}
+.ag-railsec{margin-top:16px}
+.ag-railsec h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:0 0 7px}
+.ag-rl-item{font-size:11.5px;color:var(--text);padding:5px 7px;border-radius:6px;background:#f8fafc;margin-bottom:4px;display:flex;gap:6px;align-items:center}
+.ag-stick{position:sticky;top:0;z-index:3;background:#fff}
+.ag-wk-head{display:grid;background:#fff}
 .ag-dh{padding:7px 4px;text-align:center;border-left:1px solid var(--border)}
 .ag-dh .dn{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700}
 .ag-dh .dd{font-size:17px;font-weight:700;color:var(--text);margin-top:2px;width:30px;height:30px;line-height:30px;display:inline-block}
 .ag-dh.today .dd{background:var(--primary);color:#fff;border-radius:50%}
 .ag-dh.wknd .dn{color:#e53935}
+.ag-allday{display:grid;border-top:1px solid var(--border);border-bottom:2px solid var(--border);background:#fafbfc;min-height:24px}
+.ag-ad-lbl{font-size:8.5px;color:var(--text-muted);text-transform:uppercase;text-align:right;padding:5px 6px;font-weight:700}
+.ag-ad-cell{border-left:1px solid var(--border);padding:3px;display:flex;flex-direction:column;gap:2px}
+.ag-bday{background:#e8f5e9;color:#2e7d32;font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid #43a047}
 .ag-wk-grid{display:grid}
 .ag-gut{border-right:1px solid var(--border)}
 .ag-hr{font-size:10px;color:var(--text-muted);text-align:right;padding-right:6px;box-sizing:border-box}
-.ag-col{position:relative;border-left:1px solid var(--border);background-repeat:repeat}
+.ag-col{position:relative;border-left:1px solid var(--border)}
 .ag-appt{position:absolute;border-radius:5px;padding:3px 6px;font-size:10.5px;overflow:hidden;cursor:pointer;color:#fff;background:var(--primary);border-left:3px solid rgba(0,0,0,.22);line-height:1.3;box-sizing:border-box}
 .ag-appt:hover{filter:brightness(1.08)}
 .ag-appt .at{font-weight:700}
@@ -2270,6 +2293,7 @@ function IAS_renderConsultas(p,pid){
 .ag-mc.today .md{background:var(--primary);color:#fff;border-radius:50%;width:21px;height:21px;line-height:21px;text-align:center}
 .ag-chip{font-size:9.5px;background:rgba(13,115,119,.14);color:var(--primary-dark);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ag-chip.done{background:#eceff1;color:#607d8b}
+.ag-chip.bd{background:#e8f5e9;color:#2e7d32}
 .ag-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center}
 .ag-ov.open{display:flex}
 .ag-md{background:#fff;border-radius:14px;width:min(440px,94vw);max-height:90vh;overflow:auto;padding:22px}
@@ -2286,7 +2310,7 @@ function IAS_renderConsultas(p,pid){
 /* ============================================================
    IA SAUDE - Agenda estilo Capim (modulo isolado)
    ============================================================ */
-var IASAG_cur=new Date(), IASAG_view='semana';
+var IASAG_cur=new Date(), IASAG_view='semana', IASAG_miniRef=null, IASAG_bdayIndex=null;
 var IASAG_MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 var IASAG_MESAB=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 var IASAG_DSEM=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
@@ -2319,6 +2343,20 @@ function IASAG_all(){
   });
   return out;
 }
+function IASAG_buildBday(){
+  if(IASAG_bdayIndex)return IASAG_bdayIndex;
+  IASAG_bdayIndex={};
+  (data.patients||[]).forEach(function(p){
+    var a=p.attributes||{}; if(!a.birthdate)return;
+    var s=String(a.birthdate).slice(0,10).split('-'); if(s.length<3)return;
+    var k=s[1]+'-'+s[2];
+    (IASAG_bdayIndex[k]=IASAG_bdayIndex[k]||[]).push(a.name||'Paciente');
+  });
+  return IASAG_bdayIndex;
+}
+function IASAG_birthdays(d){
+  return IASAG_buildBday()[IASAG_pad(d.getMonth()+1)+'-'+IASAG_pad(d.getDate())]||[];
+}
 
 function IASAG_periodLabel(){
   if(IASAG_view==='mes')return IASAG_MES[IASAG_cur.getMonth()]+' '+IASAG_cur.getFullYear();
@@ -2340,10 +2378,42 @@ function IASAG_toolbar(){
 }
 function IASAG_render(){
   var root=document.getElementById('iasag'); if(!root)return;
-  root.innerHTML=IASAG_toolbar()+'<div class="ag-body" id="iasag-body"></div>';
+  root.innerHTML=IASAG_toolbar()
+   +'<div class="ag-wrap"><div class="ag-rail" id="iasag-rail"></div>'
+   +'<div class="ag-body" id="iasag-body"></div></div>';
+  IASAG_renderRail();
   if(IASAG_view==='mes')IASAG_renderMonth();
   else IASAG_renderTime(IASAG_view==='dia'?1:7);
 }
+function IASAG_renderRail(){
+  var rail=document.getElementById('iasag-rail'); if(!rail)return;
+  var ref=IASAG_miniRef||IASAG_cur;
+  var y=ref.getFullYear(), m=ref.getMonth();
+  var start=IASAG_weekStart(new Date(y,m,1));
+  var today=IASAG_d0(new Date());
+  var apptDays={};
+  IASAG_all().forEach(function(a){ if(a.start.getFullYear()===y&&a.start.getMonth()===m)apptDays[a.start.getDate()]=1; });
+  var DOW=['S','T','Q','Q','S','S','D'];
+  var html='<div class="mc-head"><button class="mc-nav" onclick="IASAG_miniNav(-1)">&#8249;</button>'
+   +'<span class="mc-title">'+IASAG_MES[m]+' '+y+'</span>'
+   +'<button class="mc-nav" onclick="IASAG_miniNav(1)">&#8250;</button></div><div class="mc-grid">';
+  html+=DOW.map(function(x){return '<div class="mc-dow">'+x+'</div>';}).join('');
+  for(var i=0;i<42;i++){
+    var d=new Date(start); d.setDate(start.getDate()+i);
+    var out=(d.getMonth()!==m), isT=d.getTime()===today.getTime(), sel=IASAG_sameDay(d,IASAG_cur);
+    var dot=(!out&&apptDays[d.getDate()])?'<span class="mc-dot"></span>':'';
+    html+='<div class="mc-day'+(out?' out':'')+(isT?' today':'')+(sel?' sel':'')+'" onclick="IASAG_pickDay('+d.getFullYear()+','+d.getMonth()+','+d.getDate()+')">'+d.getDate()+dot+'</div>';
+  }
+  html+='</div>';
+  var bd=IASAG_birthdays(IASAG_cur);
+  if(bd.length){
+    html+='<div class="ag-railsec"><h4>&#127874; Aniversariantes do dia</h4>'
+     +bd.map(function(n){return '<div class="ag-rl-item">&#127874; '+IASAG_esc(n)+'</div>';}).join('')+'</div>';
+  }
+  rail.innerHTML=html;
+}
+function IASAG_miniNav(dir){var r=IASAG_miniRef||IASAG_cur;IASAG_miniRef=new Date(r.getFullYear(),r.getMonth()+dir,1);IASAG_renderRail();}
+function IASAG_pickDay(y,m,d){IASAG_cur=new Date(y,m,d);IASAG_miniRef=new Date(y,m,1);IASAG_render();}
 function IASAG_lanes(list){
   var ends=[];
   list.forEach(function(a){
@@ -2367,6 +2437,12 @@ function IASAG_renderTime(ndays){
     head+='<div class="ag-dh'+(isT?' today':'')+(wk?' wknd':'')+'"><div class="dn">'+DOW[(d.getDay()+6)%7]+'</div><div class="dd">'+d.getDate()+'</div></div>';
   });
   head+='</div>';
+  var ad='<div class="ag-allday" style="grid-template-columns:'+cols+'"><div class="ag-ad-lbl">aniv.</div>';
+  days.forEach(function(d){
+    var bd=IASAG_birthdays(d);
+    ad+='<div class="ag-ad-cell">'+bd.map(function(n){return '<div class="ag-bday" title="Aniversário de '+IASAG_esc(n)+'">&#127874; '+IASAG_esc(n)+'</div>';}).join('')+'</div>';
+  });
+  ad+='</div>';
   var gridH=(HE-HS)*HPX;
   var gut='<div class="ag-gut" style="height:'+gridH+'px">';
   for(i=HS;i<HE;i++)gut+='<div class="ag-hr" style="height:'+HPX+'px;line-height:'+HPX+'px">'+i+':00</div>';
@@ -2377,7 +2453,7 @@ function IASAG_renderTime(ndays){
     body+='<div class="ag-col" id="iasag-col-'+di+'" style="height:'+gridH+'px;background-image:'+lineBg+'"></div>';
   });
   body+='</div>';
-  document.getElementById('iasag-body').innerHTML='<div style="min-width:'+(ndays===7?720:460)+'px">'+head+body+'</div>';
+  document.getElementById('iasag-body').innerHTML='<div style="min-width:'+(ndays===7?760:480)+'px"><div class="ag-stick">'+head+ad+'</div>'+body+'</div>';
   days.forEach(function(d,di){
     var col=document.getElementById('iasag-col-'+di);
     var da=appts.filter(function(a){return IASAG_sameDay(a.start,d)&&!a.allday;}).sort(function(x,y){return x.start-y.start;});
@@ -2412,25 +2488,27 @@ function IASAG_renderMonth(){
     var d=new Date(start); d.setDate(start.getDate()+i);
     var out=(d.getMonth()!==m), isT=d.getTime()===today.getTime();
     var da=appts.filter(function(a){return IASAG_sameDay(a.start,d);}).sort(function(x,y){return x.start-y.start;});
-    var chips=da.slice(0,3).map(function(a){return '<div class="ag-chip'+(a.done?' done':'')+'">'+IASAG_hm(a.start)+' '+IASAG_esc(a.patient||a.title)+'</div>';}).join('');
-    if(da.length>3)chips+='<div class="ag-chip" style="background:none;color:var(--text-muted)">+'+(da.length-3)+' mais</div>';
+    var bd=IASAG_birthdays(d);
+    var chips=bd.slice(0,1).map(function(n){return '<div class="ag-chip bd">&#127874; '+IASAG_esc(n)+'</div>';}).join('');
+    chips+=da.slice(0,bd.length?2:3).map(function(a){return '<div class="ag-chip'+(a.done?' done':'')+'">'+IASAG_hm(a.start)+' '+IASAG_esc(a.patient||a.title)+'</div>';}).join('');
+    var extra=da.length-(bd.length?2:3);
+    if(extra>0)chips+='<div class="ag-chip" style="background:none;color:var(--text-muted)">+'+extra+' mais</div>';
     html+='<div class="ag-mc'+(out?' out':'')+(isT?' today':'')+'" data-d="'+d.getFullYear()+'_'+d.getMonth()+'_'+d.getDate()+'"><div class="md">'+d.getDate()+'</div>'+chips+'</div>';
   }
   html+='</div>';
   document.getElementById('iasag-body').innerHTML=html;
   document.querySelectorAll('#iasag-body .ag-mc').forEach(function(c){
-    c.onclick=function(){var p=c.getAttribute('data-d').split('_');IASAG_cur=new Date(+p[0],+p[1],+p[2]);IASAG_view='dia';IASAG_render();};
+    c.onclick=function(){var p=c.getAttribute('data-d').split('_');IASAG_cur=new Date(+p[0],+p[1],+p[2]);IASAG_miniRef=new Date(+p[0],+p[1],1);IASAG_view='dia';IASAG_render();};
   });
 }
 function IASAG_nav(dir){
   if(IASAG_view==='mes')IASAG_cur=new Date(IASAG_cur.getFullYear(),IASAG_cur.getMonth()+dir,1);
   else{var step=IASAG_view==='dia'?1:7;IASAG_cur=new Date(IASAG_cur.getFullYear(),IASAG_cur.getMonth(),IASAG_cur.getDate()+dir*step);}
-  IASAG_render();
+  IASAG_miniRef=null; IASAG_render();
 }
-function IASAG_hoje(){IASAG_cur=new Date();IASAG_render();}
+function IASAG_hoje(){IASAG_cur=new Date();IASAG_miniRef=null;IASAG_render();}
 function IASAG_setView(v){IASAG_view=v;IASAG_render();}
 function IASAG_open(){IASAG_render();}
-
 function IASAG_close(){var ov=document.getElementById('iasag-ov');if(ov)ov.classList.remove('open');}
 function IASAG_novo(){
   var ov=document.getElementById('iasag-ov'); if(!ov)return;
@@ -2477,9 +2555,7 @@ function IASAG_excluir(idx){
   var arr=IASAG_lsGet('iasaude_agenda',[]); arr.splice(idx,1); IASAG_lsSet('iasaude_agenda',arr);
   IASAG_close(); IASAG_render();
 }
-/* override do antigo loadAgenda */
 function loadAgenda(){IASAG_render();}
-
 (function(){
   if(!document.getElementById('iasag-ov')){
     var ov=document.createElement('div');
