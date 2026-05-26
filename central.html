@@ -2276,12 +2276,12 @@ function IAS_renderConsultas(p,pid){
 .ag-wk-grid{display:grid}
 .ag-gut{border-right:1px solid var(--border)}
 .ag-hr{font-size:10px;color:var(--text-muted);text-align:right;padding-right:6px;box-sizing:border-box}
-.ag-col{position:relative;border-left:1px solid var(--border)}
+.ag-col{position:relative;border-left:1px solid var(--border);cursor:pointer}
 .ag-appt{position:absolute;border-radius:5px;padding:3px 6px;font-size:10.5px;overflow:hidden;cursor:pointer;color:#fff;background:var(--primary);border-left:3px solid rgba(0,0,0,.22);line-height:1.3;box-sizing:border-box}
 .ag-appt:hover{filter:brightness(1.08)}
 .ag-appt .at{font-weight:700}
 .ag-appt.done{background:#90a4ae}
-.ag-nowline{position:absolute;left:0;right:0;height:2px;background:#e53935;z-index:2}
+.ag-nowline{position:absolute;left:0;right:0;height:2px;background:#e53935;z-index:2;pointer-events:none}
 .ag-nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:#e53935}
 .ag-mhead{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border)}
 .ag-mhead div{padding:7px;text-align:center;font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase}
@@ -2291,7 +2291,7 @@ function IAS_renderConsultas(p,pid){
 .ag-mc .md{font-size:12px;font-weight:600;color:var(--text);align-self:flex-start}
 .ag-mc.out{background:#f8fafc}.ag-mc.out .md{color:#cbd5e1}
 .ag-mc.today .md{background:var(--primary);color:#fff;border-radius:50%;width:21px;height:21px;line-height:21px;text-align:center}
-.ag-chip{font-size:9.5px;background:rgba(13,115,119,.14);color:var(--primary-dark);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-chip{font-size:9.5px;background:rgba(13,115,119,.14);color:var(--primary-dark);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .ag-chip.done{background:#eceff1;color:#607d8b}
 .ag-chip.bd{background:#e8f5e9;color:#2e7d32}
 .ag-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center}
@@ -2319,6 +2319,7 @@ var IASAG_HS=7, IASAG_HE=21, IASAG_HPX=52;
 function IASAG_esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function IASAG_pad(n){return (n<10?'0':'')+n;}
 function IASAG_hm(d){return IASAG_pad(d.getHours())+':'+IASAG_pad(d.getMinutes());}
+function IASAG_ymd(d){return d.getFullYear()+'-'+IASAG_pad(d.getMonth()+1)+'-'+IASAG_pad(d.getDate());}
 function IASAG_lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
 function IASAG_lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){if(window.toast)toast('Nao foi possivel salvar');return false;}}
 function IASAG_val(id){var e=document.getElementById(id);return e?e.value:'';}
@@ -2357,7 +2358,6 @@ function IASAG_buildBday(){
 function IASAG_birthdays(d){
   return IASAG_buildBday()[IASAG_pad(d.getMonth()+1)+'-'+IASAG_pad(d.getDate())]||[];
 }
-
 function IASAG_periodLabel(){
   if(IASAG_view==='mes')return IASAG_MES[IASAG_cur.getMonth()]+' '+IASAG_cur.getFullYear();
   if(IASAG_view==='dia')return IASAG_DSEM[IASAG_cur.getDay()]+', '+IASAG_cur.getDate()+' de '+IASAG_MES[IASAG_cur.getMonth()];
@@ -2456,6 +2456,15 @@ function IASAG_renderTime(ndays){
   document.getElementById('iasag-body').innerHTML='<div style="min-width:'+(ndays===7?760:480)+'px"><div class="ag-stick">'+head+ad+'</div>'+body+'</div>';
   days.forEach(function(d,di){
     var col=document.getElementById('iasag-col-'+di);
+    col.onclick=function(ev){
+      if(ev.target!==col)return;
+      var rect=col.getBoundingClientRect();
+      var hr=HS+(ev.clientY-rect.top)/HPX;
+      var h=Math.floor(hr); var mm=((hr-h)>=0.5)?30:0;
+      if(h<HS)h=HS; if(h>HE-1)h=HE-1;
+      var eh=h, em=mm+30; if(em>=60){em-=60;eh+=1;}
+      IASAG_form({date:IASAG_ymd(d),ini:IASAG_pad(h)+':'+IASAG_pad(mm),fim:IASAG_pad(eh)+':'+IASAG_pad(em)});
+    };
     var da=appts.filter(function(a){return IASAG_sameDay(a.start,d)&&!a.allday;}).sort(function(x,y){return x.start-y.start;});
     var nl=IASAG_lanes(da), w=100/nl;
     da.forEach(function(a){
@@ -2469,7 +2478,7 @@ function IASAG_renderTime(ndays){
       el.style.width='calc('+w+'% - 4px)';
       el.innerHTML='<span class="at">'+IASAG_hm(a.start)+'</span> '+IASAG_esc(a.patient||a.title);
       el.title=a.title+(a.patient?' - '+a.patient:'');
-      el.onclick=function(){IASAG_detalhe(a);};
+      el.onclick=function(ev){ev.stopPropagation();IASAG_apptClick(a);};
       col.appendChild(el);
     });
     if(d.getTime()===today.getTime()){
@@ -2511,34 +2520,50 @@ function IASAG_setView(v){IASAG_view=v;IASAG_render();}
 function IASAG_open(){IASAG_render();}
 function IASAG_close(){var ov=document.getElementById('iasag-ov');if(ov)ov.classList.remove('open');}
 function IASAG_novo(){
+  var d=IASAG_cur;
+  IASAG_form({date:IASAG_ymd(d),ini:'09:00',fim:'09:30'});
+}
+function IASAG_form(pf){
   var ov=document.getElementById('iasag-ov'); if(!ov)return;
+  pf=pf||{};
+  var editing=(pf.idx!=null&&pf.idx!=='');
   var pacs=(typeof allPatients!=='undefined'?allPatients:[]).map(function(p){return '<option value="'+IASAG_esc(p.name)+'">';}).join('');
-  var d=IASAG_cur, dstr=d.getFullYear()+'-'+IASAG_pad(d.getMonth()+1)+'-'+IASAG_pad(d.getDate());
+  var del=editing?'<button class="ag-today" style="color:var(--danger);border-color:var(--danger);margin-right:auto" onclick="IASAG_excluir('+pf.idx+')">Excluir</button>':'';
   ov.querySelector('.ag-md').innerHTML=
-   '<h3>Novo agendamento</h3>'
-   +'<label>Paciente</label><input id="iasag-f-pac" list="iasag-pac-list" placeholder="Nome do paciente"><datalist id="iasag-pac-list">'+pacs+'</datalist>'
-   +'<label>Tipo / título</label><input id="iasag-f-tit" placeholder="ex: Avaliação DTM, Retorno, Placa miorrelaxante">'
-   +'<div class="ag-mrow"><div><label>Data</label><input type="date" id="iasag-f-data" value="'+dstr+'"></div>'
-   +'<div><label>Início</label><input type="time" id="iasag-f-ini" value="09:00"></div>'
-   +'<div><label>Fim</label><input type="time" id="iasag-f-fim" value="09:30"></div></div>'
-   +'<label>Observação</label><textarea id="iasag-f-obs"></textarea>'
-   +'<div class="ag-mfoot"><button class="ag-today" onclick="IASAG_close()">Cancelar</button><button class="ag-add" onclick="IASAG_salvar()">Salvar</button></div>';
+   '<h3>'+(editing?'Editar agendamento':'Novo agendamento')+'</h3>'
+   +'<label>Paciente</label><input id="iasag-f-pac" list="iasag-pac-list" value="'+IASAG_esc(pf.pac||'')+'" placeholder="Nome do paciente"><datalist id="iasag-pac-list">'+pacs+'</datalist>'
+   +'<label>Tipo / título</label><input id="iasag-f-tit" value="'+IASAG_esc(pf.tit||'')+'" placeholder="ex: Avaliação DTM, Retorno, Placa miorrelaxante">'
+   +'<div class="ag-mrow"><div><label>Data</label><input type="date" id="iasag-f-data" value="'+(pf.date||'')+'"></div>'
+   +'<div><label>Início</label><input type="time" id="iasag-f-ini" value="'+(pf.ini||'09:00')+'"></div>'
+   +'<div><label>Fim</label><input type="time" id="iasag-f-fim" value="'+(pf.fim||'09:30')+'"></div></div>'
+   +'<label>Observação</label><textarea id="iasag-f-obs">'+IASAG_esc(pf.obs||'')+'</textarea>'
+   +'<input type="hidden" id="iasag-f-idx" value="'+(editing?pf.idx:'')+'">'
+   +'<div class="ag-mfoot">'+del+'<button class="ag-today" onclick="IASAG_close()">Cancelar</button><button class="ag-add" onclick="IASAG_salvar()">Salvar</button></div>';
   ov.classList.add('open');
 }
 function IASAG_salvar(){
   var pac=IASAG_val('iasag-f-pac'),tit=IASAG_val('iasag-f-tit'),dt=IASAG_val('iasag-f-data'),ini=IASAG_val('iasag-f-ini'),fim=IASAG_val('iasag-f-fim'),obs=IASAG_val('iasag-f-obs');
+  var idx=IASAG_val('iasag-f-idx');
   if(!dt||!ini){alert('Informe data e hora de início');return;}
   if(!fim||fim<=ini)fim=ini;
   var arr=IASAG_lsGet('iasaude_agenda',[]);
-  arr.push({start:dt+'T'+ini,end:dt+'T'+fim,title:tit||'Agendamento',patient:pac,obs:obs});
+  var rec={start:dt+'T'+ini,end:dt+'T'+fim,title:tit||'Agendamento',patient:pac,obs:obs};
+  var ed=(idx!==''&&idx!=null&&arr[+idx]);
+  if(ed)arr[+idx]=rec; else arr.push(rec);
   IASAG_lsSet('iasaude_agenda',arr);
   IASAG_close();
-  if(window.toast)toast('Agendamento criado');
+  if(window.toast)toast(ed?'Agendamento atualizado':'Agendamento criado');
   IASAG_render();
+}
+function IASAG_apptClick(a){
+  if(a.custom){
+    IASAG_form({idx:a._idx,date:IASAG_ymd(a.start),ini:IASAG_hm(a.start),fim:IASAG_hm(a.end),pac:a.patient,tit:a.title,obs:a.obs});
+  } else {
+    IASAG_detalhe(a);
+  }
 }
 function IASAG_detalhe(a){
   var ov=document.getElementById('iasag-ov'); if(!ov)return;
-  var del=a.custom?'<button class="ag-today" style="color:var(--danger);border-color:var(--danger)" onclick="IASAG_excluir('+a._idx+')">Excluir</button>':'';
   ov.querySelector('.ag-md').innerHTML=
    '<h3>'+IASAG_esc(a.title)+'</h3>'
    +'<p style="font-size:13px;color:var(--text);line-height:1.8">'
@@ -2547,13 +2572,14 @@ function IASAG_detalhe(a){
    +'<strong>Horário:</strong> '+IASAG_hm(a.start)+' às '+IASAG_hm(a.end)+'<br>'
    +'<strong>Status:</strong> '+(a.done?'Realizada':'Agendada')
    +(a.obs?'<br><strong>Observação:</strong> '+IASAG_esc(a.obs):'')+'</p>'
-   +'<div class="ag-mfoot">'+del+'<button class="ag-add" onclick="IASAG_close()">Fechar</button></div>';
+   +'<p style="font-size:11.5px;color:var(--text-muted);margin-top:6px">Consulta importada do Capim (somente leitura). Para reagendar, crie um novo agendamento.</p>'
+   +'<div class="ag-mfoot"><button class="ag-add" onclick="IASAG_close()">Fechar</button></div>';
   ov.classList.add('open');
 }
 function IASAG_excluir(idx){
   if(!confirm('Excluir este agendamento?'))return;
   var arr=IASAG_lsGet('iasaude_agenda',[]); arr.splice(idx,1); IASAG_lsSet('iasaude_agenda',arr);
-  IASAG_close(); IASAG_render();
+  IASAG_close(); if(window.toast)toast('Agendamento excluído'); IASAG_render();
 }
 function loadAgenda(){IASAG_render();}
 (function(){
