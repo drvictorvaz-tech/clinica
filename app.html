@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2123">
-<meta name="build" content="bbe99a">
+<meta name="version" content="2026.05.28-2127">
+<meta name="build" content="6e693f">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -430,63 +430,105 @@ tbody tr:last-child{border-bottom:none}
 </style>
 
 
-<style id="m-agenda-fix">
-/* ===== AGENDA + MODAL MOBILE FIX ===== */
+
+
+
+<style id="m-agenda-fix-v2">
 @media (max-width: 900px){
-  /* Agenda usa position:fixed left:240px no desktop. No mobile, full-width com offset de header (56px) e bottom tab (64px) */
-  #agenda.section.active{
+  /* Agenda full-screen no mobile */
+  body #agenda.section.active{
+    position:fixed !important;
     left:0 !important; right:0 !important;
     top:0 !important;
     bottom:calc(64px + env(safe-area-inset-bottom)) !important;
     z-index:55 !important;
-    padding-top:calc(env(safe-area-inset-top) + 50px) !important
+    padding:0 !important;
+    background:#fff !important
   }
-  /* Header móvel custom para agenda (mostrar voltar e atualizar sobreposto) */
-  #agenda.section.active::before{
-    content:'';position:fixed;top:0;left:0;right:0;
+  body #agenda.section.active::before{
+    content:''; position:absolute; top:0; left:0; right:0;
     height:calc(env(safe-area-inset-top) + 50px);
-    background:#0d7377;z-index:60
+    background:#0d7377; z-index:5
   }
-  /* Toolbar da agenda compacta */
-  .ag-top{
-    padding:8px 10px !important;gap:6px !important;
-    flex-wrap:wrap !important;font-size:12px
+  /* O container interno #iasag precisa preencher tudo e descer abaixo do header */
+  body #iasag{
+    height:100% !important;
+    padding-top:calc(env(safe-area-inset-top) + 50px) !important;
+    box-sizing:border-box !important;
+    display:flex !important; flex-direction:column !important
   }
-  .ag-title{font-size:14px !important;margin-left:0 !important;width:100%;order:-1;text-align:center;padding:4px 0}
-  .ag-ic{width:34px !important;height:34px !important;font-size:15px !important}
-  .ag-today{padding:7px 12px !important;font-size:12px !important;min-height:34px}
-  .ag-add{padding:8px 14px !important;font-size:12px !important;min-height:34px}
-  .ag-views{flex-shrink:0}
-  .ag-view{padding:7px 10px !important;font-size:11.5px !important;min-height:34px}
-  .ag-spacer{display:none}
-  /* Esconder rail lateral (calendário-mini) no mobile - economia de espaço */
-  .ag-rail{display:none !important}
-  .ag-wrap{display:block !important}
-  .ag-body{height:100% !important}
-  /* Forçar largura do conteúdo da semana/dia */
-  .ag-wk-head,.ag-wk-grid,.ag-allday{font-size:11px}
-  .ag-dh{padding:5px 2px !important}
-  .ag-dh .dn{font-size:9px !important}
-  .ag-dh .dd{font-size:14px !important;width:24px !important;height:24px !important;line-height:24px !important}
-  .ag-hr{font-size:9px !important;padding-right:3px !important}
-  .ag-appt{font-size:9.5px !important;padding:2px 3px !important;line-height:1.2 !important}
-  .ag-bday{font-size:8.5px !important;padding:1px 4px !important}
-  .ag-ad-lbl{font-size:7px !important;padding:3px !important}
-  /* Modal agendamento no mobile - centralizado, scroll, sem corte */
-  .modal{
-    max-height:calc(100vh - 80px) !important;
-    max-height:calc(100dvh - 80px) !important;
-    overflow-y:auto !important
+  /* Esconder rail lateral (calendário-mini) — alta especificidade */
+  body #iasag .ag-rail,
+  body #agenda .ag-rail{
+    display:none !important;
+    width:0 !important;
+    visibility:hidden !important
   }
-  /* Botões dentro do modal de agendamento */
-  .modal button,.modal .btn{min-height:44px;font-size:14px}
-  .modal input,.modal select,.modal textarea{font-size:16px !important;padding:10px 12px !important}
-}
-/* Quando agenda está ativa, esconder o header mobile fixo padrão pra não duplicar */
-@media (max-width: 900px){
-  body:has(#agenda.section.active) #m-hdr{display:none}
+  /* ag-wrap vira block para ag-body ocupar tudo */
+  body #iasag .ag-wrap,
+  body #agenda .ag-wrap{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    flex:1 !important;
+    overflow:hidden !important
+  }
+  body #iasag .ag-body,
+  body #agenda .ag-body{
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    overflow:auto !important;
+    -webkit-overflow-scrolling:touch
+  }
+  /* Toolbar compacta */
+  body #iasag .ag-top{
+    padding:8px 10px !important;
+    gap:6px !important;
+    flex-wrap:wrap !important;
+    flex-shrink:0
+  }
+  body #iasag .ag-title{
+    font-size:14px !important;
+    margin:0 !important;
+    width:100%;
+    order:-1;
+    text-align:center;
+    padding:4px 0
+  }
+  body #iasag .ag-spacer{display:none !important}
+  body #iasag .ag-nav{order:1}
+  body #iasag .ag-today{order:2; padding:7px 12px !important; font-size:12px !important; min-height:36px}
+  body #iasag .ag-views{order:3; flex-shrink:0}
+  body #iasag .ag-view{padding:7px 11px !important; font-size:12px !important; min-height:36px}
+  body #iasag .ag-add{order:4; padding:8px 14px !important; font-size:12px !important; min-height:36px}
+  body #iasag .ag-ic{width:36px !important; height:36px !important; font-size:16px !important}
+  /* Esconder header móvel padrão quando agenda/IAs estão ativas */
+  body:has(#agenda.section.active) #m-hdr,
   body:has(#ia-clinica.section.active) #m-hdr,
-  body:has(#ia-financeira.section.active) #m-hdr{display:none}
+  body:has(#ia-financeira.section.active) #m-hdr{display:none !important}
+  /* Botões topo direito sobrepostos para agenda */
+  body #agenda.section.active .ag-top::after{
+    content:'';display:block;width:100%
+  }
+  /* Conteúdo da grade dia/semana */
+  body #iasag .ag-wk-head,
+  body #iasag .ag-wk-grid{min-width:100%}
+  body #iasag .ag-dh{padding:4px 2px !important}
+  body #iasag .ag-dh .dn{font-size:9px !important}
+  body #iasag .ag-dh .dd{font-size:14px !important; width:24px !important; height:24px !important; line-height:24px !important}
+  body #iasag .ag-hr{font-size:9px !important; padding-right:3px !important}
+  body #iasag .ag-appt{font-size:10px !important; padding:2px 4px !important; line-height:1.25 !important}
+  body #iasag .ag-bday{font-size:8.5px !important; padding:1px 4px !important}
+  body #iasag .ag-ad-lbl{font-size:7px !important; padding:3px !important}
+  /* IA Clínica/Financeira full screen */
+  body #ia-clinica.section.active,
+  body #ia-financeira.section.active{
+    left:0 !important; right:0 !important;
+    top:0 !important;
+    bottom:calc(64px + env(safe-area-inset-bottom)) !important;
+    z-index:55 !important
+  }
 }
 </style>
 
@@ -553,7 +595,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2123</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2127</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -2956,24 +2998,57 @@ function loadAgenda(){IASAG_render();}
 </script>
 
 
-<script id="m-day-default">
+
+
+
+<script id="m-day-default-v2">
 (function(){
-  if(window.matchMedia('(max-width:900px)').matches){
-    document.addEventListener('click', function(e){
-      var t=e.target;
-      if(t && t.classList && t.classList.contains('m-tab') && t.getAttribute('data-msec')==='agenda'){
-        setTimeout(function(){
-          var dia=document.querySelector('.ag-view[data-v="day"],.ag-view[data-view="day"]');
-          if(!dia){
-            // tenta encontrar pela texto "Dia"
-            var btns=document.querySelectorAll('.ag-view');
-            btns.forEach(function(b){if(b.textContent.trim().toLowerCase()==='dia') dia=b;});
-          }
-          if(dia && !dia.classList.contains('active')) dia.click();
-        }, 250);
-      }
+  if(!window.matchMedia('(max-width:900px)').matches) return;
+
+  function forceDayView(){
+    var views = document.querySelectorAll('#iasag .ag-view, #agenda .ag-view');
+    if(!views.length) return false;
+    var dayBtn = null;
+    views.forEach(function(b){
+      var t = (b.textContent||'').trim().toLowerCase();
+      if(t==='dia' || t==='day') dayBtn = b;
     });
+    if(dayBtn && !dayBtn.classList.contains('active')){
+      dayBtn.click();
+      return true;
+    }
+    return !!dayBtn;
   }
+
+  // Observa entradas/mudanças no DOM dentro de #iasag
+  var observer = new MutationObserver(function(){
+    if(document.querySelector('#agenda.section.active')){
+      forceDayView();
+    }
+  });
+  function startObserve(){
+    var sag = document.getElementById('iasag');
+    if(sag){
+      observer.observe(sag, {childList:true, subtree:true});
+    }
+  }
+
+  // Quando tab agenda é clicada
+  document.addEventListener('click', function(e){
+    var t = e.target.closest && e.target.closest('.m-tab,.nav-item');
+    if(!t) return;
+    var sec = t.getAttribute('data-msec') || t.getAttribute('data-section');
+    if(sec === 'agenda'){
+      startObserve();
+      // tentar várias vezes
+      [50, 200, 500, 1000, 2000].forEach(function(d){
+        setTimeout(forceDayView, d);
+      });
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', startObserve);
+  if(document.readyState !== 'loading') startObserve();
 })();
 </script>
 
