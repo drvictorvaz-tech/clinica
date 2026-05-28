@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2139">
-<meta name="build" content="5bcb58">
+<meta name="version" content="2026.05.28-2147">
+<meta name="build" content="5f22dc">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -585,6 +585,12 @@ tbody tr:last-child{border-bottom:none}
 .sb-login-box .sb-btn-alt:active{transform:scale(.97);border-color:#0d7377}
 .sb-login-box #sb-btn-magic{background:#0d7377}
 .sb-login-box .link.show{display:block}
+.sb-login-box .sb-btn-alt-full{
+  width:100%;padding:12px;background:#fff;color:#1a2535;
+  border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-weight:600;
+  cursor:pointer
+}
+.sb-login-box .sb-btn-alt-full:active{transform:scale(.98);border-color:#0d7377}
 </style>
 
 </head>
@@ -594,35 +600,29 @@ tbody tr:last-child{border-bottom:none}
   <div class="sb-login-box">
     <div class="sb-logo">🦷</div>
     <h2>IA SAÚDE</h2>
-    <p class="sub">Dr. Victor Vaz · DTM, Sono e Bruxismo</p>
+    <p class="sub">Dr. Victor Vaz</p>
 
-    <label for="sb-email">Seu email</label>
+    <label for="sb-email">Email</label>
     <input id="sb-email" type="email" autocomplete="email" value="drvictorvaz@gmail.com" inputmode="email">
 
-    <button class="sb-btn" id="sb-btn-magic" onclick="window.__sbMagic()">📧 Enviar link de acesso</button>
-    <p style="font-size:11.5px;color:#6b7280;text-align:center;margin-top:8px;line-height:1.4">Recomendado · sem senha. Voce recebe um link no email e clica para entrar.</p>
+    <label for="sb-pass">Senha</label>
+    <input id="sb-pass" type="password" autocomplete="current-password" placeholder="IASaude2026!">
 
-    <div style="text-align:center;color:#9ca3af;font-size:11px;margin:18px 0 6px;font-weight:600;letter-spacing:1px">OU</div>
-
-    <div style="display:flex;gap:8px">
-      <button class="sb-btn-alt" onclick="window.__sbOAuth('google')">
-        <span style="font-size:16px">G</span> Google
-      </button>
-      <button class="sb-btn-alt" onclick="window.__sbOAuth('github')">
-        <span style="font-size:14px">⚫</span> GitHub
-      </button>
-    </div>
-
-    <a class="link" onclick="document.getElementById('sb-pass-box').style.display='block';this.style.display='none'">Entrar com senha</a>
-
-    <div id="sb-pass-box" style="display:none">
-      <label for="sb-pass">Senha</label>
-      <input id="sb-pass" type="password" autocomplete="current-password">
-      <button class="sb-btn" onclick="window.__sbLogin()" style="margin-top:12px">Entrar com senha</button>
-    </div>
+    <button class="sb-btn" id="sb-btn-login" onclick="window.__sbLogin()">Entrar</button>
 
     <div class="err" id="sb-err"></div>
+
+    <div style="text-align:center;color:#9ca3af;font-size:11px;margin:20px 0 10px;font-weight:600;letter-spacing:1px">OU</div>
+
+    <button class="sb-btn-alt-full" onclick="window.__sbMagic()">📧 Receber link por email</button>
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="sb-btn-alt" onclick="window.__sbOAuth('google')">G  Google</button>
+      <button class="sb-btn-alt" onclick="window.__sbOAuth('github')">⚫ GitHub</button>
+    </div>
   </div>
+</div>
+<div class="sb-status-pill" id="sb-pill">🌐 Sincronizado</div>
 </div>
 <div class="sb-status-pill" id="sb-pill">🌐 Sincronizado</div>
 <div class="sb-status-pill" id="sb-pill">🌐 Sincronizado</div>
@@ -688,7 +688,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2139</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2147</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
