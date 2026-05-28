@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2147">
-<meta name="build" content="5f22dc">
+<meta name="version" content="2026.05.28-2149">
+<meta name="build" content="8b1138">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -532,7 +532,7 @@ tbody tr:last-child{border-bottom:none}
 }
 </style>
 
-<script id="m-supabase-cdn" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 <style id="m-supabase-login">
 #sb-login-ov{
@@ -688,7 +688,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2147</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2149</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3458,130 +3458,116 @@ function loadAgenda(){IASAG_render();}
 </script>
 
 
+
+
+
 <script id="m-supabase-auth">
-/* ===== SUPABASE INTEGRATION ===== */
+/* ===== SUPABASE INTEGRATION (via fetch direto) ===== */
 (function(){
   var SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
   var SB_KEY = 'sb_publishable_7DRcNLIMIsCXHC3QGq2FGg_HUuIUaPY';
-  var sb = null, user = null;
+  var SESSION_KEY = 'iasaude-sb-session';
+  var session = null;
 
-  function ready(){
-    return typeof window.supabase !== 'undefined' && window.supabase.createClient;
+  function saveSession(s){
+    try{ localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }catch(e){}
+    session = s;
   }
-  function initClient(){
-    if(sb) return sb;
-    if(!ready()) return null;
-    sb = window.supabase.createClient(SB_URL, SB_KEY, {
-      auth:{persistSession:true,autoRefreshToken:true,storageKey:'iasaude-auth'}
-    });
-    return sb;
+  function loadSession(){
+    try{ var v = localStorage.getItem(SESSION_KEY); return v ? JSON.parse(v) : null; }catch(e){return null;}
   }
-  function showErr(msg){
-    var e=document.getElementById('sb-err');
-    if(e){e.textContent=msg; e.classList.add('show');}
+  function clearSession(){
+    try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+    session = null;
+  }
+
+  function authHeaders(){
+    var h = {'apikey': SB_KEY, 'Content-Type': 'application/json'};
+    if(session && session.access_token) h['Authorization'] = 'Bearer ' + session.access_token;
+    return h;
+  }
+
+  function showErr(msg, isOk){
+    var e = document.getElementById('sb-err');
+    if(!e) { alert(msg); return; }
+    e.textContent = msg;
+    e.classList.add('show');
+    if(isOk){ e.style.background='#e8f5e9'; e.style.color='#0d7377'; }
+    else { e.style.background='#fee'; e.style.color='#c00'; }
   }
   function clearErr(){
-    var e=document.getElementById('sb-err'); if(e)e.classList.remove('show');
+    var e = document.getElementById('sb-err'); if(e) e.classList.remove('show');
   }
   function hideLogin(){
-    var ov=document.getElementById('sb-login-ov'); if(ov)ov.classList.add('hide');
+    var ov = document.getElementById('sb-login-ov'); if(ov) ov.classList.add('hide');
   }
   function showLogin(){
-    var ov=document.getElementById('sb-login-ov'); if(ov)ov.classList.remove('hide');
+    var ov = document.getElementById('sb-login-ov'); if(ov) ov.classList.remove('hide');
   }
   function setPill(txt, dur){
-    var p=document.getElementById('sb-pill');
+    var p = document.getElementById('sb-pill');
     if(!p) return;
-    p.textContent=txt; p.classList.add('show');
+    p.textContent = txt; p.classList.add('show');
     if(dur) setTimeout(function(){p.classList.remove('show')}, dur);
   }
 
   window.__sbLogin = async function(){
     clearErr();
-    var c = initClient(); if(!c){showErr('Supabase ainda carregando, tente em 1s');return;}
-    var email = document.getElementById('sb-email').value.trim();
-    var pass = document.getElementById('sb-pass').value;
-    if(!email || !pass){showErr('Preencha email e senha');return;}
-    var btn = document.getElementById('sb-btn');
-    btn.disabled = true; btn.textContent = 'Entrando...';
+    var btn = document.getElementById('sb-btn-login');
+    var email = (document.getElementById('sb-email')||{}).value || '';
+    var pass = (document.getElementById('sb-pass')||{}).value || '';
+    email = email.trim();
+    if(!email || !pass){ showErr('Preencha email e senha'); return; }
+    if(btn){ btn.disabled = true; btn.textContent = 'Entrando...'; }
     try{
-      var res = await c.auth.signInWithPassword({email:email, password:pass});
-      if(res.error){
-        showErr(res.error.message === 'Invalid login credentials' ? 'Email ou senha incorretos' : res.error.message);
-        btn.disabled=false; btn.textContent='Entrar';
+      var resp = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: {'apikey': SB_KEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({email: email, password: pass})
+      });
+      var data = await resp.json();
+      if(!resp.ok){
+        var msg = (data && (data.msg||data.error_description||data.error)) || ('Erro ' + resp.status);
+        if(/invalid login/i.test(msg) || /credentials/i.test(msg)) msg = 'Email ou senha incorretos';
+        showErr(msg);
+        if(btn){ btn.disabled = false; btn.textContent = 'Entrar'; }
         return;
       }
-      user = res.data.user;
+      saveSession(data);
       hideLogin();
       await window.__sbBootData();
     }catch(e){
-      showErr('Erro: ' + e.message);
-      btn.disabled=false; btn.textContent='Entrar';
+      showErr('Falha de conexao: ' + (e.message || e));
+      if(btn){ btn.disabled = false; btn.textContent = 'Entrar'; }
     }
-  };
-
-  window.__sbReset = async function(){
-    var c = initClient(); if(!c){showErr('Supabase ainda carregando');return;}
-    var email = document.getElementById('sb-email').value.trim();
-    if(!email){showErr('Digite seu email primeiro');return;}
-    try{
-      var res = await c.auth.resetPasswordForEmail(email, {redirectTo: window.location.href});
-      if(res.error) throw res.error;
-      showErr('Email de redefinicao enviado! Verifique sua caixa.');
-      document.getElementById('sb-err').style.color='#0d7377';
-      document.getElementById('sb-err').style.background='#e8f5e9';
-    }catch(e){showErr('Erro: '+e.message);}
   };
 
   window.__sbMagic = async function(){
     clearErr();
-    var c = initClient(); if(!c){showErr('Supabase carregando, tente em 2s');return;}
-    var email = document.getElementById('sb-email').value.trim();
-    if(!email){showErr('Digite seu email');return;}
-    var btn = document.getElementById('sb-btn-magic');
-    btn.disabled = true; btn.textContent = 'Enviando...';
+    var email = (document.getElementById('sb-email')||{}).value.trim();
+    if(!email){ showErr('Digite seu email'); return; }
     try{
-      var res = await c.auth.signInWithOtp({
-        email: email,
-        options:{
-          emailRedirectTo: window.location.origin + window.location.pathname,
-          shouldCreateUser: false
-        }
+      var resp = await fetch(SB_URL + '/auth/v1/otp', {
+        method: 'POST',
+        headers: {'apikey': SB_KEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({email: email, create_user: false})
       });
-      if(res.error) throw res.error;
-      document.getElementById('sb-err').style.color='#0d7377';
-      document.getElementById('sb-err').style.background='#e8f5e9';
-      document.getElementById('sb-err').textContent='✓ Link enviado! Abra seu email ('+email+') e clique no link "Magic Link". Depois volte aqui.';
-      document.getElementById('sb-err').classList.add('show');
-      btn.textContent = '✓ Link enviado';
-      setTimeout(function(){btn.disabled=false;btn.textContent='📧 Reenviar link';}, 5000);
-    }catch(e){
-      showErr('Erro: '+e.message);
-      btn.disabled=false; btn.textContent='📧 Enviar link de acesso';
-    }
+      if(!resp.ok){ var e = await resp.json(); throw new Error(e.msg||e.error||'Erro'); }
+      showErr('✓ Link enviado para ' + email + '. Abra seu email e clique.', true);
+    }catch(e){ showErr('Erro: ' + e.message); }
   };
 
-  window.__sbOAuth = async function(provider){
-    clearErr();
-    var c = initClient(); if(!c){showErr('Supabase carregando');return;}
-    try{
-      var res = await c.auth.signInWithOAuth({
-        provider: provider,
-        options:{redirectTo: window.location.origin + window.location.pathname}
-      });
-      if(res.error) throw res.error;
-    }catch(e){
-      showErr(provider+' nao configurado no Supabase. Use o link por email.');
-    }
+  window.__sbOAuth = function(provider){
+    var url = SB_URL + '/auth/v1/authorize?provider=' + provider +
+              '&redirect_to=' + encodeURIComponent(window.location.origin + window.location.pathname);
+    window.location.href = url;
   };
 
-  window.__sbLogout = async function(){
-    var c = initClient(); if(!c) return;
-    await c.auth.signOut();
-    location.reload();
+  window.__sbLogout = function(){
+    clearSession();
+    window.location.reload();
   };
 
-  // Mapeia paciente do Supabase para formato esperado pelo app (CAPIM-like)
   function mapPatient(p){
     return {
       id: p.id,
@@ -3598,14 +3584,14 @@ function loadAgenda(){IASAG_render();}
       }
     };
   }
-  // Mapeia agenda do Supabase para formato CAPIM appointments
   function mapAppointment(a){
+    var dur = a.duracao_minutos || 60;
     return {
       id: 'sb_' + a.id,
       _sb_id: a.id,
       attributes: {
         start_date: a.data_hora,
-        end_date: new Date(new Date(a.data_hora).getTime() + (a.duracao_minutos||60)*60000).toISOString(),
+        end_date: new Date(new Date(a.data_hora).getTime() + dur*60000).toISOString(),
         patient_name: a.nome_paciente || '',
         patient_id: a.paciente_id || '',
         title: a.tipo || 'consulta',
@@ -3618,14 +3604,10 @@ function loadAgenda(){IASAG_render();}
   }
 
   function recomputeAnalysis(patients, appts){
-    // Reconstroi analysis: aniversariantes, inativos, etc
     var now = new Date();
     var thisMonth = now.getMonth();
-    var thirtyAgo = new Date(now.getTime() - 30*86400000);
     var sixMonthsAgo = new Date(now.getTime() - 180*86400000);
-
-    var lastByPid = {};
-    var countByPid = {};
+    var lastByPid = {}, countByPid = {};
     appts.forEach(function(a){
       var pid = (a.attributes && a.attributes.patient_id) || '';
       if(!pid) return;
@@ -3635,56 +3617,64 @@ function loadAgenda(){IASAG_render();}
         countByPid[pid] = (countByPid[pid]||0) + 1;
       }
     });
-
-    var inactive = [], birthsM = [], birthsP = [], never = [], freq = [], nret = [];
+    var inactive=[],birthsM=[],birthsP=[],never=[],freq=[],nret=[];
     patients.forEach(function(p){
       var a = p.attributes || {};
-      var last = lastByPid[p.id];
-      var cnt = countByPid[p.id] || 0;
+      var last = lastByPid[p.id]; var cnt = countByPid[p.id] || 0;
       if(a.birthdate){
         try{
           var b = new Date(a.birthdate);
-          if(b.getMonth() === thisMonth) birthsM.push(p);
-          else {
-            var thisYrBday = new Date(now.getFullYear(), b.getMonth(), b.getDate());
-            var diff = (thisYrBday - now) / 86400000;
+          if(b.getMonth()===thisMonth) birthsM.push(p);
+          else{
+            var bd = new Date(now.getFullYear(), b.getMonth(), b.getDate());
+            var diff = (bd - now)/86400000;
             if(diff >= 0 && diff <= 30) birthsP.push(p);
           }
         }catch(e){}
       }
-      if(cnt === 0) never.push(p);
-      else if(cnt === 1) nret.push(p);
-      else if(cnt >= 10) freq.push(p);
+      if(cnt===0) never.push(p);
+      else if(cnt===1) nret.push(p);
+      else if(cnt>=10) freq.push(p);
       if(last && last < sixMonthsAgo) inactive.push(p);
     });
-
     return {
-      inactive_6months: inactive,
-      birthdays_this_month: birthsM,
-      upcoming_birthdays: birthsP,
-      never_returned: nret,
-      needs_followup: [],
-      high_frequency: freq,
-      no_appointment_ever: never
+      inactive_6months:inactive,
+      birthdays_this_month:birthsM,
+      upcoming_birthdays:birthsP,
+      never_returned:nret,
+      needs_followup:[],
+      high_frequency:freq,
+      no_appointment_ever:never
     };
   }
 
+  async function sbGet(path){
+    var r = await fetch(SB_URL + '/rest/v1/' + path, {headers: authHeaders()});
+    if(!r.ok){
+      if(r.status === 401){ clearSession(); showLogin(); throw new Error('Sessao expirada'); }
+      throw new Error('Erro ' + r.status);
+    }
+    return await r.json();
+  }
+  async function sbInsert(table, row){
+    var r = await fetch(SB_URL + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: Object.assign({}, authHeaders(), {'Prefer':'return=representation'}),
+      body: JSON.stringify(row)
+    });
+    if(!r.ok){ var e = await r.text(); throw new Error(e); }
+    return await r.json();
+  }
+
   window.__sbBootData = async function(){
-    var c = initClient(); if(!c) return;
     setPill('🔄 Carregando do Supabase...');
     try{
-      // Carrega pacientes e agenda em paralelo
-      var [pacRes, agRes] = await Promise.all([
-        c.from('pacientes').select('*').limit(2000),
-        c.from('agenda').select('*').order('data_hora', {ascending:true}).limit(5000)
+      var [pacs, ags] = await Promise.all([
+        sbGet('pacientes?select=*&limit=2000'),
+        sbGet('agenda?select=*&order=data_hora.asc&limit=5000')
       ]);
-      if(pacRes.error) throw pacRes.error;
-      if(agRes.error) throw agRes.error;
-
-      var patients = (pacRes.data||[]).map(mapPatient);
-      var appts = (agRes.data||[]).map(mapAppointment);
-
-      // Sobrescreve dados globais
+      var patients = pacs.map(mapPatient);
+      var appts = ags.map(mapAppointment);
       if(typeof data !== 'undefined'){
         data.patients = patients;
         data.appointments = appts;
@@ -3695,42 +3685,31 @@ function loadAgenda(){IASAG_render();}
         window.CAPIM_DATA.appointments = appts;
         window.CAPIM_DATA.analysis = data.analysis;
       }
-      // Allpatients lista global
       if(typeof allPatients !== 'undefined'){
-        window.allPatients = patients.map(function(p){
-          return {id:p.id, name:p.attributes.name, phone:p.attributes.phone};
-        });
+        window.allPatients = patients.map(function(p){return {id:p.id, name:p.attributes.name, phone:p.attributes.phone};});
       }
-      // Limpa cache IASAG
       window.IASAG_bdayIndex = null;
-      // Re-render
       if(typeof initDashboard === 'function') try{initDashboard()}catch(e){}
       if(typeof IASAG_render === 'function') try{IASAG_render()}catch(e){}
-
-      setPill('✓ ' + patients.length + ' pacientes · ' + appts.length + ' consultas', 4000);
+      setPill('✓ ' + patients.length + ' pacientes · ' + appts.length + ' consultas', 5000);
     }catch(e){
-      console.error('Boot Supabase erro:', e);
-      setPill('❌ Erro: ' + (e.message||e), 6000);
+      setPill('❌ ' + (e.message||e), 8000);
     }
   };
 
-  // Override IASAG_salvar para gravar no Supabase
   function patchIASAG(){
     if(typeof window.IASAG_salvar !== 'function') return false;
-    var origSalvar = window.IASAG_salvar;
     window.IASAG_salvar = async function(){
-      var c = initClient(); if(!c){ origSalvar(); return; }
-      var pac=document.getElementById('iasag-f-pac');pac=pac?pac.value:'';
-      var tit=document.getElementById('iasag-f-tit');tit=tit?tit.value:'';
-      var dt=document.getElementById('iasag-f-data');dt=dt?dt.value:'';
-      var ini=document.getElementById('iasag-f-ini');ini=ini?ini.value:'';
-      var fim=document.getElementById('iasag-f-fim');fim=fim?fim.value:'';
-      var obs=document.getElementById('iasag-f-obs');obs=obs?obs.value:'';
-      if(!dt||!ini){alert('Informe data e hora de início');return;}
+      var pac=(document.getElementById('iasag-f-pac')||{}).value||'';
+      var tit=(document.getElementById('iasag-f-tit')||{}).value||'';
+      var dt=(document.getElementById('iasag-f-data')||{}).value||'';
+      var ini=(document.getElementById('iasag-f-ini')||{}).value||'';
+      var fim=(document.getElementById('iasag-f-fim')||{}).value||'';
+      var obs=(document.getElementById('iasag-f-obs')||{}).value||'';
+      if(!dt||!ini){alert('Informe data e hora');return;}
       var sH=parseInt(ini.split(':')[0]||0,10), sM=parseInt(ini.split(':')[1]||0,10);
       var eH=parseInt((fim||ini).split(':')[0]||0,10), eM=parseInt((fim||ini).split(':')[1]||0,10);
       var dur = Math.max(15, (eH*60+eM)-(sH*60+sM)); if(dur<=0) dur=30;
-      // Match paciente_id por nome (case-insensitive)
       var pid = null;
       if(pac && window.allPatients){
         var norm = pac.trim().toLowerCase();
@@ -3738,7 +3717,7 @@ function loadAgenda(){IASAG_render();}
         if(m) pid = m.id;
       }
       try{
-        var payload = {
+        await sbInsert('agenda', {
           paciente_id: pid,
           nome_paciente: pac,
           data_hora: dt+'T'+ini+':00',
@@ -3746,46 +3725,64 @@ function loadAgenda(){IASAG_render();}
           tipo: tit || 'consulta',
           observacoes: obs,
           status: 'agendado'
-        };
-        var res = await c.from('agenda').insert([payload]).select();
-        if(res.error) throw res.error;
-        if(window.toast) toast('Agendamento salvo ✓');
+        });
+        if(window.toast) toast('Salvo no Supabase ✓');
         if(typeof IASAG_close === 'function') IASAG_close();
         await window.__sbBootData();
-      }catch(e){
-        alert('Erro ao salvar: '+e.message);
-      }
+      }catch(e){ alert('Erro ao salvar: ' + e.message); }
     };
     return true;
   }
 
-  // Hook init: verifica sessão
   async function checkSession(){
-    var c = initClient();
-    if(!c){ setTimeout(checkSession, 200); return; }
-    var s = await c.auth.getSession();
-    if(s.data && s.data.session){
-      user = s.data.session.user;
-      hideLogin();
-      await window.__sbBootData();
-    } else {
-      showLogin();
+    session = loadSession();
+    if(session && session.access_token){
+      // Tenta usar token. Se 401, mostrar login.
+      try{
+        var r = await fetch(SB_URL + '/auth/v1/user', {headers: authHeaders()});
+        if(r.ok){
+          hideLogin();
+          await window.__sbBootData();
+          var tries=0; var iv=setInterval(function(){if(patchIASAG()||++tries>40)clearInterval(iv);},250);
+          return;
+        }
+      }catch(e){}
+      clearSession();
     }
-    // Patch IASAG quando estiver pronto
-    var tries = 0;
-    var iv = setInterval(function(){
-      if(patchIASAG() || ++tries > 40) clearInterval(iv);
-    }, 250);
+    showLogin();
+    // patch IASAG mesmo sem login (caso seja só visualização local)
+    var t2=0; var iv2=setInterval(function(){if(patchIASAG()||++t2>40)clearInterval(iv2);},250);
   }
 
-  // Enter para enviar form login
+  // Capturar tokens vindos de OAuth/Magic redirect (#access_token=...)
+  function captureUrlToken(){
+    if(window.location.hash && window.location.hash.indexOf('access_token=') >= 0){
+      var p = {};
+      window.location.hash.substring(1).split('&').forEach(function(kv){
+        var eq = kv.indexOf('=');
+        if(eq>0) p[decodeURIComponent(kv.slice(0,eq))] = decodeURIComponent(kv.slice(eq+1));
+      });
+      if(p.access_token){
+        saveSession({
+          access_token:p.access_token,
+          refresh_token:p.refresh_token||'',
+          expires_at: Math.floor(Date.now()/1000) + parseInt(p.expires_in||3600,10),
+          token_type:'bearer'
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }
+
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Enter' && document.getElementById('sb-login-ov') && !document.getElementById('sb-login-ov').classList.contains('hide')){
-      window.__sbLogin();
+    if(e.key==='Enter'){
+      var ov = document.getElementById('sb-login-ov');
+      if(ov && !ov.classList.contains('hide')) window.__sbLogin();
     }
   });
 
-  if(document.readyState !== 'loading') checkSession();
+  captureUrlToken();
+  if(document.readyState!=='loading') checkSession();
   else document.addEventListener('DOMContentLoaded', checkSession);
 })();
 </script>
