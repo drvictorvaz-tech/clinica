@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Teste Login Supabase</title>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:#0d7377;color:#fff;min-height:100vh;padding:30px 20px;line-height:1.5}
+h1{font-size:22px;margin-bottom:6px}
+.sub{font-size:13px;opacity:.8;margin-bottom:24px}
+.card{background:#fff;color:#333;border-radius:14px;padding:24px;max-width:420px;margin:0 auto}
+label{display:block;font-size:12px;font-weight:600;margin:14px 0 4px;color:#333}
+input{width:100%;padding:14px;font-size:16px;border:2px solid #ccc;border-radius:10px;outline:none}
+input:focus{border-color:#0d7377}
+button{width:100%;padding:15px;background:#0d7377;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:18px}
+button:disabled{opacity:.5}
+.log{background:#000;color:#0f0;font-family:monospace;font-size:11px;padding:12px;border-radius:8px;margin-top:14px;max-height:300px;overflow:auto;word-break:break-all}
+.log .ok{color:#0f0}
+.log .err{color:#f44}
+.log .info{color:#fff}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;width:40px;height:40px;color:#666;padding:0;margin:0}
+.wrap{position:relative}
+</style>
+</head>
+<body>
+<h1>🦷 Teste de Login</h1>
+<div class="sub">Página isolada para diagnosticar problema de acesso</div>
+
+<div class="card">
+  <label>Email</label>
+  <input id="em" type="email" value="drvictorvaz@gmail.com">
+  <label>Senha</label>
+  <div class="wrap">
+    <input id="ps" type="password" value="IASaude2026!" style="padding-right:48px">
+    <button class="eye" onclick="toggle()">👁</button>
+  </div>
+  <button onclick="testar()" id="btn">TESTAR LOGIN</button>
+  <button onclick="testarConectividade()" style="background:#444">TESTAR SÓ INTERNET</button>
+  <div class="log" id="log">Aguardando...</div>
+</div>
+
+<script>
+var SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
+var SB_KEY = 'sb_publishable_7DRcNLIMIsCXHC3QGq2FGg_HUuIUaPY';
+var logEl = document.getElementById('log');
+
+function log(msg, type){
+  type = type || 'info';
+  var d = new Date().toLocaleTimeString();
+  logEl.innerHTML += '<div class="'+type+'">['+d+'] '+msg+'</div>';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function toggle(){
+  var i = document.getElementById('ps');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+async function testarConectividade(){
+  log('--- Testando conectividade ---', 'info');
+  try{
+    log('Pingando google.com...', 'info');
+    var r = await fetch('https://www.google.com/generate_204', {mode:'no-cors'});
+    log('✓ Google respondeu', 'ok');
+  }catch(e){
+    log('✗ Google FALHOU: ' + e.message, 'err');
+  }
+  try{
+    log('Pingando supabase.co...', 'info');
+    var r = await fetch(SB_URL + '/auth/v1/health', {headers:{'apikey':SB_KEY}});
+    log('Supabase status: ' + r.status, r.ok ? 'ok' : 'err');
+    var t = await r.text();
+    log('Resposta: ' + t.substring(0, 200), 'info');
+  }catch(e){
+    log('✗ Supabase FALHOU: ' + e.message, 'err');
+    log('Possivel firewall/proxy bloqueando *.supabase.co', 'err');
+  }
+}
+
+async function testar(){
+  logEl.innerHTML = '';
+  log('--- Iniciando teste de login ---', 'info');
+  var btn = document.getElementById('btn');
+  btn.disabled = true; btn.textContent = 'Testando...';
+  var em = document.getElementById('em').value.trim();
+  var ps = document.getElementById('ps').value;
+  log('Email: ' + em, 'info');
+  log('Senha: ' + ps.length + ' caracteres', 'info');
+  log('URL: ' + SB_URL, 'info');
+
+  try{
+    log('Enviando POST /auth/v1/token...', 'info');
+    var resp = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {'apikey': SB_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({email: em, password: ps})
+    });
+    log('HTTP status: ' + resp.status, resp.ok ? 'ok' : 'err');
+    var data = await resp.json();
+    if(resp.ok){
+      log('✓ LOGIN OK!', 'ok');
+      log('User ID: ' + data.user.id, 'ok');
+      log('Email: ' + data.user.email, 'ok');
+      log('Token (50 chars): ' + data.access_token.substring(0,50) + '...', 'ok');
+      log('Expira em: ' + data.expires_in + 's', 'ok');
+      log('--- LOGIN FUNCIONA NESTE DISPOSITIVO ---', 'ok');
+      log('Se o app.html nao loga, e problema do app, nao do Supabase', 'info');
+    } else {
+      log('✗ FALHOU: ' + JSON.stringify(data), 'err');
+    }
+  }catch(e){
+    log('✗ ERRO FATAL: ' + e.message, 'err');
+    log('Tipo do erro: ' + e.name, 'err');
+    if(/Failed to fetch|NetworkError|Network/i.test(e.message)){
+      log('PROVAVEL: rede do consultorio bloqueia supabase.co', 'err');
+      log('Teste em rede 4G/movel para confirmar', 'err');
+    }
+  }
+  btn.disabled = false; btn.textContent = 'TESTAR LOGIN';
+}
+</script>
+</body>
+</html>
