@@ -1,7 +1,7 @@
 {
-  "name": "IA Pacientes - Dr. Victor Vaz",
-  "short_name": "IA Pacientes",
-  "description": "Gestão de pacientes da clínica do Dr. Victor Vaz - DTM, Sono e Bruxismo",
+  "name": "IA SAÚDE - Dr. Victor Vaz",
+  "short_name": "IA SAÚDE",
+  "description": "Sistema completo: pacientes, agenda, IA Clínica, IA Financeira, odontograma",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",

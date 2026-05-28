@@ -1,5 +1,5 @@
-/* Service Worker - IA Pacientes */
-const CACHE = 'ia-pacientes-v1';
+/* Service Worker - IA SAÚDE v2 */
+const CACHE = 'ia-saude-v2';
 const ASSETS = ['./app.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,6 @@ self.addEventListener('activate', e => {
   );
 });
 
-/* Estratégia: Network-first com fallback para cache (sempre busca atualização) */
 self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
