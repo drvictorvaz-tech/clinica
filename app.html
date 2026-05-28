@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2127">
-<meta name="build" content="6e693f">
+<meta name="version" content="2026.05.28-2130">
+<meta name="build" content="d6999f">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -595,7 +595,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2127</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2130</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3049,6 +3049,187 @@ function loadAgenda(){IASAG_render();}
 
   document.addEventListener('DOMContentLoaded', startObserve);
   if(document.readyState !== 'loading') startObserve();
+})();
+</script>
+
+
+<script id="m-agenda-sync">
+/* ===== AGENDA SYNC COM API RAILWAY ===== */
+(function(){
+  var API = 'https://clinica-production-22e0.up.railway.app';
+  window.IASAG_API_BASE = API;
+  window.IASAG_remote = [];
+  window.IASAG_syncing = false;
+  window.IASAG_lastSync = 0;
+
+  function parseRemoteDate(s){
+    if(!s) return null;
+    // Aceita: "2026-05-28T14:00:00" ou "2026-05-28 14:00:00" ou com timezone
+    var d = new Date(s);
+    if(!isNaN(d)) return d;
+    var m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if(m) return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);
+    return null;
+  }
+
+  window.IASAG_syncRemote = function(force){
+    if(window.IASAG_syncing) return;
+    var now = Date.now();
+    if(!force && (now - window.IASAG_lastSync) < 5000) return;
+    window.IASAG_syncing = true;
+    fetch(API + '/agenda', {cache:'no-store'})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var list = (data && data.agendamentos) || [];
+        window.IASAG_remote = list;
+        window.IASAG_lastSync = Date.now();
+        if(typeof IASAG_render === 'function' && document.getElementById('agenda') && document.getElementById('agenda').classList.contains('active')){
+          IASAG_render();
+        }
+        showSyncStatus('Sincronizado: ' + list.length + ' agendamentos');
+      })
+      .catch(function(e){
+        console.warn('Sync agenda falhou:', e);
+        showSyncStatus('Offline (usando dados locais)');
+      })
+      .finally(function(){window.IASAG_syncing=false;});
+  };
+
+  function showSyncStatus(txt){
+    var el = document.getElementById('iasag-sync-status');
+    if(el){ el.textContent = txt; setTimeout(function(){if(el)el.textContent=''}, 3000); }
+  }
+
+  // Sobrescreve IASAG_all após carregamento original
+  function patchIASAG(){
+    if(typeof IASAG_all !== 'function') return false;
+    var orig = IASAG_all;
+    window.IASAG_all = function(){
+      var out = orig();
+      // Adicionar remotos da API
+      (window.IASAG_remote||[]).forEach(function(r, i){
+        var s = parseRemoteDate(r.data_hora);
+        if(!s) return;
+        var dur = parseInt(r.duracao_minutos||60,10);
+        var e = new Date(s.getTime() + dur*60000);
+        out.push({
+          id: 'r' + (r.id||i),
+          _remote: r,
+          _remoteIdx: i,
+          start: s, end: e,
+          title: r.tipo || 'Consulta',
+          patient: r.nome_paciente || '',
+          obs: r.observacoes || '',
+          done: (r.status==='realizado'),
+          allday: false,
+          custom: true,
+          remote: true
+        });
+      });
+      return out;
+    };
+
+    // Sobrescreve IASAG_salvar para também enviar pra API
+    if(typeof IASAG_salvar === 'function'){
+      var origSalvar = IASAG_salvar;
+      window.IASAG_salvar = function(){
+        // Pega valores antes de qualquer reset
+        var pac=document.getElementById('iasag-f-pac');pac=pac?pac.value:'';
+        var tit=document.getElementById('iasag-f-tit');tit=tit?tit.value:'';
+        var dt=document.getElementById('iasag-f-data');dt=dt?dt.value:'';
+        var ini=document.getElementById('iasag-f-ini');ini=ini?ini.value:'';
+        var fim=document.getElementById('iasag-f-fim');fim=fim?fim.value:'';
+        var obs=document.getElementById('iasag-f-obs');obs=obs?obs.value:'';
+        if(!dt || !ini){ alert('Informe data e hora de início'); return; }
+
+        // Calcular duração
+        var sH = parseInt(ini.split(':')[0]||0,10), sM=parseInt(ini.split(':')[1]||0,10);
+        var eH = parseInt((fim||ini).split(':')[0]||0,10), eM=parseInt((fim||ini).split(':')[1]||0,10);
+        var dur = Math.max(15, (eH*60+eM) - (sH*60+sM));
+        if(dur<=0) dur=30;
+
+        var payload = {
+          nome_paciente: pac,
+          data_hora: dt + 'T' + ini + ':00',
+          duracao_minutos: dur,
+          tipo: tit || 'consulta',
+          observacoes: obs,
+          status: 'agendado'
+        };
+
+        // Salvar localStorage tambem como backup offline
+        try{ origSalvar(); }catch(e){}
+
+        // Enviar para API
+        fetch(API + '/agenda', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        }).then(function(r){return r.json();}).then(function(saved){
+          if(window.toast) toast('Sincronizado com a nuvem ✓');
+          window.IASAG_syncRemote(true);
+        }).catch(function(e){
+          console.warn('POST agenda falhou:', e);
+          if(window.toast) toast('Salvo localmente (sem internet)');
+        });
+      };
+    }
+
+    return true;
+  }
+
+  // Adicionar indicador de sync na toolbar quando disponível
+  function injectSyncBtn(){
+    var top = document.querySelector('#iasag .ag-top');
+    if(!top || document.getElementById('iasag-sync-btn')) return;
+    var btn = document.createElement('button');
+    btn.id = 'iasag-sync-btn';
+    btn.className = 'ag-today';
+    btn.title = 'Sincronizar com nuvem';
+    btn.innerHTML = '🔄';
+    btn.onclick = function(){ window.IASAG_syncRemote(true); };
+    top.appendChild(btn);
+    var status = document.createElement('span');
+    status.id = 'iasag-sync-status';
+    status.style.cssText = 'font-size:11px;color:#0d7377;font-weight:600;margin-left:6px';
+    top.appendChild(status);
+  }
+
+  function tryInit(){
+    if(patchIASAG()){
+      injectSyncBtn();
+      window.IASAG_syncRemote(true);
+      return true;
+    }
+    return false;
+  }
+
+  // Tenta patchar várias vezes (IASAG pode carregar tarde)
+  var tries = 0;
+  var interval = setInterval(function(){
+    if(tryInit() || ++tries > 40){
+      clearInterval(interval);
+    }
+  }, 250);
+
+  // Sync periódico a cada 60s quando agenda visível
+  setInterval(function(){
+    var agenda = document.getElementById('agenda');
+    if(agenda && agenda.classList.contains('active')){
+      window.IASAG_syncRemote();
+    }
+  }, 60000);
+
+  // Sync ao clicar tab agenda
+  document.addEventListener('click', function(e){
+    var t = e.target.closest && e.target.closest('.m-tab,.nav-item');
+    if(!t) return;
+    var sec = t.getAttribute('data-msec') || t.getAttribute('data-section');
+    if(sec === 'agenda'){
+      injectSyncBtn();
+      setTimeout(function(){window.IASAG_syncRemote(true);}, 200);
+    }
+  });
 })();
 </script>
 
