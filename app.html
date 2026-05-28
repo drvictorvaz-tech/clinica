@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2149">
-<meta name="build" content="8b1138">
+<meta name="version" content="2026.05.28-2151">
+<meta name="build" content="8cf5f0">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -591,6 +591,17 @@ tbody tr:last-child{border-bottom:none}
   cursor:pointer
 }
 .sb-login-box .sb-btn-alt-full:active{transform:scale(.98);border-color:#0d7377}
+.sb-login-box .sb-pass-wrap{position:relative}
+.sb-login-box .sb-pass-wrap input{padding-right:48px}
+.sb-login-box .sb-eye{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border:none;background:transparent;cursor:pointer;
+  font-size:18px;border-radius:50%;color:#6b7280;
+  display:flex;align-items:center;justify-content:center
+}
+.sb-login-box .sb-eye:active{background:#f0f4f8}
+.sb-login-box .sb-eye.open{color:#0d7377}
+
 </style>
 
 </head>
@@ -606,7 +617,10 @@ tbody tr:last-child{border-bottom:none}
     <input id="sb-email" type="email" autocomplete="email" value="drvictorvaz@gmail.com" inputmode="email">
 
     <label for="sb-pass">Senha</label>
-    <input id="sb-pass" type="password" autocomplete="current-password" placeholder="IASaude2026!">
+    <div class="sb-pass-wrap">
+      <input id="sb-pass" type="password" autocomplete="current-password" placeholder="Digite a senha">
+      <button type="button" class="sb-eye" id="sb-eye-btn" onclick="window.__sbToggleEye()" aria-label="Mostrar senha">👁</button>
+    </div>
 
     <button class="sb-btn" id="sb-btn-login" onclick="window.__sbLogin()">Entrar</button>
 
@@ -688,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2149</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2151</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3510,6 +3524,22 @@ function loadAgenda(){IASAG_render();}
     p.textContent = txt; p.classList.add('show');
     if(dur) setTimeout(function(){p.classList.remove('show')}, dur);
   }
+
+  
+  window.__sbToggleEye = function(){
+    var inp = document.getElementById('sb-pass');
+    var btn = document.getElementById('sb-eye-btn');
+    if(!inp || !btn) return;
+    if(inp.type === 'password'){
+      inp.type = 'text';
+      btn.textContent = '🙈';
+      btn.classList.add('open');
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁';
+      btn.classList.remove('open');
+    }
+  };
 
   window.__sbLogin = async function(){
     clearErr();
