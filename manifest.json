@@ -1,0 +1,17 @@
+{
+  "name": "IA Pacientes - Dr. Victor Vaz",
+  "short_name": "IA Pacientes",
+  "description": "Gestão de pacientes da clínica do Dr. Victor Vaz - DTM, Sono e Bruxismo",
+  "start_url": "./app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d7377",
+  "theme_color": "#0d7377",
+  "lang": "pt-BR",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ],
+  "categories": ["medical", "productivity", "health"]
+}
