@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.28-2138">
-<meta name="build" content="2b344a">
+<meta name="version" content="2026.05.28-2139">
+<meta name="build" content="5bcb58">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -577,6 +577,14 @@ tbody tr:last-child{border-bottom:none}
   font-size:10px;font-weight:600;z-index:9000;display:none
 }
 .sb-status-pill.show{display:block}
+.sb-login-box .sb-btn-alt{
+  flex:1;padding:11px 8px;background:#fff;color:#1a2535;
+  border:2px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px
+}
+.sb-login-box .sb-btn-alt:active{transform:scale(.97);border-color:#0d7377}
+.sb-login-box #sb-btn-magic{background:#0d7377}
+.sb-login-box .link.show{display:block}
 </style>
 
 </head>
@@ -587,15 +595,36 @@ tbody tr:last-child{border-bottom:none}
     <div class="sb-logo">🦷</div>
     <h2>IA SAÚDE</h2>
     <p class="sub">Dr. Victor Vaz · DTM, Sono e Bruxismo</p>
-    <label for="sb-email">Email</label>
+
+    <label for="sb-email">Seu email</label>
     <input id="sb-email" type="email" autocomplete="email" value="drvictorvaz@gmail.com" inputmode="email">
-    <label for="sb-pass">Senha</label>
-    <input id="sb-pass" type="password" autocomplete="current-password" placeholder="Sua senha do Supabase">
+
+    <button class="sb-btn" id="sb-btn-magic" onclick="window.__sbMagic()">📧 Enviar link de acesso</button>
+    <p style="font-size:11.5px;color:#6b7280;text-align:center;margin-top:8px;line-height:1.4">Recomendado · sem senha. Voce recebe um link no email e clica para entrar.</p>
+
+    <div style="text-align:center;color:#9ca3af;font-size:11px;margin:18px 0 6px;font-weight:600;letter-spacing:1px">OU</div>
+
+    <div style="display:flex;gap:8px">
+      <button class="sb-btn-alt" onclick="window.__sbOAuth('google')">
+        <span style="font-size:16px">G</span> Google
+      </button>
+      <button class="sb-btn-alt" onclick="window.__sbOAuth('github')">
+        <span style="font-size:14px">⚫</span> GitHub
+      </button>
+    </div>
+
+    <a class="link" onclick="document.getElementById('sb-pass-box').style.display='block';this.style.display='none'">Entrar com senha</a>
+
+    <div id="sb-pass-box" style="display:none">
+      <label for="sb-pass">Senha</label>
+      <input id="sb-pass" type="password" autocomplete="current-password">
+      <button class="sb-btn" onclick="window.__sbLogin()" style="margin-top:12px">Entrar com senha</button>
+    </div>
+
     <div class="err" id="sb-err"></div>
-    <button class="sb-btn" id="sb-btn" onclick="window.__sbLogin()">Entrar</button>
-    <a class="link" onclick="window.__sbReset()">Esqueci minha senha</a>
   </div>
 </div>
+<div class="sb-status-pill" id="sb-pill">🌐 Sincronizado</div>
 <div class="sb-status-pill" id="sb-pill">🌐 Sincronizado</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
@@ -659,7 +688,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2138</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.28-2139</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3502,6 +3531,48 @@ function loadAgenda(){IASAG_render();}
       document.getElementById('sb-err').style.color='#0d7377';
       document.getElementById('sb-err').style.background='#e8f5e9';
     }catch(e){showErr('Erro: '+e.message);}
+  };
+
+  window.__sbMagic = async function(){
+    clearErr();
+    var c = initClient(); if(!c){showErr('Supabase carregando, tente em 2s');return;}
+    var email = document.getElementById('sb-email').value.trim();
+    if(!email){showErr('Digite seu email');return;}
+    var btn = document.getElementById('sb-btn-magic');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try{
+      var res = await c.auth.signInWithOtp({
+        email: email,
+        options:{
+          emailRedirectTo: window.location.origin + window.location.pathname,
+          shouldCreateUser: false
+        }
+      });
+      if(res.error) throw res.error;
+      document.getElementById('sb-err').style.color='#0d7377';
+      document.getElementById('sb-err').style.background='#e8f5e9';
+      document.getElementById('sb-err').textContent='✓ Link enviado! Abra seu email ('+email+') e clique no link "Magic Link". Depois volte aqui.';
+      document.getElementById('sb-err').classList.add('show');
+      btn.textContent = '✓ Link enviado';
+      setTimeout(function(){btn.disabled=false;btn.textContent='📧 Reenviar link';}, 5000);
+    }catch(e){
+      showErr('Erro: '+e.message);
+      btn.disabled=false; btn.textContent='📧 Enviar link de acesso';
+    }
+  };
+
+  window.__sbOAuth = async function(provider){
+    clearErr();
+    var c = initClient(); if(!c){showErr('Supabase carregando');return;}
+    try{
+      var res = await c.auth.signInWithOAuth({
+        provider: provider,
+        options:{redirectTo: window.location.origin + window.location.pathname}
+      });
+      if(res.error) throw res.error;
+    }catch(e){
+      showErr(provider+' nao configurado no Supabase. Use o link por email.');
+    }
   };
 
   window.__sbLogout = async function(){
