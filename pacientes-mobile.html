@@ -233,6 +233,52 @@ body{display:flex;flex-direction:column}
   font-size:10.5px;font-weight:600;z-index:9000;display:none
 }
 .sync-pill.show{display:block}
+
+/* FAB - Floating Action Button */
+.fab-add{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom) + 24px);right:20px;
+  width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#0d7377,#14a085);
+  border:none;color:#fff;font-size:32px;font-weight:300;line-height:1;
+  box-shadow:0 6px 20px rgba(13,115,119,.4);cursor:pointer;z-index:150;
+  display:flex;align-items:center;justify-content:center;transition:.15s
+}
+.fab-add:active{transform:scale(.92)}
+
+/* MODAL CADASTRO */
+.modal-ov{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;
+  display:none;align-items:flex-end;justify-content:center;padding:0
+}
+.modal-ov.show{display:flex;animation:fadein .2s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal-card{
+  background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;
+  max-height:92vh;overflow-y:auto;animation:slideup .25s ease;
+  padding:18px 18px calc(env(safe-area-inset-bottom) + 22px)
+}
+@keyframes slideup{from{transform:translateY(60px)}to{transform:none}}
+.modal-bar{width:48px;height:5px;background:#ddd;border-radius:3px;margin:0 auto 14px}
+.modal-card h2{font-size:18px;color:#1a2535;margin-bottom:14px;text-align:center}
+.modal-card label{display:block;font-size:12px;color:#1a2535;font-weight:600;margin:10px 0 4px}
+.modal-card input,.modal-card select{
+  width:100%;padding:12px 13px;border:2px solid #e2e8f0;border-radius:10px;
+  font-size:16px;outline:none;background:#fff;color:#1a2535;box-sizing:border-box
+}
+.modal-card input:focus,.modal-card select:focus{border-color:#0d7377}
+.modal-card .row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.modal-card .footer{display:flex;gap:9px;margin-top:18px}
+.modal-card .btn-cancel{
+  flex:1;padding:13px;background:#fff;color:#6b7280;border:2px solid #e2e8f0;
+  border-radius:10px;font-size:14px;font-weight:600;cursor:pointer
+}
+.modal-card .btn-save{
+  flex:2;padding:13px;background:#0d7377;color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer
+}
+.modal-card .btn-save:disabled{opacity:.6}
+.modal-err{background:#fee;color:#c00;padding:9px 12px;border-radius:8px;font-size:12px;margin-top:8px;display:none}
+.modal-err.show{display:block}
+
 </style>
 </head>
 <body>
@@ -616,6 +662,71 @@ document.addEventListener('keydown',function(e){
   }
 })();
 
+
+function openNovoPaciente(){
+  ['nome','celular','cpf','email','nasc','sexo','prof','civil','plano','conheceu','end','obs'].forEach(function(f){
+    var el=document.getElementById('np-'+f);
+    if(el){el.value=''; if(el.tagName==='SELECT') el.selectedIndex=0;}
+  });
+  document.getElementById('np-err').classList.remove('show');
+  document.getElementById('modal-novo').classList.add('show');
+  setTimeout(function(){document.getElementById('np-nome').focus();}, 200);
+}
+function closeNovoPaciente(){document.getElementById('modal-novo').classList.remove('show');}
+
+async function salvarNovoPaciente(){
+  var err=document.getElementById('np-err');
+  err.classList.remove('show');
+  var nome=document.getElementById('np-nome').value.trim();
+  var cel=document.getElementById('np-celular').value.trim();
+  if(!nome){err.textContent='Preencha o nome';err.classList.add('show');return;}
+  if(!cel){err.textContent='Preencha o celular';err.classList.add('show');return;}
+  var btn=document.getElementById('np-btn');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    var row={
+      nome: nome,
+      celular: cel,
+      cpf: document.getElementById('np-cpf').value.trim() || null,
+      email: document.getElementById('np-email').value.trim() || null,
+      data_nascimento: document.getElementById('np-nasc').value || null,
+      sexo: document.getElementById('np-sexo').value || null,
+      profissao: document.getElementById('np-prof').value.trim() || null,
+      estado_civil: document.getElementById('np-civil').value || null,
+      plano_saude: document.getElementById('np-plano').value.trim() || null,
+      como_conheceu: document.getElementById('np-conheceu').value.trim() || null,
+      endereco: document.getElementById('np-end').value.trim() || null,
+      observacoes: document.getElementById('np-obs').value.trim() || null,
+      ativo: true
+    };
+    var r=await fetch(SB_URL+'/rest/v1/pacientes',{
+      method:'POST',
+      headers:Object.assign({},authHeaders(),{'Prefer':'return=representation'}),
+      body:JSON.stringify(row)
+    });
+    if(!r.ok){var t=await r.text();throw new Error(t);}
+    var inserted=await r.json();
+    var novo=inserted[0];
+    pacientes.unshift(novo);
+    closeNovoPaciente();
+    toast('Paciente "'+nome+'" cadastrado ✓');
+    renderList();
+    // Abrir ficha do novo paciente
+    setTimeout(function(){openDetail(novo.id);}, 350);
+  }catch(e){
+    err.textContent='Erro: '+(e.message||e);
+    err.classList.add('show');
+  }finally{
+    btn.disabled=false;btn.textContent='Salvar paciente';
+  }
+}
+
+// Fechar modal ao tocar fora
+document.getElementById('modal-novo').addEventListener('click',function(e){
+  if(e.target===this) closeNovoPaciente();
+});
+
+
 // BOOT
 (async function(){
   document.getElementById('loader').classList.add('hide');
@@ -634,5 +745,74 @@ document.addEventListener('keydown',function(e){
   // Sem sessão — mantém login visível (sem ocultar)
 })();
 </script>
+
+<button class="fab-add" onclick="openNovoPaciente()" title="Novo paciente">+</button>
+
+<div class="modal-ov" id="modal-novo">
+  <div class="modal-card">
+    <div class="modal-bar"></div>
+    <h2>👤 Novo paciente</h2>
+    <label>Nome completo *</label>
+    <input id="np-nome" type="text" placeholder="Nome do paciente" autocomplete="off">
+    <div class="row2">
+      <div>
+        <label>Celular *</label>
+        <input id="np-celular" type="tel" placeholder="(47) 99999-9999" inputmode="tel">
+      </div>
+      <div>
+        <label>CPF</label>
+        <input id="np-cpf" type="text" placeholder="000.000.000-00" inputmode="numeric">
+      </div>
+    </div>
+    <label>Email</label>
+    <input id="np-email" type="email" placeholder="email@exemplo.com" inputmode="email">
+    <div class="row2">
+      <div>
+        <label>Data nascimento</label>
+        <input id="np-nasc" type="date">
+      </div>
+      <div>
+        <label>Sexo</label>
+        <select id="np-sexo">
+          <option value="">—</option>
+          <option value="Feminino">Feminino</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <label>Profissão</label>
+    <input id="np-prof" type="text" placeholder="Profissão">
+    <div class="row2">
+      <div>
+        <label>Estado civil</label>
+        <select id="np-civil">
+          <option value="">—</option>
+          <option>Solteiro(a)</option>
+          <option>Casado(a)</option>
+          <option>Divorciado(a)</option>
+          <option>Viúvo(a)</option>
+          <option>União estável</option>
+        </select>
+      </div>
+      <div>
+        <label>Plano de saúde</label>
+        <input id="np-plano" type="text" placeholder="Particular / Unimed / etc">
+      </div>
+    </div>
+    <label>Como conheceu a clínica?</label>
+    <input id="np-conheceu" type="text" placeholder="Indicação, Instagram, etc">
+    <label>Endereço</label>
+    <input id="np-end" type="text" placeholder="Endereço">
+    <label>Observações</label>
+    <input id="np-obs" type="text" placeholder="Notas iniciais">
+    <div class="modal-err" id="np-err"></div>
+    <div class="footer">
+      <button class="btn-cancel" onclick="closeNovoPaciente()">Cancelar</button>
+      <button class="btn-save" id="np-btn" onclick="salvarNovoPaciente()">Salvar paciente</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

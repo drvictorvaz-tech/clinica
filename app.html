@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.30-1646">
-<meta name="build" content="952212">
+<meta name="version" content="2026.05.30-1740">
+<meta name="build" content="7b6499">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1646</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1740</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3851,6 +3851,240 @@ function loadAgenda(){IASAG_render();}
   }
   if(document.readyState !== 'loading') reloadOnAgenda();
   else document.addEventListener('DOMContentLoaded', reloadOnAgenda);
+})();
+</script>
+
+
+<style id="m-novo-paciente-css">
+.fab-add-p{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom) + 80px);right:20px;
+  width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0d7377,#14a085);
+  border:none;color:#fff;font-size:30px;font-weight:300;line-height:1;
+  box-shadow:0 6px 20px rgba(13,115,119,.4);cursor:pointer;z-index:150;
+  display:none;align-items:center;justify-content:center;transition:.15s
+}
+@media (max-width:900px){
+  .fab-add-p{bottom:calc(env(safe-area-inset-bottom) + 84px)}
+}
+body.sec-pacientes-active .fab-add-p{display:flex}
+.fab-add-p:active{transform:scale(.92)}
+
+#np-modal-ov{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;
+  display:none;align-items:flex-end;justify-content:center;padding:0
+}
+#np-modal-ov.show{display:flex;animation:np-fade .2s}
+@keyframes np-fade{from{opacity:0}to{opacity:1}}
+#np-modal-ov .np-card{
+  background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;
+  max-height:92vh;overflow-y:auto;padding:18px 18px calc(env(safe-area-inset-bottom) + 22px);
+  animation:np-slide .25s ease;color:#1a2535
+}
+@media (min-width:520px){#np-modal-ov .np-card{border-radius:16px;margin:auto}}
+@keyframes np-slide{from{transform:translateY(60px)}to{transform:none}}
+#np-modal-ov .np-bar{width:48px;height:5px;background:#ddd;border-radius:3px;margin:0 auto 14px}
+#np-modal-ov h2{font-size:18px;color:#1a2535;margin-bottom:14px;text-align:center;font-weight:700}
+#np-modal-ov label{display:block;font-size:12px;color:#1a2535;font-weight:600;margin:10px 0 4px}
+#np-modal-ov input,#np-modal-ov select{
+  width:100%;padding:12px 13px;border:2px solid #e2e8f0;border-radius:10px;
+  font-size:16px;outline:none;background:#fff;color:#1a2535;box-sizing:border-box
+}
+#np-modal-ov input:focus,#np-modal-ov select:focus{border-color:#0d7377}
+#np-modal-ov .np-row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#np-modal-ov .np-footer{display:flex;gap:9px;margin-top:18px}
+#np-modal-ov .np-cancel{
+  flex:1;padding:13px;background:#fff;color:#6b7280;border:2px solid #e2e8f0;
+  border-radius:10px;font-size:14px;font-weight:600;cursor:pointer
+}
+#np-modal-ov .np-save{
+  flex:2;padding:13px;background:#0d7377;color:#fff;border:none;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer
+}
+#np-modal-ov .np-save:disabled{opacity:.6}
+#np-modal-ov .np-err{background:#fee;color:#c00;padding:9px 12px;border-radius:8px;font-size:12px;margin-top:8px;display:none}
+#np-modal-ov .np-err.show{display:block}
+</style>
+
+<button class="fab-add-p" onclick="window.__npOpen()" title="Novo paciente" id="np-fab">+</button>
+
+<div id="np-modal-ov">
+  <div class="np-card">
+    <div class="np-bar"></div>
+    <h2>👤 Novo paciente</h2>
+    <label>Nome completo *</label>
+    <input id="np-nome" type="text" placeholder="Nome do paciente">
+    <div class="np-row2">
+      <div>
+        <label>Celular *</label>
+        <input id="np-celular" type="tel" placeholder="(47) 99999-9999" inputmode="tel">
+      </div>
+      <div>
+        <label>CPF</label>
+        <input id="np-cpf" type="text" placeholder="000.000.000-00" inputmode="numeric">
+      </div>
+    </div>
+    <label>Email</label>
+    <input id="np-email" type="email" placeholder="email@exemplo.com" inputmode="email">
+    <div class="np-row2">
+      <div>
+        <label>Data nascimento</label>
+        <input id="np-nasc" type="date">
+      </div>
+      <div>
+        <label>Sexo</label>
+        <select id="np-sexo">
+          <option value="">—</option>
+          <option value="Feminino">Feminino</option>
+          <option value="Masculino">Masculino</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <label>Profissão</label>
+    <input id="np-prof" type="text" placeholder="Profissão">
+    <div class="np-row2">
+      <div>
+        <label>Estado civil</label>
+        <select id="np-civil">
+          <option value="">—</option>
+          <option>Solteiro(a)</option>
+          <option>Casado(a)</option>
+          <option>Divorciado(a)</option>
+          <option>Viúvo(a)</option>
+          <option>União estável</option>
+        </select>
+      </div>
+      <div>
+        <label>Plano de saúde</label>
+        <input id="np-plano" type="text" placeholder="Particular / Unimed">
+      </div>
+    </div>
+    <label>Como conheceu a clínica?</label>
+    <input id="np-conheceu" type="text" placeholder="Indicação, Instagram, etc">
+    <label>Endereço</label>
+    <input id="np-end" type="text" placeholder="Endereço completo">
+    <label>Observações</label>
+    <input id="np-obs" type="text" placeholder="Notas iniciais">
+    <div class="np-err" id="np-err"></div>
+    <div class="np-footer">
+      <button class="np-cancel" onclick="window.__npClose()">Cancelar</button>
+      <button class="np-save" id="np-btn" onclick="window.__npSave()">Salvar paciente</button>
+    </div>
+  </div>
+</div>
+
+<script id="m-novo-paciente-js">
+(function(){
+  var SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
+  var SB_KEY = 'sb_publishable_7DRcNLIMIsCXHC3QGq2FGg_HUuIUaPY';
+  function getToken(){
+    try{
+      var s = localStorage.getItem('iasaude-sb-session');
+      if(s){ var p = JSON.parse(s); return p && p.access_token; }
+    }catch(e){}
+    return null;
+  }
+  function authHeaders(){
+    var t = getToken();
+    return Object.assign({'apikey': SB_KEY, 'Content-Type': 'application/json'}, t ? {'Authorization':'Bearer '+t} : {});
+  }
+  
+  window.__npOpen = function(){
+    ['nome','celular','cpf','email','nasc','sexo','prof','civil','plano','conheceu','end','obs'].forEach(function(f){
+      var el = document.getElementById('np-'+f);
+      if(el){ el.value = ''; if(el.tagName==='SELECT') el.selectedIndex = 0; }
+    });
+    document.getElementById('np-err').classList.remove('show');
+    document.getElementById('np-modal-ov').classList.add('show');
+    setTimeout(function(){ var n = document.getElementById('np-nome'); if(n) n.focus(); }, 200);
+  };
+  window.__npClose = function(){
+    document.getElementById('np-modal-ov').classList.remove('show');
+  };
+  
+  window.__npSave = async function(){
+    var err = document.getElementById('np-err');
+    err.classList.remove('show');
+    var nome = document.getElementById('np-nome').value.trim();
+    var cel = document.getElementById('np-celular').value.trim();
+    if(!nome){ err.textContent = 'Preencha o nome'; err.classList.add('show'); return; }
+    if(!cel){ err.textContent = 'Preencha o celular'; err.classList.add('show'); return; }
+    var btn = document.getElementById('np-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try{
+      var row = {
+        nome: nome,
+        celular: cel,
+        cpf: document.getElementById('np-cpf').value.trim() || null,
+        email: document.getElementById('np-email').value.trim() || null,
+        data_nascimento: document.getElementById('np-nasc').value || null,
+        sexo: document.getElementById('np-sexo').value || null,
+        profissao: document.getElementById('np-prof').value.trim() || null,
+        estado_civil: document.getElementById('np-civil').value || null,
+        plano_saude: document.getElementById('np-plano').value.trim() || null,
+        como_conheceu: document.getElementById('np-conheceu').value.trim() || null,
+        endereco: document.getElementById('np-end').value.trim() || null,
+        observacoes: document.getElementById('np-obs').value.trim() || null,
+        ativo: true
+      };
+      var r = await fetch(SB_URL + '/rest/v1/pacientes', {
+        method: 'POST',
+        headers: Object.assign({}, authHeaders(), {'Prefer':'return=representation'}),
+        body: JSON.stringify(row)
+      });
+      if(!r.ok){ var t = await r.text(); throw new Error(t); }
+      var inserted = await r.json();
+      var novo = inserted[0];
+      window.__npClose();
+      if(window.toast) toast('Paciente "' + nome + '" cadastrado ✓');
+      // Re-sync para atualizar data.patients
+      if(typeof window.__sbBootData === 'function'){
+        await window.__sbBootData();
+      }
+      // Tentar abrir a ficha do novo paciente
+      try{
+        if(typeof openPatient === 'function') openPatient(novo.id);
+        else if(typeof IAS_open === 'function') IAS_open(novo.id);
+      }catch(e){}
+    }catch(e){
+      err.textContent = 'Erro: ' + (e.message || e);
+      err.classList.add('show');
+    }finally{
+      btn.disabled = false; btn.textContent = 'Salvar paciente';
+    }
+  };
+  
+  // Mostrar FAB so na secao Pacientes
+  function watchSection(){
+    function check(){
+      var s = document.getElementById('pacientes');
+      var fab = document.getElementById('np-fab');
+      if(!fab) return;
+      if(s && s.classList.contains('active')){
+        fab.style.display = 'flex';
+        document.body.classList.add('sec-pacientes-active');
+      } else {
+        fab.style.display = 'none';
+        document.body.classList.remove('sec-pacientes-active');
+      }
+    }
+    check();
+    document.addEventListener('click', function(e){
+      var t = e.target.closest && e.target.closest('.m-tab,.nav-item');
+      if(t){ setTimeout(check, 50); }
+    });
+  }
+  
+  // Fechar modal ao tocar fora
+  var ov = document.getElementById('np-modal-ov');
+  if(ov){
+    ov.addEventListener('click', function(e){
+      if(e.target === ov) window.__npClose();
+    });
+  }
+  
+  if(document.readyState !== 'loading') watchSection();
+  else document.addEventListener('DOMContentLoaded', watchSection);
 })();
 </script>
 
