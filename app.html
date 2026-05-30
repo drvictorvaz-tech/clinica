@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.30-1459">
-<meta name="build" content="45f175">
+<meta name="version" content="2026.05.30-1646">
+<meta name="build" content="952212">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1459</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1646</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3692,6 +3692,32 @@ function loadAgenda(){IASAG_render();}
         data.patients = patients;
         data.appointments = appts;
         data.analysis = recomputeAnalysis(patients, appts);
+        // Mapear evolucoes do Supabase para data.annotations (formato Capim)
+        var annotations = {};
+        (evRes || []).forEach(function(e){
+          if(!e.paciente_id) return;
+          var pid = String(e.paciente_id);
+          if(!annotations[pid]) annotations[pid] = [];
+          var partes = [];
+          if(e.queixa_principal) partes.push('Queixa: ' + e.queixa_principal);
+          if(e.anamnese) partes.push(e.anamnese);
+          if(e.exame_clinico) partes.push('Exame: ' + e.exame_clinico);
+          if(e.diagnostico) partes.push('Diagnostico: ' + e.diagnostico);
+          if(e.plano_tratamento) partes.push('Plano: ' + e.plano_tratamento);
+          if(e.procedimentos_realizados) partes.push('Procedimentos: ' + e.procedimentos_realizados);
+          if(e.orientacoes && !/^Importado do Capim/.test(e.orientacoes)) partes.push('Orientacoes: ' + e.orientacoes);
+          var texto = partes.join('\n\n').trim();
+          if(!texto) return;
+          annotations[pid].push({
+            id: e.id,
+            attributes: {
+              created_at: e.data_consulta + 'T00:00:00',
+              comments: texto,
+              dentist: {name: 'Dr. Victor Vaz'}
+            }
+          });
+        });
+        data.annotations = annotations;
       }
       if(window.CAPIM_DATA){
         window.CAPIM_DATA.patients = patients;
