@@ -7,8 +7,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.30-1530">
-<meta name="build" content="155420">
+<meta name="version" content="2026.05.30-1537">
+<meta name="build" content="ddf6d1">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -423,7 +423,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1530</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1537</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -615,11 +615,12 @@ tbody tr:last-child{border-bottom:none}
 // ============================================================
 // DATA LOADER
 // ============================================================
-let data = {
+window.data = {
   patients:[],appointments:[],
   analysis:{inactive_6months:[],birthdays_this_month:[],upcoming_birthdays:[],never_returned:[],high_frequency:[],no_appointment_ever:[]},
   annotations:{},documents:{}
 };
+var data = window.data;
 
 function setProgress(msg, pct){
   const prog=document.getElementById('loader-progress');
@@ -644,8 +645,8 @@ function initDashboard(){
 
 function loadDemoData(){
   // Load with empty data just to show the UI
-  data = {
-    patients:[{id:'demo1',attributes:{name:'Paciente Demo',phone:'(11) 99999-9999',birth_date:'1985-06-15',email:'demo@demo.com'}}],
+  Object.assign(window.data, {
+    patients:[{id:"demo1",attributes:{name:'Paciente Demo',phone:'(11) 99999-9999',birth_date:'1985-06-15',email:'demo@demo.com'}}],
     appointments:[],
     analysis:{inactive_6months:[],birthdays_this_month:[],upcoming_birthdays:[],never_returned:[],high_frequency:[],no_appointment_ever:[]},
     annotations:{},documents:{}
@@ -2788,14 +2789,35 @@ function loadAgenda(){IASAG_render();}
       var [pacs,ags]=await Promise.all([sbGet('pacientes?select=*&limit=2000'),sbGet('agenda?select=*&order=data_hora.asc&limit=5000')]);
       var patients=pacs.map(mapPatient);
       var appts=ags.map(mapAppt);
-      if(typeof data!=='undefined'){data.patients=patients;data.appointments=appts;data.analysis=recomputeAnalysis(patients,appts);}
-      if(window.CAPIM_DATA){window.CAPIM_DATA.patients=patients;window.CAPIM_DATA.appointments=appts;window.CAPIM_DATA.analysis=data.analysis;}
-      if(typeof allPatients!=='undefined'){window.allPatients=patients.map(function(p){return {id:p.id,name:p.attributes.name,phone:p.attributes.phone};});}
+      var analysis=recomputeAnalysis(patients,appts);
+      // Sobrescreve window.data (que e o mesmo objeto do let original via assignment)
+      if(window.data){
+        window.data.patients=patients;
+        window.data.appointments=appts;
+        window.data.analysis=analysis;
+      }
+      if(window.CAPIM_DATA){
+        window.CAPIM_DATA.patients=patients;
+        window.CAPIM_DATA.appointments=appts;
+        window.CAPIM_DATA.analysis=analysis;
+      }
+      window.allPatients=patients.map(function(p){return {id:p.id,name:p.attributes.name,phone:p.attributes.phone};});
       window.IASAG_bdayIndex=null;
-      if(typeof initDashboard==='function')try{initDashboard()}catch(e){}
-      if(typeof IASAG_render==='function')try{IASAG_render()}catch(e){}
+      // Esconde loader original do central.html
+      var dl=document.getElementById('data-loader');if(dl)dl.classList.add('hidden');
+      // Re-render tudo
+      try{if(typeof initDashboard==='function')initDashboard();}catch(e){console.error('initDashboard:',e);}
+      try{if(typeof buildDashboard==='function')buildDashboard();}catch(e){}
+      try{if(typeof buildPatients==='function')buildPatients();}catch(e){}
+      try{if(typeof buildInativos==='function')buildInativos();}catch(e){}
+      try{if(typeof buildAniversariantes==='function')buildAniversariantes();}catch(e){}
+      try{if(typeof buildRetorno==='function')buildRetorno();}catch(e){}
+      try{if(typeof buildArquivos==='function')buildArquivos();}catch(e){}
+      try{if(typeof IASAG_render==='function')IASAG_render();}catch(e){console.error('IASAG:',e);}
+      // Atualizar footer
+      try{var f=document.querySelector('.sidebar-footer');if(f)f.textContent='IA SAÚDE · '+patients.length+' pacientes';}catch(e){}
       pill('✓ '+patients.length+' pacientes · '+appts.length+' consultas',4000);
-    }catch(e){pill('❌ '+(e.message||e),6000);}
+    }catch(e){pill('❌ '+(e.message||e),6000);console.error('sbBoot:',e);}
   };
 
   function patchIASAG(){
