@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.30-1740">
-<meta name="build" content="7b6499">
+<meta name="version" content="2026.05.30-2238">
+<meta name="build" content="a56570">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1740</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-2238</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3861,12 +3861,12 @@ function loadAgenda(){IASAG_render();}
   width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0d7377,#14a085);
   border:none;color:#fff;font-size:30px;font-weight:300;line-height:1;
   box-shadow:0 6px 20px rgba(13,115,119,.4);cursor:pointer;z-index:150;
-  display:none;align-items:center;justify-content:center;transition:.15s
+  display:flex !important;align-items:center;justify-content:center;transition:.15s
 }
 @media (max-width:900px){
   .fab-add-p{bottom:calc(env(safe-area-inset-bottom) + 84px)}
 }
-body.sec-pacientes-active .fab-add-p{display:flex}
+
 .fab-add-p:active{transform:scale(.92)}
 
 #np-modal-ov{
@@ -3905,7 +3905,7 @@ body.sec-pacientes-active .fab-add-p{display:flex}
 #np-modal-ov .np-err.show{display:block}
 </style>
 
-<button class="fab-add-p" onclick="window.__npOpen()" title="Novo paciente" id="np-fab">+</button>
+<button class="fab-add-p" onclick="window.__npOpen()" title="Novo paciente" id="np-fab" style="position:fixed !important;bottom:calc(env(safe-area-inset-bottom) + 90px);right:18px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#0d7377,#14a085);border:none;color:#fff;font-size:32px;font-weight:300;line-height:1;box-shadow:0 8px 24px rgba(13,115,119,.5);cursor:pointer;z-index:9999;display:flex !important;align-items:center;justify-content:center">+</button>
 
 <div id="np-modal-ov">
   <div class="np-card">

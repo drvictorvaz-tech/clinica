@@ -1,5 +1,5 @@
-/* IA SAUDE SW v3 */
-const CACHE = 'ia-saude-v3-8b1138';
+/* IA SAUDE SW v4 */
+const CACHE = 'ia-saude-v4-a56570';
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).then(()=>self.clients.claim()));
