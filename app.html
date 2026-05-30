@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.29-0933">
-<meta name="build" content="208693">
+<meta name="version" content="2026.05.30-1459">
+<meta name="build" content="45f175">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.29-0933</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-1459</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -3797,6 +3797,34 @@ function loadAgenda(){IASAG_render();}
   captureUrlToken();
   if(document.readyState!=='loading') checkSession();
   else document.addEventListener('DOMContentLoaded', checkSession);
+})();
+</script>
+
+
+<script id="m-agenda-refresh">
+/* Forca recarregar agenda do Supabase ao abrir aba Agenda */
+(function(){
+  function reloadOnAgenda(){
+    document.addEventListener('click', function(e){
+      var t = e.target.closest && e.target.closest('.m-tab,.nav-item');
+      if(!t) return;
+      var sec = t.getAttribute('data-msec') || t.getAttribute('data-section');
+      if(sec === 'agenda' && typeof window.__sbBootData === 'function'){
+        // Limpa indice pra forçar rebuild
+        window.IASAG_bdayIndex = null;
+        setTimeout(function(){
+          window.__sbBootData().then(function(){
+            // Garantir re-render apos dados chegarem
+            if(typeof IASAG_render === 'function'){
+              try{ IASAG_render(); }catch(e){}
+            }
+          });
+        }, 100);
+      }
+    });
+  }
+  if(document.readyState !== 'loading') reloadOnAgenda();
+  else document.addEventListener('DOMContentLoaded', reloadOnAgenda);
 })();
 </script>
 
