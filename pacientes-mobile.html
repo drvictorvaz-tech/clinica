@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Pacientes — IA SAÚDE</title>
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate,max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#0d7377">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pacientes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#0d7377;--primary-dark:#0a5c60;
+  --bg:#f4f6f9;--card:#fff;
+  --text:#1a2535;--text-muted:#6b7280;
+  --border:#e2e8f0;--wa:#25D366;
+  --danger:#e53935;--success:#2e7d32;--warn:#f9a825;
+  --header-h:56px;--safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.4}
+body{display:flex;flex-direction:column}
+
+/* HEADER */
+.app-header{
+  background:var(--primary);color:#fff;
+  padding:calc(var(--safe-top) + 12px) 14px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);z-index:10;flex-shrink:0
+}
+.app-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.app-title .logo{font-size:22px}
+.hdr-btn{
+  width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);
+  border:none;color:#fff;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center
+}
+.hdr-btn:active{background:rgba(255,255,255,.3)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px calc(var(--safe-bot) + 18px)}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:14px}
+.search-input{
+  width:100%;padding:13px 14px 13px 44px;
+  font-size:16px;border:2px solid var(--border);border-radius:12px;
+  background:var(--card);color:var(--text);outline:none;transition:.15s
+}
+.search-input:focus{border-color:var(--primary)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:17px;pointer-events:none}
+.search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:none;background:#eef;border-radius:50%;color:var(--text-muted);font-size:14px;cursor:pointer;display:none}
+.search-clear.show{display:flex;align-items:center;justify-content:center}
+
+/* FILTERS */
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.filter-pill{
+  padding:7px 14px;font-size:12.5px;font-weight:600;border:2px solid var(--border);
+  background:#fff;color:var(--text);border-radius:20px;cursor:pointer;white-space:nowrap;transition:.15s
+}
+.filter-pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* CARD */
+.sec-title{
+  font-size:14px;font-weight:700;color:var(--text);
+  padding:6px 4px 10px;display:flex;align-items:center;gap:8px;justify-content:space-between
+}
+.sec-title .badge{background:var(--primary);color:#fff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:12px}
+.p-list{display:flex;flex-direction:column;gap:10px}
+.p-card{
+  background:var(--card);border-radius:14px;padding:13px;
+  display:flex;align-items:center;gap:11px;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:pointer;
+  transition:.1s;border:1px solid transparent
+}
+.p-card:active{background:#f0f4f8;border-color:var(--primary);transform:scale(.99)}
+.avatar{
+  width:46px;height:46px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),#14a085);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;flex-shrink:0
+}
+.p-info{flex:1;min-width:0}
+.p-name{font-size:15px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-meta{font-size:12.5px;color:var(--text-muted);margin-top:2px;display:flex;gap:9px;flex-wrap:wrap}
+.p-meta .chip{display:inline-flex;align-items:center;gap:3px}
+.wa-btn{
+  width:40px;height:40px;border-radius:50%;background:var(--wa);color:#fff;
+  border:none;font-size:18px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center
+}
+.wa-btn:active{transform:scale(.9)}
+.empty{text-align:center;padding:40px 20px;color:var(--text-muted)}
+.empty .e-ic{font-size:48px;opacity:.5;margin-bottom:10px}
+
+/* DETAIL */
+.detail-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:none;flex-direction:column;z-index:200;
+  transform:translateX(100%);transition:transform .25s ease
+}
+.detail-screen.show{display:flex;transform:none}
+.detail-header{
+  background:var(--primary);color:#fff;
+  padding:calc(var(--safe-top) + 16px) 14px 70px;position:relative
+}
+.back-btn{
+  width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);
+  border:none;color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center
+}
+.detail-avatar{
+  width:88px;height:88px;border-radius:50%;
+  background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;font-weight:700;color:#fff;margin:16px auto 12px
+}
+.detail-name{text-align:center;font-size:19px;font-weight:700;color:#fff;padding:0 14px}
+.detail-sub{text-align:center;font-size:12.5px;color:rgba(255,255,255,.85);margin-top:3px}
+.detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 14px calc(var(--safe-bot) + 20px);margin-top:-50px}
+
+.action-row{display:flex;gap:8px;margin-bottom:16px}
+.act-btn{
+  flex:1;padding:13px 8px;border:none;border-radius:12px;
+  font-size:13px;font-weight:700;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  box-shadow:0 4px 12px rgba(0,0,0,.1)
+}
+.act-btn:active{transform:scale(.96)}
+.act-wa{background:var(--wa)}
+.act-call{background:var(--primary)}
+.act-mail{background:#5e35b1}
+.act-edit{background:#3949ab}
+
+.info-card{
+  background:var(--card);border-radius:14px;padding:14px;
+  margin-bottom:11px;box-shadow:0 1px 2px rgba(0,0,0,.05)
+}
+.info-card h3{font-size:12.5px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;gap:10px}
+.info-row:last-child{border-bottom:none}
+.info-row .lbl{color:var(--text-muted);font-weight:500;flex-shrink:0}
+.info-row .val{font-weight:600;text-align:right;word-break:break-word}
+
+.evolu-list{display:flex;flex-direction:column;gap:9px}
+.evolu-item{padding:11px 12px;background:#f8fafc;border-radius:10px;border-left:3px solid var(--primary)}
+.evolu-date{font-size:11.5px;color:var(--primary);font-weight:700;margin-bottom:3px}
+.evolu-txt{font-size:13px;color:var(--text);white-space:pre-wrap}
+
+.appt-item{padding:10px 12px;background:#f8fafc;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.appt-date{font-size:13px;font-weight:700;color:var(--text)}
+.appt-type{font-size:12px;color:var(--text-muted)}
+.appt-status{padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;flex-shrink:0}
+.appt-status.agendado{background:#e0f2fe;color:#0369a1}
+.appt-status.confirmado{background:#d1fae5;color:#065f46}
+.appt-status.realizado{background:#dbeafe;color:#1e40af}
+.appt-status.cancelado{background:#fee2e2;color:#991b1b}
+
+/* LOADER */
+.loader{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:999;gap:14px
+}
+.loader.hide{display:none}
+.spin{
+  width:46px;height:46px;border:4px solid var(--border);
+  border-top-color:var(--primary);border-radius:50%;
+  animation:spin 1s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-size:13.5px;color:var(--text-muted);font-weight:600}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:calc(var(--safe-bot) + 20px);
+  left:50%;transform:translateX(-50%) translateY(80px);
+  background:#1a2535;color:#fff;padding:11px 18px;border-radius:30px;
+  font-size:13.5px;font-weight:600;z-index:300;transition:.3s;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;pointer-events:none
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* LOGIN */
+#login-ov{
+  position:fixed;inset:0;background:linear-gradient(135deg,var(--primary),#14a085);
+  z-index:99999;display:flex;align-items:center;justify-content:center;
+  padding:20px
+}
+#login-ov.hide{display:none}
+.login-box{
+  background:#fff;border-radius:18px;padding:32px 24px;
+  width:100%;max-width:380px;box-shadow:0 18px 50px rgba(0,0,0,.3)
+}
+.login-box h2{font-size:21px;color:var(--text);margin-bottom:4px;text-align:center}
+.login-box .sub{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:20px}
+.login-box label{display:block;font-size:12px;color:var(--text);font-weight:600;margin:14px 0 5px}
+.login-box input{
+  width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;
+  font-size:16px;outline:none;transition:border .2s
+}
+.login-box input:focus{border-color:var(--primary)}
+.login-box .pass-wrap{position:relative}
+.login-box .pass-wrap input{padding-right:44px}
+.login-box .eye{
+  position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  width:36px;height:36px;background:none;border:none;font-size:17px;color:var(--text-muted);
+  cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center
+}
+.login-box .eye:active{background:#f0f4f8}
+.login-box .btn{
+  width:100%;padding:14px;background:var(--primary);color:#fff;border:none;
+  border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:18px
+}
+.login-box .btn:disabled{opacity:.6;cursor:wait}
+.login-box .err{
+  background:#fee;color:#c00;padding:9px 12px;border-radius:8px;
+  font-size:12.5px;margin-top:10px;display:none
+}
+.login-box .err.show{display:block}
+.login-logo{text-align:center;font-size:34px;margin-bottom:6px}
+
+/* PILL */
+.sync-pill{
+  position:fixed;top:env(safe-area-inset-top);right:12px;
+  background:rgba(13,115,119,.92);color:#fff;
+  padding:4px 11px;border-radius:0 0 9px 9px;
+  font-size:10.5px;font-weight:600;z-index:9000;display:none
+}
+.sync-pill.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-ov">
+  <div class="login-box">
+    <div class="login-logo">🦷</div>
+    <h2>IA SAÚDE — Pacientes</h2>
+    <p class="sub">Dr. Victor Vaz · DTM, Sono, Bruxismo</p>
+    <label>Email</label>
+    <input id="lg-email" type="email" autocomplete="email" value="drvictorvaz@gmail.com" inputmode="email">
+    <label>Senha</label>
+    <div class="pass-wrap">
+      <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Sua senha">
+      <button class="eye" onclick="toggleEye()">👁</button>
+    </div>
+    <button class="btn" id="lg-btn" onclick="doLogin()">Entrar</button>
+    <div class="err" id="lg-err"></div>
+  </div>
+</div>
+
+<div class="loader" id="loader">
+  <div class="spin"></div>
+  <div class="loader-text" id="loader-text">Carregando pacientes...</div>
+</div>
+
+<header class="app-header">
+  <div class="app-title"><span class="logo">👥</span><span>Pacientes</span></div>
+  <div style="display:flex;gap:6px">
+    <button class="hdr-btn" onclick="reloadAll()" title="Atualizar">🔄</button>
+    <button class="hdr-btn" onclick="logout()" title="Sair">⏻</button>
+  </div>
+</header>
+
+<div class="content">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="srch" placeholder="Nome, telefone, CPF ou email..." inputmode="search">
+    <button class="search-clear" id="srch-clr" onclick="clearSearch()">✕</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="filter-pill active" data-filter="todos">Todos</div>
+    <div class="filter-pill" data-filter="ativos">Ativos</div>
+    <div class="filter-pill" data-filter="aniversario">🎂 Aniversariantes</div>
+    <div class="filter-pill" data-filter="inativos">🔴 Inativos +6m</div>
+    <div class="filter-pill" data-filter="recentes">🆕 Recentes</div>
+  </div>
+
+  <div class="sec-title"><span>Lista</span><span class="badge" id="p-count">0</span></div>
+  <div class="p-list" id="p-list"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="detail-screen" id="detail">
+  <div class="detail-header">
+    <button class="back-btn" onclick="closeDetail()">&#8592;</button>
+    <div class="detail-avatar" id="d-avatar">—</div>
+    <div class="detail-name" id="d-name">—</div>
+    <div class="detail-sub" id="d-sub"></div>
+  </div>
+  <div class="detail-body">
+    <div class="action-row" id="d-actions"></div>
+    <div class="info-card"><h3>Dados pessoais</h3><div id="d-info"></div></div>
+    <div class="info-card"><h3>📅 Histórico de consultas</h3><div id="d-hist"></div></div>
+    <div class="info-card"><h3>📝 Evoluções clínicas</h3><div id="d-evol"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="sync-pill" id="sync-pill"></div>
+
+<script>
+/* ===== SUPABASE CONFIG ===== */
+var SB_URL='https://aejaulnwurvumxgtlirw.supabase.co';
+var SB_KEY='sb_publishable_7DRcNLIMIsCXHC3QGq2FGg_HUuIUaPY';
+var SESS_KEY='iasaude-pmobile-session';
+var session=null;
+var pacientes=[];
+var appointments=[];
+var evolucoes=[];
+var currentFilter='todos';
+
+function saveSession(s){try{localStorage.setItem(SESS_KEY,JSON.stringify(s))}catch(e){};session=s;}
+function loadSession(){try{var v=localStorage.getItem(SESS_KEY);return v?JSON.parse(v):null}catch(e){return null}}
+function clearSession(){try{localStorage.removeItem(SESS_KEY)}catch(e){};session=null;}
+function authHeaders(){var h={'apikey':SB_KEY,'Content-Type':'application/json'};if(session&&session.access_token)h['Authorization']='Bearer '+session.access_token;return h;}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2200);}
+function pill(m,d){var p=document.getElementById('sync-pill');p.textContent=m;p.classList.add('show');if(d)setTimeout(function(){p.classList.remove('show')},d);}
+
+function toggleEye(){
+  var i=document.getElementById('lg-pass'),b=document.querySelector('.eye');
+  if(i.type==='password'){i.type='text';b.textContent='🙈';}else{i.type='password';b.textContent='👁';}
+}
+
+function showErr(m){var e=document.getElementById('lg-err');e.textContent=m;e.classList.add('show');}
+function clearErr(){document.getElementById('lg-err').classList.remove('show');}
+
+async function doLogin(){
+  clearErr();
+  var em=document.getElementById('lg-email').value.trim();
+  var ps=document.getElementById('lg-pass').value;
+  if(!em||!ps){showErr('Preencha email e senha');return;}
+  var btn=document.getElementById('lg-btn');
+  btn.disabled=true;btn.textContent='Entrando...';
+  try{
+    var r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email:em,password:ps})
+    });
+    var d=await r.json();
+    if(!r.ok){
+      var m=(d&&(d.msg||d.error_description||d.error))||'Erro';
+      if(/invalid login/i.test(m)||/credentials/i.test(m))m='Email ou senha incorretos';
+      showErr(m);
+      btn.disabled=false;btn.textContent='Entrar';
+      return;
+    }
+    saveSession(d);
+    document.getElementById('login-ov').classList.add('hide');
+    await bootData();
+  }catch(e){
+    showErr('Falha de conexao: '+(e.message||e));
+    btn.disabled=false;btn.textContent='Entrar';
+  }
+}
+
+function logout(){
+  if(!confirm('Deseja sair?'))return;
+  clearSession();
+  location.reload();
+}
+
+async function sbGet(path){
+  var r=await fetch(SB_URL+'/rest/v1/'+path,{headers:authHeaders()});
+  if(!r.ok){
+    if(r.status===401){clearSession();location.reload();throw new Error('expired')}
+    throw new Error('HTTP '+r.status);
+  }
+  return await r.json();
+}
+
+function norm(s){return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+function init(n){
+  var s=(n||'').trim();if(!s)return '—';
+  var ps=s.split(/\s+/);
+  return (ps[0][0]+(ps.length>1?ps[ps.length-1][0]:'')).toUpperCase()
+}
+function fmtPhone(p){
+  if(!p)return '';
+  var d=String(p).replace(/\D/g,'');
+  if(d.length===11)return '('+d.slice(0,2)+') '+d.slice(2,7)+'-'+d.slice(7);
+  if(d.length===10)return '('+d.slice(0,2)+') '+d.slice(2,6)+'-'+d.slice(6);
+  return p;
+}
+function calcAge(bd){
+  if(!bd)return null;
+  try{
+    var b=new Date(bd);var a=new Date().getFullYear()-b.getFullYear();
+    var m=new Date().getMonth()-b.getMonth();
+    if(m<0||(m===0&&new Date().getDate()<b.getDate()))a--;
+    return a;
+  }catch(e){return null}
+}
+function fmtDate(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('pt-BR')}catch(e){return s}}
+function fmtDateTime(s){if(!s)return '—';try{var d=new Date(s);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}catch(e){return s}}
+function escHTML(s){return (s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+
+function openWA(phone,name){
+  if(!phone)return;
+  var p=String(phone).replace(/\D/g,'');
+  if(p.length<10){toast('Telefone invalido');return;}
+  if(p.length<=11)p='55'+p;
+  var msg=encodeURIComponent('Olá '+(name||'').split(' ')[0]+'! Aqui é da clínica do Dr. Victor Vaz.');
+  window.open('https://wa.me/'+p+'?text='+msg,'_blank');
+}
+
+async function bootData(){
+  document.getElementById('loader').classList.remove('hide');
+  document.getElementById('loader-text').textContent='Carregando do Supabase...';
+  try{
+    var [pacs,ags]=await Promise.all([
+      sbGet('pacientes?select=*&order=nome.asc&limit=2000'),
+      sbGet('agenda?select=*&order=data_hora.desc&limit=5000')
+    ]);
+    pacientes=pacs||[];
+    appointments=ags||[];
+    // Tentar carregar evolucoes (pode falhar se RLS bloquear)
+    try{
+      evolucoes=await sbGet('evolucoes?select=*&order=data_consulta.desc&limit=2000')||[];
+    }catch(e){evolucoes=[];}
+    pill('✓ '+pacientes.length+' pacientes',3500);
+    renderList();
+  }catch(e){
+    toast('Erro: '+e.message);
+  }finally{
+    document.getElementById('loader').classList.add('hide');
+  }
+}
+
+function applyFilter(list){
+  var now=new Date(),thisMonth=now.getMonth();
+  var sixAgo=new Date(now.getTime()-180*86400000);
+  var lastApptByPid={};
+  appointments.forEach(function(a){
+    if(!a.paciente_id)return;
+    var d=new Date(a.data_hora);
+    if(!isNaN(d)&&(!lastApptByPid[a.paciente_id]||d>lastApptByPid[a.paciente_id]))lastApptByPid[a.paciente_id]=d;
+  });
+
+  if(currentFilter==='ativos'){
+    return list.filter(function(p){return p.ativo!==false});
+  }
+  if(currentFilter==='aniversario'){
+    return list.filter(function(p){
+      if(!p.data_nascimento)return false;
+      try{return new Date(p.data_nascimento).getMonth()===thisMonth}catch(e){return false}
+    });
+  }
+  if(currentFilter==='inativos'){
+    return list.filter(function(p){
+      var last=lastApptByPid[p.id];
+      return last&&last<sixAgo;
+    });
+  }
+  if(currentFilter==='recentes'){
+    return list.slice().sort(function(a,b){
+      return new Date(b.criado_em||0)-new Date(a.criado_em||0);
+    }).slice(0,80);
+  }
+  return list;
+}
+
+function renderList(){
+  var q=document.getElementById('srch').value.trim();
+  var qn=norm(q);
+  var filtered=applyFilter(pacientes);
+  var list=qn?filtered.filter(function(p){
+    return norm(p.nome).indexOf(qn)>=0||norm(p.celular).indexOf(qn)>=0||norm(p.cpf).indexOf(qn)>=0||norm(p.email).indexOf(qn)>=0;
+  }):filtered;
+
+  document.getElementById('p-count').textContent=list.length;
+  document.getElementById('srch-clr').classList.toggle('show',!!q);
+
+  var box=document.getElementById('p-list');
+  if(!list.length){
+    box.innerHTML='<div class="empty"><div class="e-ic">🔍</div><div>Nenhum paciente encontrado</div></div>';
+    return;
+  }
+  // Render só 300 para performance
+  box.innerHTML=list.slice(0,300).map(function(p){
+    var age=calcAge(p.data_nascimento);
+    var meta=[];
+    if(p.celular)meta.push('<span class="chip">📱 '+fmtPhone(p.celular)+'</span>');
+    if(age)meta.push('<span class="chip">🎂 '+age+' anos</span>');
+    var waHtml=p.celular?'<button class="wa-btn" onclick="event.stopPropagation();openWA(\''+String(p.celular).replace(/\D/g,'')+'\',\''+escHTML(p.nome).replace(/'/g,"&#39;")+'\')">💬</button>':'';
+    return '<div class="p-card" onclick="openDetail(\''+p.id+'\')">'+
+      '<div class="avatar">'+init(p.nome)+'</div>'+
+      '<div class="p-info"><div class="p-name">'+escHTML(p.nome)+'</div><div class="p-meta">'+meta.join('')+'</div></div>'+
+      waHtml+'</div>';
+  }).join('');
+  if(list.length>300){
+    box.innerHTML+='<div class="empty" style="padding:18px;font-size:12.5px">Mostrando 300 de '+list.length+'. Use a busca para filtrar.</div>';
+  }
+}
+
+function openDetail(id){
+  var p=pacientes.find(function(x){return x.id===id});
+  if(!p)return;
+  document.getElementById('d-avatar').textContent=init(p.nome);
+  document.getElementById('d-name').textContent=p.nome;
+  var sub=[];
+  var age=calcAge(p.data_nascimento);
+  if(age)sub.push(age+' anos');
+  if(p.cpf)sub.push('CPF: '+p.cpf);
+  document.getElementById('d-sub').textContent=sub.join(' • ');
+
+  var phone=String(p.celular||'').replace(/\D/g,'');
+  var acts=[];
+  if(phone)acts.push('<button class="act-btn act-wa" onclick="openWA(\''+phone+'\',\''+escHTML(p.nome).replace(/'/g,"&#39;")+'\')">💬 WhatsApp</button>');
+  if(phone)acts.push('<button class="act-btn act-call" onclick="location.href=\'tel:+55'+phone+'\'">📞 Ligar</button>');
+  if(p.email)acts.push('<button class="act-btn act-mail" onclick="location.href=\'mailto:'+p.email+'\'">✉️ Email</button>');
+  document.getElementById('d-actions').innerHTML=acts.join('')||'<div style="color:var(--text-muted);font-size:12.5px;text-align:center;width:100%">Sem telefone ou email cadastrado</div>';
+
+  var rows=[
+    ['Nome',p.nome],
+    ['Telefone',fmtPhone(p.celular)||'—'],
+    ['Email',p.email||'—'],
+    ['CPF',p.cpf||'—'],
+    ['Nascimento',fmtDate(p.data_nascimento)],
+    ['Sexo',p.sexo||'—'],
+    ['Profissão',p.profissao||'—'],
+    ['Estado civil',p.estado_civil||'—'],
+    ['Plano de saúde',p.plano_saude||'—'],
+    ['Endereço',p.endereco||'—'],
+    ['Como conheceu',p.como_conheceu||'—'],
+    ['Cadastrado em',fmtDate(p.criado_em)]
+  ];
+  document.getElementById('d-info').innerHTML=rows.map(function(r){
+    return '<div class="info-row"><span class="lbl">'+r[0]+'</span><span class="val">'+escHTML(r[1])+'</span></div>'
+  }).join('');
+
+  // Histórico de consultas
+  var hist=appointments.filter(function(a){return a.paciente_id===p.id});
+  if(hist.length){
+    document.getElementById('d-hist').innerHTML=hist.slice(0,30).map(function(a){
+      var st=(a.status||'agendado').toLowerCase();
+      return '<div class="appt-item"><div><div class="appt-date">'+fmtDateTime(a.data_hora)+'</div><div class="appt-type">'+escHTML(a.tipo||'consulta')+'</div></div><div class="appt-status '+st+'">'+st+'</div></div>';
+    }).join('');
+  } else {
+    document.getElementById('d-hist').innerHTML='<div style="color:var(--text-muted);font-size:12.5px;padding:6px 0">Nenhuma consulta registrada</div>';
+  }
+
+  // Evoluções
+  var evols=evolucoes.filter(function(e){return e.paciente_id===p.id});
+  if(evols.length){
+    document.getElementById('d-evol').innerHTML=evols.slice(0,30).map(function(e){
+      var partes=[];
+      if(e.queixa_principal)partes.push('Queixa: '+e.queixa_principal);
+      if(e.diagnostico)partes.push('Diagnóstico: '+e.diagnostico);
+      if(e.plano_tratamento)partes.push('Plano: '+e.plano_tratamento);
+      if(e.procedimentos_realizados)partes.push('Procedimentos: '+e.procedimentos_realizados);
+      if(e.orientacoes)partes.push('Orientações: '+e.orientacoes);
+      var txt=partes.join('\\n\\n')||e.anamnese||e.exame_clinico||'(sem detalhes)';
+      return '<div class="evolu-item"><div class="evolu-date">'+fmtDate(e.data_consulta)+(e.tipo?' • '+e.tipo:'')+'</div><div class="evolu-txt">'+escHTML(txt)+'</div></div>';
+    }).join('');
+  } else {
+    document.getElementById('d-evol').innerHTML='<div style="color:var(--text-muted);font-size:12.5px;padding:6px 0">Nenhuma evolucao registrada</div>';
+  }
+
+  document.getElementById('detail').classList.add('show');
+}
+function closeDetail(){document.getElementById('detail').classList.remove('show')}
+
+function clearSearch(){document.getElementById('srch').value='';renderList();}
+
+async function reloadAll(){
+  pill('Atualizando...');
+  await bootData();
+}
+
+// EVENTS
+document.getElementById('srch').addEventListener('input',function(){
+  clearTimeout(window.__srchT);
+  window.__srchT=setTimeout(renderList,150);
+});
+document.querySelectorAll('.filter-pill').forEach(function(p){
+  p.addEventListener('click',function(){
+    document.querySelectorAll('.filter-pill').forEach(function(x){x.classList.remove('active')});
+    p.classList.add('active');
+    currentFilter=p.getAttribute('data-filter');
+    renderList();
+  });
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var ov=document.getElementById('login-ov');
+    if(ov&&!ov.classList.contains('hide'))doLogin();
+  }
+});
+
+// Capturar tokens vindos de OAuth/Magic
+(function(){
+  if(window.location.hash&&window.location.hash.indexOf('access_token=')>=0){
+    var p={};
+    window.location.hash.substring(1).split('&').forEach(function(kv){
+      var eq=kv.indexOf('=');
+      if(eq>0)p[decodeURIComponent(kv.slice(0,eq))]=decodeURIComponent(kv.slice(eq+1));
+    });
+    if(p.access_token){
+      saveSession({
+        access_token:p.access_token,
+        refresh_token:p.refresh_token||'',
+        expires_at:Math.floor(Date.now()/1000)+parseInt(p.expires_in||3600,10),
+        token_type:'bearer'
+      });
+      window.history.replaceState({},document.title,window.location.pathname);
+    }
+  }
+})();
+
+// BOOT
+(async function(){
+  document.getElementById('loader').classList.add('hide');
+  session=loadSession();
+  if(session&&session.access_token){
+    try{
+      var r=await fetch(SB_URL+'/auth/v1/user',{headers:authHeaders()});
+      if(r.ok){
+        document.getElementById('login-ov').classList.add('hide');
+        await bootData();
+        return;
+      }
+    }catch(e){}
+    clearSession();
+  }
+  // Sem sessão — mantém login visível (sem ocultar)
+})();
+</script>
+</body>
+</html>
