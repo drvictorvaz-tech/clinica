@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.06.01-0946">
-<meta name="build" content="32c0e0">
+<meta name="version" content="2026.06.01-0947">
+<meta name="build" content="832e6a">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.06.01-0946</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.06.01-0947</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -4080,6 +4080,45 @@ function loadAgenda(){IASAG_render();}
   
   if(document.readyState !== 'loading') watchSection();
   else document.addEventListener('DOMContentLoaded', watchSection);
+})();
+</script>
+
+
+<script id="m-gcal">
+/* Google Calendar - geracao de link direto (sem OAuth) */
+(function(){
+  // Helper: gerar link do Google Calendar
+  window.__gcalLink = function(opts){
+    function fmt(d){
+      d = new Date(d);
+      var p = function(n){return (n<10?'0':'')+n;};
+      return d.getUTCFullYear()+p(d.getUTCMonth()+1)+p(d.getUTCDate())+'T'+p(d.getUTCHours())+p(d.getUTCMinutes())+'00Z';
+    }
+    var params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: opts.titulo || 'Consulta',
+      dates: fmt(opts.inicio) + '/' + fmt(opts.fim),
+      details: opts.detalhes || '',
+      location: opts.local || 'Clinica Dr Victor Vaz',
+      ctz: 'America/Sao_Paulo'
+    });
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  };
+
+  // Toast com botao Calendar apos salvar
+  window.__showGCalToast = function(payload){
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#0A5E48;color:#fff;padding:14px 18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:10000;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;max-width:340px';
+    t.innerHTML = '<span>✓ Agendado!</span>' +
+      '<button style="background:#fff;color:#0A5E48;border:none;padding:7px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12.5px">📅 Google Calendar</button>';
+    t.querySelector('button').onclick = function(){
+      var url = window.__gcalLink(payload);
+      window.open(url, '_blank');
+      t.remove();
+    };
+    document.body.appendChild(t);
+    setTimeout(function(){t.remove()}, 8000);
+  };
 })();
 </script>
 
