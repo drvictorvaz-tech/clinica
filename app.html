@@ -873,7 +873,7 @@ tbody tr:last-child{border-bottom:none}
     <div class="modal-header">
       <button class="ias-voltar" onclick="closeModal()">&#8592; Pacientes</button>
       <div class="ias-pavatar" id="ias-pavatar">—</div>
-      <div class="ias-phead"><h2 id="modal-patient-name">—</h2><div id="ias-psub"></div></div>
+      <div class="ias-phead"><h2 id="modal-patient-name">—</h2><div id="ias-psub"></div></div><div style="margin-left:auto;display:flex;gap:8px"><button onclick="window.__npEdit(IAS_curPid)" style="padding:7px 14px;background:rgba(13,115,119,.15);border:1px solid var(--primary);border-radius:8px;color:var(--primary);cursor:pointer;font-size:13px;font-weight:600">✏️ Editar</button><button onclick="window.__deletePatient(IAS_curPid)" style="padding:7px 14px;background:rgba(248,81,73,.12);border:1px solid var(--danger);border-radius:8px;color:var(--danger);cursor:pointer;font-size:13px;font-weight:600">🗑 Excluir</button></div>
     </div>
     <div class="modal-body">
       <div class="modal-tabs">
@@ -3963,7 +3963,7 @@ function loadAgenda(){IASAG_render();}
 <div id="np-modal-ov">
   <div class="np-card">
     <div class="np-bar"></div>
-    <h2>👤 Novo paciente</h2>
+    <h2 id="np-title">👤 Novo paciente</h2>
     <label>Nome completo *</label>
     <input id="np-nome" type="text" placeholder="Nome do paciente">
     <div class="np-row2">
@@ -4041,8 +4041,39 @@ function loadAgenda(){IASAG_render();}
     var t = getToken();
     return Object.assign({'apikey': SB_KEY, 'Content-Type': 'application/json'}, t ? {'Authorization':'Bearer '+t} : {});
   }
-  
+  var npEditId = null;
+  window.__npEdit = async function(pid){
+    if(!pid) return;
+    try{
+      var r = await fetch(SB_URL + '/rest/v1/pacientes?id=eq.'+pid+'&select=*', {headers: authHeaders()});
+      var rows = await r.json();
+      var p = rows && rows[0];
+      if(!p){ alert('Paciente não encontrado'); return; }
+      var map = {nome:'nome',celular:'celular',cpf:'cpf',email:'email',nasc:'data_nascimento',sexo:'sexo',prof:'profissao',civil:'estado_civil',plano:'plano_saude',conheceu:'como_conheceu',end:'endereco',obs:'observacoes'};
+      Object.keys(map).forEach(function(fld){ var el=document.getElementById('np-'+fld); if(el) el.value = (p[map[fld]]==null?'':p[map[fld]]); });
+      npEditId = pid;
+      var ttl=document.getElementById('np-title'); if(ttl) ttl.textContent='✏️ Editar paciente';
+      var btn=document.getElementById('np-btn'); if(btn) btn.textContent='Salvar alterações';
+      document.getElementById('np-err').classList.remove('show');
+      try{ closeModal(); }catch(e){}
+      document.getElementById('np-modal-ov').classList.add('show');
+    }catch(e){ alert('Erro ao carregar paciente: '+(e.message||e)); }
+  };
+  window.__deletePatient = async function(pid){
+    if(!pid) return;
+    if(!confirm('Excluir este paciente definitivamente? Esta ação não pode ser desfeita.')) return;
+    try{
+      var r = await fetch(SB_URL + '/rest/v1/pacientes?id=eq.'+pid, {method:'DELETE', headers: Object.assign({}, authHeaders(), {'Prefer':'return=minimal'})});
+      if(!r.ok){ var t = await r.text(); throw new Error(t); }
+      try{ closeModal(); }catch(e){}
+      if(window.toast) toast('Paciente excluído ✓ Atualizando...');
+      setTimeout(function(){ window.location.replace(window.location.pathname + '?reloaded=' + Date.now()); }, 800);
+    }catch(e){ alert('Erro ao excluir (o paciente pode ter consultas vinculadas): '+(e.message||e)); }
+  };
   window.__npOpen = function(){
+    npEditId = null;
+    var ttl=document.getElementById('np-title'); if(ttl) ttl.textContent='👤 Novo paciente';
+    var btn=document.getElementById('np-btn'); if(btn) btn.textContent='Salvar paciente';
     ['nome','celular','cpf','email','nasc','sexo','prof','civil','plano','conheceu','end','obs'].forEach(function(f){
       var el = document.getElementById('np-'+f);
       if(el){ el.value = ''; if(el.tagName==='SELECT') el.selectedIndex = 0; }
@@ -4080,16 +4111,16 @@ function loadAgenda(){IASAG_render();}
         observacoes: document.getElementById('np-obs').value.trim() || null,
         ativo: true
       };
-      var r = await fetch(SB_URL + '/rest/v1/pacientes', {
-        method: 'POST',
+      var url = SB_URL + '/rest/v1/pacientes' + (npEditId ? ('?id=eq.'+npEditId) : '');
+      var r = await fetch(url, {
+        method: npEditId ? 'PATCH' : 'POST',
         headers: Object.assign({}, authHeaders(), {'Prefer':'return=representation'}),
         body: JSON.stringify(row)
       });
       if(!r.ok){ var t = await r.text(); throw new Error(t); }
-      var inserted = await r.json();
-      var novo = inserted[0];
+      var wasEdit = !!npEditId;
       window.__npClose();
-      if(window.toast) toast('Paciente "' + nome + '" cadastrado ✓ Atualizando...');
+      if(window.toast) toast('Paciente "' + nome + '" ' + (wasEdit?'atualizado':'cadastrado') + ' ✓ Atualizando...');
       // Reload completo para garantir TUDO atualiza (data, listas, allPatients)
       setTimeout(function(){
         window.location.replace(window.location.pathname + '?reloaded=' + Date.now());
