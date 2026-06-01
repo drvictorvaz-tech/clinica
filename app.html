@@ -2471,18 +2471,24 @@ function IAS_buildFolders(pid){
   custFiles.forEach(function(f){ensure(f.folder).files.push({name:f.name,date:f.date,dataUrl:f.dataUrl,real:0});});
   return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return a.name.localeCompare(b.name);});
 }
-function IAS_renderArquivos(pid){
-  IAS_curFolder=null;
-  IAS_folderList=IAS_buildFolders(pid);
-  var tiles='<div class="fi-tile fi-add" onclick="IAS_addPasta()"><span class="fi-ic">&#128193;</span><span class="fi-nm">Adicionar pasta</span></div>'
-   +'<div class="fi-tile fi-add" onclick="IAS_novoDoc(null)"><span class="fi-ic">&#10133;</span><span class="fi-nm">Novo Documento</span></div>';
-  IAS_folderList.forEach(function(f,i){
-    tiles+='<div class="fi-tile" onclick="IAS_openFolderIdx('+i+')"><span class="fi-ic">&#128194;</span><span class="fi-nm">'+IAS_esc(f.name)+'</span><span class="fi-ct">'+f.files.length+' arquivo(s)</span></div>';
-  });
-  var total=IAS_folderList.reduce(function(s,f){return s+f.files.length;},0);
-  document.getElementById('tab-arquivos').innerHTML=
-   '<div class="fi-sec-title">&#128193; Arquivos do paciente <span style="font-weight:500;color:var(--text-muted)">&middot; '+total+' no total</span></div>'
-   +'<div class="fi-grid">'+tiles+'</div>';
+function IAS_fileSize(b){b=+b||0;if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function IAS_pickArquivos(){var inp=document.getElementById('ias-file-input');if(inp){inp.value='';inp.click();}}
+function IAS_delArquivo(id){if(!confirm('Excluir este arquivo?'))return;window.__arqDelete(id).then(function(){if(window.toast)toast('Arquivo excluído');IAS_renderArquivos(IAS_curPid);}).catch(function(e){alert('Erro: '+(e.message||e));});}
+async function IAS_renderArquivos(pid){
+  var box=document.getElementById('tab-arquivos'); if(!box)return;
+  box.innerHTML='<div class="fi-sec-title">&#128193; Arquivos do paciente</div>'
+   +'<div style="margin:10px 0 14px"><button class="fi-btn" onclick="IAS_pickArquivos()">&#11014;&#65039; Enviar arquivos</button> <span style="font-size:12px;color:var(--text-muted)">você pode selecionar vários de uma vez</span></div>'
+   +'<div id="ias-arq-list" style="font-size:13px;color:var(--text-muted)">Carregando…</div>';
+  try{
+    var files=await window.__arqList(pid);
+    var list=document.getElementById('ias-arq-list'); if(!list)return;
+    if(!files.length){ list.innerHTML='<div class="fi-empty"><span class="fi-ei">&#128196;</span>Nenhum arquivo enviado ainda</div>'; return; }
+    list.innerHTML='<div class="fi-sec-title" style="font-size:13px">'+files.length+' arquivo(s)</div>'+files.map(function(f){
+      return '<div class="fi-file-row"><div><div class="fi-fn">'+IAS_esc(f.nome)+'</div><div class="fi-fm">'+IAS_fd(f.criado_em)+' &middot; '+IAS_fileSize(f.tamanho_bytes)+'</div></div>'
+       +'<div style="display:flex;gap:6px"><button class="fi-btn-out fi-btn-sm" onclick="window.__arqOpen(\''+f.id+'\')">Abrir</button>'
+       +'<button class="fi-btn-out fi-btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="IAS_delArquivo(\''+f.id+'\')">Excluir</button></div></div>';
+    }).join('');
+  }catch(e){ var l=document.getElementById('ias-arq-list'); if(l)l.innerHTML='<div style="color:var(--danger);font-size:13px">Erro ao carregar: '+(e.message||e)+'</div>'; }
 }
 function IAS_openFolderIdx(i){
   var f=IAS_folderList[i]; if(!f)return;
@@ -2517,22 +2523,20 @@ function IAS_novoDoc(folder){
   var inp=document.getElementById('ias-file-input'); if(inp)inp.click();
 }
 function IAS_novoDocFolder(){IAS_novoDoc(IAS_curFolder?IAS_curFolder.name:'Sem pasta');}
-function IAS_onFilePicked(e){
-  var inp=e.target; var file=inp.files&&inp.files[0]; inp.value='';
-  if(!file)return;
-  if(file.size>1800000){if(window.toast)toast('Arquivo muito grande (max ~1,8 MB para salvar offline)');return;}
-  var r=new FileReader();
-  r.onload=function(){
-    var k='iasaude_files_'+IAS_curPid; var arr=IAS_lsGet(k,[]);
-    arr.push({folder:IAS_uploadFolder,name:file.name,date:new Date().toISOString(),dataUrl:r.result});
-    if(!IAS_lsSet(k,arr))return;
-    if(window.toast)toast('Documento adicionado');
-    var target=IAS_uploadFolder;
-    IAS_folderList=IAS_buildFolders(IAS_curPid);
-    var idx=-1; for(var i=0;i<IAS_folderList.length;i++){if(IAS_folderList[i].name===target){idx=i;break;}}
-    if(idx>=0)IAS_openFolderIdx(idx); else IAS_renderArquivos(IAS_curPid);
-  };
-  r.readAsDataURL(file);
+async function IAS_onFilePicked(e){
+  var inp=e.target; var files=Array.prototype.slice.call(inp.files||[]); inp.value='';
+  if(!files.length)return;
+  var pid=IAS_curPid; var LIM=8*1024*1024;
+  var big=files.filter(function(f){return f.size>LIM;});
+  var ok=files.filter(function(f){return f.size<=LIM;});
+  if(big.length)alert('Não enviados (passam de 8 MB): '+big.map(function(f){return f.name;}).join(', '));
+  if(!ok.length)return;
+  if(window.toast)toast('Enviando '+ok.length+' arquivo(s)…');
+  try{
+    await window.__arqUploadFiles(pid, ok);
+    if(window.toast)toast(ok.length+' arquivo(s) enviado(s) ✓');
+    IAS_renderArquivos(pid);
+  }catch(err){ alert('Erro ao enviar: '+(err.message||err)); }
 }
 
 /* ---------- CONSULTAS ---------- */
@@ -2551,7 +2555,7 @@ function IAS_renderConsultas(p,pid){
 (function(){
   if(document.getElementById('ias-file-input'))return;
   var inp=document.createElement('input');
-  inp.type='file'; inp.id='ias-file-input'; inp.style.display='none';
+  inp.type='file'; inp.id='ias-file-input'; inp.multiple=true; inp.style.display='none';
   inp.addEventListener('change',IAS_onFilePicked);
   (document.body||document.documentElement).appendChild(inp);
   document.querySelectorAll(".nav-item").forEach(function(_n){
@@ -4069,6 +4073,35 @@ function loadAgenda(){IASAG_render();}
       if(window.toast) toast('Paciente excluído ✓ Atualizando...');
       setTimeout(function(){ window.location.replace(window.location.pathname + '?reloaded=' + Date.now()); }, 800);
     }catch(e){ alert('Erro ao excluir (o paciente pode ter consultas vinculadas): '+(e.message||e)); }
+  };
+  function _readAsDataURL(file){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result);}; r.onerror=rej; r.readAsDataURL(file); }); }
+  window.__arqList = async function(pid){
+    var r = await fetch(SB_URL + '/rest/v1/arquivos?paciente_id=eq.'+pid+'&select=id,nome,tipo_arquivo,tamanho_bytes,criado_em&order=criado_em.desc', {headers: authHeaders()});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  };
+  window.__arqUploadFiles = async function(pid, files){
+    var rows = [];
+    for(var i=0;i<files.length;i++){
+      var f=files[i]; var dataUrl=await _readAsDataURL(f);
+      rows.push({paciente_id:pid, nome:f.name, tipo_arquivo:(f.type||''), tamanho_bytes:f.size, conteudo_base64:dataUrl});
+    }
+    var r = await fetch(SB_URL + '/rest/v1/arquivos', {method:'POST', headers: Object.assign({}, authHeaders(), {'Prefer':'return=minimal'}), body: JSON.stringify(rows)});
+    if(!r.ok){ var t=await r.text(); throw new Error(t); }
+    return true;
+  };
+  window.__arqDelete = async function(id){
+    var r = await fetch(SB_URL + '/rest/v1/arquivos?id=eq.'+id, {method:'DELETE', headers: Object.assign({}, authHeaders(), {'Prefer':'return=minimal'})});
+    if(!r.ok){ var t=await r.text(); throw new Error(t); }
+    return true;
+  };
+  window.__arqOpen = async function(id){
+    try{
+      var r = await fetch(SB_URL + '/rest/v1/arquivos?id=eq.'+id+'&select=nome,conteudo_base64', {headers: authHeaders()});
+      var rows = await r.json(); var f = rows && rows[0];
+      if(!f || !f.conteudo_base64){ alert('Arquivo sem conteúdo'); return; }
+      var w = window.open(); if(w){ w.document.write('<title>'+(f.nome||'arquivo')+'</title><iframe src="'+f.conteudo_base64+'" style="border:0;position:fixed;inset:0;width:100%;height:100%"></iframe>'); w.document.close(); }
+    }catch(e){ alert('Erro ao abrir: '+(e.message||e)); }
   };
   window.__npOpen = function(){
     npEditId = null;
