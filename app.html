@@ -3669,6 +3669,26 @@ function loadAgenda(){IASAG_render();}
     }
     return await r.json();
   }
+  // Busca paginada: PostgREST limita ~1000 linhas por resposta. Busca todas as paginas via header Range.
+  async function sbGetAll(path){
+    var all = [], step = 1000, from = 0;
+    while(true){
+      var to = from + step - 1;
+      var r = await fetch(SB_URL + '/rest/v1/' + path, {
+        headers: Object.assign({}, authHeaders(), {'Range-Unit':'items','Range': from + '-' + to})
+      });
+      if(!r.ok){
+        if(r.status === 401){ clearSession(); showLogin(); throw new Error('Sessao expirada'); }
+        if(r.status === 416) break; // fora de faixa = acabou
+        throw new Error('Erro ' + r.status);
+      }
+      var chunk = await r.json();
+      all = all.concat(chunk);
+      if(!chunk.length || chunk.length < step) break;
+      from += step;
+    }
+    return all;
+  }
   async function sbInsert(table, row){
     var r = await fetch(SB_URL + '/rest/v1/' + table, {
       method: 'POST',
@@ -3683,8 +3703,8 @@ function loadAgenda(){IASAG_render();}
     setPill('🔄 Carregando do Supabase...');
     try{
       var [pacs, ags] = await Promise.all([
-        sbGet('pacientes?select=*&limit=2000'),
-        sbGet('agenda?select=*&order=data_hora.asc&limit=5000')
+        sbGetAll('pacientes?select=*&order=nome.asc'),
+        sbGetAll('agenda?select=*&order=data_hora.asc')
       ]);
       var patients = pacs.map(mapPatient);
       var appts = ags.map(mapAppointment);
