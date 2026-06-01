@@ -3780,7 +3780,7 @@ function loadAgenda(){IASAG_render();}
       var idx=(document.getElementById('iasag-f-idx')||{}).value||'';
       if(!dt||!ini){alert('Informe data e hora');return;}
       var dur=durMin(ini,fim);
-      var body={paciente_id:pidFor(pac),nome_paciente:pac,data_hora:dt+'T'+ini+':00',duracao_minutos:dur,tipo:tit||'consulta',observacoes:obs,status:st};
+      var body={paciente_id:pidFor(pac),nome_paciente:pac,data_hora:dt+'T'+ini+':00-03:00',duracao_minutos:dur,tipo:tit||'consulta',observacoes:obs,status:st};
       try{
         if(sbid){
           var r=await fetch(SB_URL+'/rest/v1/agenda?id=eq.'+encodeURIComponent(sbid),{method:'PATCH',headers:Object.assign({},authHeaders(),{'Prefer':'return=minimal'}),body:JSON.stringify(body)});
