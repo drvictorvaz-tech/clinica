@@ -2671,7 +2671,7 @@ function IASAG_all(){
     var s=new Date(at.start_date); if(isNaN(s))return;
     var e=at.end_date?new Date(at.end_date):null;
     if(!e||isNaN(e)||e<=s)e=new Date(s.getTime()+30*60000);
-    out.push({id:'c'+i,start:s,end:e,title:at.title||'Consulta',patient:at.patient_name||'',obs:at.observation||'',done:!!at.attended,allday:!!at.all_day,custom:false});
+    out.push({id:'c'+i,_sbid:a._sb_id,status:at.status||'agendado',start:s,end:e,title:at.title||'Consulta',patient:at.patient_name||'',obs:at.observation||'',done:!!at.attended,allday:!!at.all_day,custom:false});
   });
   IASAG_lsGet('iasaude_agenda',[]).forEach(function(c,i){
     var s=new Date(c.start); if(isNaN(s))return;
@@ -2862,9 +2862,11 @@ function IASAG_novo(){
 function IASAG_form(pf){
   var ov=document.getElementById('iasag-ov'); if(!ov)return;
   pf=pf||{};
-  var editing=(pf.idx!=null&&pf.idx!=='');
+  var sbid=pf.sbid||'';
+  var editing=(pf.idx!=null&&pf.idx!=='')||!!sbid;
   var pacs=(typeof allPatients!=='undefined'?allPatients:[]).map(function(p){return '<option value="'+IASAG_esc(p.name)+'">';}).join('');
-  var del=editing?'<button class="ag-today" style="color:var(--danger);border-color:var(--danger);margin-right:auto" onclick="IASAG_excluir('+pf.idx+')">Excluir</button>':'';
+  var del=editing?'<button class="ag-today" style="color:var(--danger);border-color:var(--danger);margin-right:auto" onclick="IASAG_excluir()">Excluir</button>':'';
+  var stOpts=['agendado','confirmado','realizado','cancelado'].map(function(o){return '<option value="'+o+'"'+((pf.status||'agendado')===o?' selected':'')+'>'+o.charAt(0).toUpperCase()+o.slice(1)+'</option>';}).join('');
   ov.querySelector('.ag-md').innerHTML=
    '<h3>'+(editing?'Editar agendamento':'Novo agendamento')+'</h3>'
    +'<label>Paciente</label><input id="iasag-f-pac" list="iasag-pac-list" value="'+IASAG_esc(pf.pac||'')+'" placeholder="Nome do paciente"><datalist id="iasag-pac-list">'+pacs+'</datalist>'
@@ -2872,8 +2874,10 @@ function IASAG_form(pf){
    +'<div class="ag-mrow"><div><label>Data</label><input type="date" id="iasag-f-data" value="'+(pf.date||'')+'"></div>'
    +'<div><label>Início</label><input type="time" id="iasag-f-ini" value="'+(pf.ini||'09:00')+'"></div>'
    +'<div><label>Fim</label><input type="time" id="iasag-f-fim" value="'+(pf.fim||'09:30')+'"></div></div>'
+   +'<label>Status</label><select id="iasag-f-status">'+stOpts+'</select>'
    +'<label>Observação</label><textarea id="iasag-f-obs">'+IASAG_esc(pf.obs||'')+'</textarea>'
-   +'<input type="hidden" id="iasag-f-idx" value="'+(editing?pf.idx:'')+'">'
+   +'<input type="hidden" id="iasag-f-idx" value="'+((pf.idx!=null&&pf.idx!=='')?pf.idx:'')+'">'
+   +'<input type="hidden" id="iasag-f-sbid" value="'+IASAG_esc(sbid)+'">'
    +'<div class="ag-mfoot">'+del+'<button class="ag-today" onclick="IASAG_close()">Cancelar</button><button class="ag-add" onclick="IASAG_salvar()">Salvar</button></div>';
   ov.classList.add('open');
 }
@@ -2894,6 +2898,8 @@ function IASAG_salvar(){
 function IASAG_apptClick(a){
   if(a.custom){
     IASAG_form({idx:a._idx,date:IASAG_ymd(a.start),ini:IASAG_hm(a.start),fim:IASAG_hm(a.end),pac:a.patient,tit:a.title,obs:a.obs});
+  } else if(a._sbid){
+    IASAG_form({sbid:a._sbid,date:IASAG_ymd(a.start),ini:IASAG_hm(a.start),fim:IASAG_hm(a.end),pac:a.patient,tit:a.title,obs:a.obs,status:a.status});
   } else {
     IASAG_detalhe(a);
   }
@@ -3193,6 +3199,7 @@ function loadAgenda(){IASAG_render();}
   // Sobrescreve IASAG_all após carregamento original
   function patchIASAG(){
     if(typeof IASAG_all !== 'function') return false;
+    return true; /* Override Railway desativado: edicao/criacao agora 100% via Supabase */
     var orig = IASAG_all;
     window.IASAG_all = function(){
       var out = orig();
@@ -3702,9 +3709,10 @@ function loadAgenda(){IASAG_render();}
   window.__sbBootData = async function(){
     setPill('🔄 Carregando do Supabase...');
     try{
-      var [pacs, ags] = await Promise.all([
+      var [pacs, ags, evRes] = await Promise.all([
         sbGetAll('pacientes?select=*&order=nome.asc'),
-        sbGetAll('agenda?select=*&order=data_hora.asc')
+        sbGetAll('agenda?select=*&order=data_hora.asc'),
+        sbGetAll('evolucoes?select=*').catch(function(){return [];})
       ]);
       var patients = pacs.map(mapPatient);
       var appts = ags.map(mapAppointment);
@@ -3758,6 +3766,8 @@ function loadAgenda(){IASAG_render();}
 
   function patchIASAG(){
     if(typeof window.IASAG_salvar !== 'function') return false;
+    function durMin(ini,fim){var a=ini.split(':'),b=(fim||ini).split(':');var d=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);return d>0?d:30;}
+    function pidFor(pac){var pid=null;if(pac&&window.allPatients){var n=pac.trim().toLowerCase();var m=window.allPatients.find(function(x){return (x.name||'').trim().toLowerCase()===n;});if(m)pid=m.id;}return pid;}
     window.IASAG_salvar = async function(){
       var pac=(document.getElementById('iasag-f-pac')||{}).value||'';
       var tit=(document.getElementById('iasag-f-tit')||{}).value||'';
@@ -3765,30 +3775,53 @@ function loadAgenda(){IASAG_render();}
       var ini=(document.getElementById('iasag-f-ini')||{}).value||'';
       var fim=(document.getElementById('iasag-f-fim')||{}).value||'';
       var obs=(document.getElementById('iasag-f-obs')||{}).value||'';
+      var st=(document.getElementById('iasag-f-status')||{}).value||'agendado';
+      var sbid=(document.getElementById('iasag-f-sbid')||{}).value||'';
+      var idx=(document.getElementById('iasag-f-idx')||{}).value||'';
       if(!dt||!ini){alert('Informe data e hora');return;}
-      var sH=parseInt(ini.split(':')[0]||0,10), sM=parseInt(ini.split(':')[1]||0,10);
-      var eH=parseInt((fim||ini).split(':')[0]||0,10), eM=parseInt((fim||ini).split(':')[1]||0,10);
-      var dur = Math.max(15, (eH*60+eM)-(sH*60+sM)); if(dur<=0) dur=30;
-      var pid = null;
-      if(pac && window.allPatients){
-        var norm = pac.trim().toLowerCase();
-        var m = window.allPatients.find(function(x){return (x.name||'').trim().toLowerCase()===norm;});
-        if(m) pid = m.id;
-      }
+      var dur=durMin(ini,fim);
+      var body={paciente_id:pidFor(pac),nome_paciente:pac,data_hora:dt+'T'+ini+':00',duracao_minutos:dur,tipo:tit||'consulta',observacoes:obs,status:st};
       try{
-        await sbInsert('agenda', {
-          paciente_id: pid,
-          nome_paciente: pac,
-          data_hora: dt+'T'+ini+':00',
-          duracao_minutos: dur,
-          tipo: tit || 'consulta',
-          observacoes: obs,
-          status: 'agendado'
-        });
-        if(window.toast) toast('Salvo no Supabase ✓');
-        if(typeof IASAG_close === 'function') IASAG_close();
-        await window.__sbBootData();
-      }catch(e){ alert('Erro ao salvar: ' + e.message); }
+        if(sbid){
+          var r=await fetch(SB_URL+'/rest/v1/agenda?id=eq.'+encodeURIComponent(sbid),{method:'PATCH',headers:Object.assign({},authHeaders(),{'Prefer':'return=minimal'}),body:JSON.stringify(body)});
+          if(!r.ok)throw new Error('HTTP '+r.status);
+          if(window.toast)toast('Agendamento atualizado ✓');
+          if(typeof IASAG_close==='function')IASAG_close();
+          await window.__sbBootData();
+        }else if(idx!==''){
+          var arr=[];try{arr=JSON.parse(localStorage.getItem('iasaude_agenda')||'[]');}catch(e){}
+          arr[+idx]={start:dt+'T'+ini,end:dt+'T'+(fim||ini),title:tit||'Agendamento',patient:pac,obs:obs};
+          localStorage.setItem('iasaude_agenda',JSON.stringify(arr));
+          if(window.toast)toast('Agendamento atualizado ✓');
+          if(typeof IASAG_close==='function')IASAG_close();
+          if(typeof IASAG_render==='function')IASAG_render();
+        }else{
+          await sbInsert('agenda',body);
+          if(window.toast)toast('Agendamento criado ✓');
+          if(typeof IASAG_close==='function')IASAG_close();
+          await window.__sbBootData();
+        }
+      }catch(e){ alert('Erro ao salvar: '+(e.message||e)); }
+    };
+    window.IASAG_excluir = async function(){
+      var sbid=(document.getElementById('iasag-f-sbid')||{}).value||'';
+      var idx=(document.getElementById('iasag-f-idx')||{}).value||'';
+      if(!confirm('Excluir este agendamento?'))return;
+      try{
+        if(sbid){
+          var r=await fetch(SB_URL+'/rest/v1/agenda?id=eq.'+encodeURIComponent(sbid),{method:'DELETE',headers:Object.assign({},authHeaders(),{'Prefer':'return=minimal'})});
+          if(!r.ok)throw new Error('HTTP '+r.status);
+          if(typeof IASAG_close==='function')IASAG_close();
+          if(window.toast)toast('Agendamento excluído');
+          await window.__sbBootData();
+        }else if(idx!==''){
+          var arr=[];try{arr=JSON.parse(localStorage.getItem('iasaude_agenda')||'[]');}catch(e){}
+          arr.splice(+idx,1);localStorage.setItem('iasaude_agenda',JSON.stringify(arr));
+          if(typeof IASAG_close==='function')IASAG_close();
+          if(window.toast)toast('Agendamento excluído');
+          if(typeof IASAG_render==='function')IASAG_render();
+        }
+      }catch(e){ alert('Erro ao excluir: '+(e.message||e)); }
     };
     return true;
   }
