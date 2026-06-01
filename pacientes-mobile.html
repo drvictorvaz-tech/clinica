@@ -709,10 +709,10 @@ async function salvarNovoPaciente(){
     var novo=inserted[0];
     pacientes.unshift(novo);
     closeNovoPaciente();
-    toast('Paciente "'+nome+'" cadastrado ✓');
-    renderList();
-    // Abrir ficha do novo paciente
-    setTimeout(function(){openDetail(novo.id);}, 350);
+    toast('Paciente "'+nome+'" cadastrado ✓ Atualizando...');
+    setTimeout(function(){
+      window.location.replace(window.location.pathname + '?reloaded=' + Date.now());
+    }, 800);
   }catch(e){
     err.textContent='Erro: '+(e.message||e);
     err.classList.add('show');

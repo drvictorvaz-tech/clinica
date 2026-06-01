@@ -15,8 +15,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="version" content="2026.05.30-2238">
-<meta name="build" content="a56570">
+<meta name="version" content="2026.06.01-0946">
+<meta name="build" content="32c0e0">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -702,7 +702,7 @@ tbody tr:last-child{border-bottom:none}
       <div class="nav-item" data-section="ia-clinica" style="margin-top:8px"><span class="nav-icon">🧠</span>IA Clínica</div>
     <div class="nav-item" data-section="ia-financeira"><span class="nav-icon">💰</span>IA Financeira</div>
     <div class="sidebar-footer">
-  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.05.30-2238</div>
+  <div style="margin-bottom:8px;font-size:10px;opacity:.6">v2026.06.01-0946</div>
   <button onclick="window.__forceReload()" style="width:100%;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15);padding:7px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer" title="Limpar cache e recarregar">🔄 Atualizar Sistema</button>
 </div>
 </aside>
@@ -4036,16 +4036,11 @@ function loadAgenda(){IASAG_render();}
       var inserted = await r.json();
       var novo = inserted[0];
       window.__npClose();
-      if(window.toast) toast('Paciente "' + nome + '" cadastrado ✓');
-      // Re-sync para atualizar data.patients
-      if(typeof window.__sbBootData === 'function'){
-        await window.__sbBootData();
-      }
-      // Tentar abrir a ficha do novo paciente
-      try{
-        if(typeof openPatient === 'function') openPatient(novo.id);
-        else if(typeof IAS_open === 'function') IAS_open(novo.id);
-      }catch(e){}
+      if(window.toast) toast('Paciente "' + nome + '" cadastrado ✓ Atualizando...');
+      // Reload completo para garantir TUDO atualiza (data, listas, allPatients)
+      setTimeout(function(){
+        window.location.replace(window.location.pathname + '?reloaded=' + Date.now());
+      }, 800);
     }catch(e){
       err.textContent = 'Erro: ' + (e.message || e);
       err.classList.add('show');
