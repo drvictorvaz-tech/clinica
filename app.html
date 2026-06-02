@@ -604,6 +604,13 @@ tbody tr:last-child{border-bottom:none}
 
 </style>
 
+
+<style id="fix-status-cores">
+.ag-appt.st-cancelado{background:#e53935 !important;color:#fff !important;border-left-color:#7f1d1d !important;text-decoration:line-through;opacity:.92}
+.ag-appt.st-confirmado{background:#2563eb !important;color:#fff !important;border-left-color:#1e3a8a !important}
+.ag-appt.st-realizado{background:#64748b !important;color:#fff !important;border-left-color:#334155 !important}
+.ag-appt.st-agendado{background:#0d7377 !important;color:#fff !important;border-left-color:#0a5c60 !important}
+</style>
 </head>
 <body>
 
@@ -2811,7 +2818,7 @@ function IASAG_renderTime(ndays){
       var sh=a.start.getHours()+a.start.getMinutes()/60, eh=a.end.getHours()+a.end.getMinutes()/60;
       if(sh<HS)sh=HS; if(eh>HE)eh=HE; if(eh<sh+0.25)eh=sh+0.25;
       var el=document.createElement('div');
-      el.className='ag-appt'+(a.done?' done':'');
+      el.className='ag-appt'+(a.done?' done':'')+' st-'+(a.status||'agendado');
       el.style.top=((sh-HS)*HPX)+'px';
       el.style.height=Math.max((eh-sh)*HPX-2,16)+'px';
       el.style.left='calc('+(a._lane*w)+'% + 2px)';
