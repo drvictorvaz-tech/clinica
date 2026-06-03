@@ -4246,5 +4246,51 @@ function loadAgenda(){IASAG_render();}
 })();
 </script>
 
+
+<script>(function IAS_MODULE(){
+  if(window.__IAS_SYNC_V1)return; window.__IAS_SYNC_V1=true;
+  var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+  var URL='https://aejaulnwurvumxgtlirw.supabase.co';
+  function _sess(){for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(/sb-.*-auth-token/.test(k)){try{return{k:k,o:JSON.parse(localStorage.getItem(k))};}catch(e){}}}return null;}
+  function _token(){var s=_sess();return s&&s.o?s.o.access_token:null;}
+  async function _refresh(){var s=_sess();if(!s||!s.o||!s.o.refresh_token)return null;try{var r=await fetch(URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.o.refresh_token})});var j=await r.json();if(j.access_token){var ns=Object.assign({},s.o,j);if(j.expires_in)ns.expires_at=Math.floor(Date.now()/1000)+j.expires_in;localStorage.setItem(s.k,JSON.stringify(ns));return j.access_token;}}catch(e){}return null;}
+  async function sbf(path,opts){opts=opts||{};var tk=_token();var hdr=Object.assign({apikey:ANON,Authorization:'Bearer '+tk},opts.headers||{});var r=await fetch(URL+'/rest/v1/'+path,Object.assign({},opts,{headers:hdr}));if(r.status===401){var nt=await _refresh();if(nt){hdr.Authorization='Bearer '+nt;r=await fetch(URL+'/rest/v1/'+path,Object.assign({},opts,{headers:hdr}));}}return r;}
+  function esc(s){return window.IAS_esc?IAS_esc(s):String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function fdt(s){try{var d=new Date(s);if(isNaN(d))return'';return('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear();}catch(e){return'';}}
+  window.IAS_evoSb=window.IAS_evoSb||{};
+  window.__iasLoadPid=async function(pid){pid=String(pid);try{
+    var ra=await sbf('anotacoes?paciente_id=eq.'+encodeURIComponent(pid)+'&order=data.desc&select=id,data,usuario,texto');
+    if(ra.ok){var aa=await ra.json();window.data=window.data||{};data.annotations=data.annotations||{};data.annotations[pid]=aa.map(function(r){return{id:r.id,d:r.data,u:r.usuario,t:r.texto,sb:true};});}
+    var re=await sbf('evolucoes_notas?paciente_id=eq.'+encodeURIComponent(pid)+'&order=data.desc&select=id,data,usuario,texto');
+    if(re.ok){var ee=await re.json();window.IAS_evoSb[pid]=ee.map(function(r){return{id:r.id,date:r.data,texto:r.texto,u:r.usuario};});}
+    if(String(IAS_curPid)===pid&&window.IAS_reFicha)IAS_reFicha();
+  }catch(e){console.warn('iasLoad',e);}};
+  window.IAS_anotacoesHtml=function(pid){
+    var arr=(data.annotations&&data.annotations[String(pid)])||[];
+    var all=arr.map(function(a){if(a.attributes){var at=a.attributes;return{id:a.id,d:at.created_at,u:(at.dentist&&at.dentist.name)||at.dentist||'Dr. Victor Vaz',t:at.comments,sb:false};}return{id:a.id,d:a.d,u:a.u||'Dr. Victor Vaz',t:a.t,sb:a.sb!==false};});
+    var head='<div class="oc-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><h3 style="font-size:15px;font-weight:700">Anotações</h3><button class="oc-add" onclick="IAS_addAnotacao()">+ Adicionar anotação</button></div>';
+    var body=all.length===0?'<div class="fi-empty"><span class="fi-ei">&#128221;</span>Nenhuma anotação</div>':all.map(function(a){
+      var canEdit=a.sb&&a.id!=null;
+      var acts=canEdit?'<div style="display:flex;gap:6px;margin-top:8px"><button onclick="IAS_editAnotacao(\''+a.id+'\')" style="font-size:12px;padding:3px 9px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer">✏️ Editar</button><button onclick="IAS_delAnotacao(\''+a.id+'\')" style="font-size:12px;padding:3px 9px;border:1px solid #fecaca;color:#b91c1c;border-radius:6px;background:#fff;cursor:pointer">🗑 Excluir</button></div>':'';
+      return '<div class="an-card" style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--primary)"><div style="font-size:12px;font-weight:700">'+fdt(a.d)+'</div><div style="font-size:11px;color:#6b7280;margin:2px 0 6px">'+esc(a.u)+'</div><div style="font-size:13.5px;line-height:1.6;white-space:pre-wrap">'+esc(a.t)+'</div>'+acts+'</div>';
+    }).join('');
+    return head+body;
+  };
+  window.IAS_addAnotacao=async function(){var t=prompt('Nova anotação para este paciente:');if(!t||!t.trim())return;var pid=String(IAS_curPid);var r=await sbf('anotacoes',{method:'POST',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({paciente_id:pid,texto:t.trim(),data:new Date().toISOString(),usuario:'Dr. Victor Vaz'})});if(!r.ok){if(window.toast)toast('Erro ao salvar');return;}if(window.toast)toast('Anotação salva');await window.__iasLoadPid(pid);};
+  window.IAS_editAnotacao=async function(id){var pid=String(IAS_curPid);var arr=(data.annotations&&data.annotations[pid])||[];var cur=arr.filter(function(a){return String(a.id)===String(id);})[0];var t=prompt('Editar anotação:',cur?cur.t:'');if(t==null||!t.trim())return;var r=await sbf('anotacoes?id=eq.'+id,{method:'PATCH',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({texto:t.trim(),atualizado_em:new Date().toISOString()})});if(!r.ok){if(window.toast)toast('Erro ao editar');return;}if(window.toast)toast('Atualizada');await window.__iasLoadPid(pid);};
+  window.IAS_delAnotacao=async function(id){if(!confirm('Excluir esta anotação?'))return;var pid=String(IAS_curPid);var r=await sbf('anotacoes?id=eq.'+id,{method:'DELETE',headers:{Prefer:'return=minimal'}});if(!r.ok){if(window.toast)toast('Erro ao excluir');return;}if(window.toast)toast('Excluída');await window.__iasLoadPid(pid);};
+  window.IAS_renderEvolucoes=function(pid){
+    var arr=(window.IAS_evoSb&&window.IAS_evoSb[String(pid)])||[];
+    var list=arr.length===0?'<div class="fi-empty"><span class="fi-ei">&#128200;</span>Nenhuma evolução registrada</div>':arr.map(function(e){return '<div class="fi-entry" style="background:#f8fafc;border-radius:8px;padding:12px;margin-bottom:10px;border-left:3px solid var(--secondary)"><div class="fi-ed" style="font-size:12px;font-weight:700">'+fdt(e.date)+'</div><div class="fi-et" style="font-size:13.5px;line-height:1.6;white-space:pre-wrap;margin-top:4px">'+esc(e.texto)+'</div><div style="display:flex;gap:6px;margin-top:8px"><button onclick="IAS_editEvoNota(\''+e.id+'\')" style="font-size:12px;padding:3px 9px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;cursor:pointer">✏️ Editar</button><button onclick="IAS_delEvoNota(\''+e.id+'\')" style="font-size:12px;padding:3px 9px;border:1px solid #fecaca;color:#b91c1c;border-radius:6px;background:#fff;cursor:pointer">🗑 Excluir</button></div></div>';}).join('');
+    var el=document.getElementById('tab-evolucoes');if(!el)return;
+    el.innerHTML='<div class="fi-sec-title">&#128200; Evolução clínica</div><div class="fi-fg full" style="margin-bottom:10px"><textarea id="ias-evo-txt" placeholder="Descreva a evolução..." style="width:100%;min-height:70px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px"></textarea></div><button class="oc-add" onclick="IAS_addEvolucao()" style="margin-bottom:14px">+ Registrar evolução</button>'+list;
+  };
+  window.IAS_addEvolucao=async function(){var el=document.getElementById('ias-evo-txt');var t=el?el.value:'';if(!t||!t.trim()){if(window.toast)toast('Escreva a evolução');return;}var pid=String(IAS_curPid);var r=await sbf('evolucoes_notas',{method:'POST',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({paciente_id:pid,texto:t.trim(),data:new Date().toISOString(),usuario:'Dr. Victor Vaz'})});if(!r.ok){if(window.toast)toast('Erro ao salvar');return;}if(window.toast)toast('Evolução registrada');await window.__iasLoadPid(pid);};
+  window.IAS_editEvoNota=async function(id){var pid=String(IAS_curPid);var arr=(window.IAS_evoSb&&window.IAS_evoSb[pid])||[];var cur=arr.filter(function(e){return String(e.id)===String(id);})[0];var t=prompt('Editar evolução:',cur?cur.texto:'');if(t==null||!t.trim())return;var r=await sbf('evolucoes_notas?id=eq.'+id,{method:'PATCH',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({texto:t.trim(),atualizado_em:new Date().toISOString()})});if(!r.ok){if(window.toast)toast('Erro ao editar');return;}if(window.toast)toast('Atualizada');await window.__iasLoadPid(pid);};
+  window.IAS_delEvoNota=async function(id){if(!confirm('Excluir esta evolução?'))return;var pid=String(IAS_curPid);var r=await sbf('evolucoes_notas?id=eq.'+id,{method:'DELETE',headers:{Prefer:'return=minimal'}});if(!r.ok){if(window.toast)toast('Erro ao excluir');return;}if(window.toast)toast('Excluída');await window.__iasLoadPid(pid);};
+  function _wrapOpen(){ if(window.openPatient && !window.openPatient.__iasWrapped){ var _op=window.openPatient; window.openPatient=function(pid){var rv=_op.apply(this,arguments);try{window.__iasLoadPid(String(pid));}catch(e){}return rv;}; window.openPatient.__iasWrapped=true; } }
+  _wrapOpen(); if(document.readyState!=='complete') window.addEventListener('load',_wrapOpen);
+  try{if(typeof IAS_curPid!=='undefined'&&IAS_curPid)window.__iasLoadPid(String(IAS_curPid));}catch(e){}
+ })();</script>
 </body>
 </html>
