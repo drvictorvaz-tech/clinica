@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha do Paciente — Dr. Victor Vaz</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde: #2D6A4F;
+  --verde2: #40916C;
+  --verde-bg: #D8F3DC;
+  --creme: #FEFAE0;
+  --texto: #1a1a1a;
+  --leve: #5a5a5a;
+  --borda: #C8D5C9;
+  --sombra: 0 2px 14px rgba(45,106,79,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--creme); color: var(--texto); font-size: 16px; line-height: 1.65; }
+
+/* HEADER */
+.hdr { background: var(--verde); color: white; padding: 24px 20px 20px; text-align: center; }
+.hdr-logo { font-size: 2rem; margin-bottom: 8px; }
+.hdr h1 { font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 600; margin-bottom: 4px; }
+.hdr p { font-size: 0.85rem; opacity: 0.8; }
+
+/* PROGRESS */
+.prog-wrap { background: var(--verde-bg); padding: 12px 18px 10px; position: sticky; top: 0; z-index: 99; border-bottom: 1px solid var(--borda); }
+.prog-bars { display: flex; gap: 4px; margin-bottom: 6px; }
+.prog-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--borda); transition: background .3s; }
+.prog-bar.done { background: var(--verde2); }
+.prog-bar.active { background: var(--verde); }
+.prog-info { font-size: 0.78rem; color: var(--leve); }
+.prog-info b { color: var(--verde); }
+
+/* SEÇÕES */
+.sec { display: none; }
+.sec.on { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* CARDS */
+.card { background: white; margin: 16px 13px; border-radius: 14px; padding: 20px 18px; box-shadow: var(--sombra); border: 1px solid var(--borda); }
+.card-h { display: flex; align-items: center; gap: 9px; font-family: 'Lora', serif; font-size: 1.05rem; color: var(--verde); font-weight: 600; margin-bottom: 18px; padding-bottom: 11px; border-bottom: 2px solid var(--verde-bg); }
+.card-ico { width: 30px; height: 30px; background: var(--verde-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+.intro { background: var(--verde-bg); margin: 16px 13px 0; padding: 14px 16px; border-radius: 12px; border-left: 4px solid var(--verde2); font-size: 0.9rem; color: var(--verde); font-weight: 500; line-height: 1.5; }
+
+/* CAMPOS */
+.f { margin-bottom: 20px; }
+.f:last-child { margin-bottom: 0; }
+.f label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; }
+.hint { font-size: 0.8rem; color: var(--leve); margin-bottom: 7px; line-height: 1.35; }
+input[type=text], input[type=email], input[type=tel], input[type=date], select, textarea {
+  width: 100%; padding: 11px 13px; border: 2px solid var(--borda); border-radius: 9px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.97rem; color: var(--texto);
+  background: var(--creme); -webkit-appearance: none; transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--verde2); background: white; }
+textarea { resize: vertical; min-height: 75px; }
+
+/* EVA */
+.eva { background: var(--creme); border: 2px solid var(--borda); border-radius: 11px; padding: 14px 12px 11px; }
+.eva-nums { display: flex; gap: 3px; margin-bottom: 7px; }
+.eva-n { flex:1; padding: 8px 2px; border: 2px solid var(--borda); border-radius: 7px; background: white; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: center; min-height: 42px; font-family: 'DM Sans', sans-serif; color: var(--leve); transition: all .15s; }
+.eva-n:hover { border-color: var(--verde2); }
+.eva-n.on { background: var(--verde); border-color: var(--verde); color: white; }
+.eva-n[data-v="0"].on,.eva-n[data-v="1"].on,.eva-n[data-v="2"].on { background:#52B788;border-color:#52B788; }
+.eva-n[data-v="3"].on,.eva-n[data-v="4"].on { background:#f4a261;border-color:#f4a261; }
+.eva-n[data-v="5"].on,.eva-n[data-v="6"].on { background:#e76f51;border-color:#e76f51; }
+.eva-n[data-v="7"].on,.eva-n[data-v="8"].on { background:#d62828;border-color:#d62828; }
+.eva-n[data-v="9"].on,.eva-n[data-v="10"].on { background:#9b2226;border-color:#9b2226; }
+.eva-labs { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--leve); }
+.eva-txt { text-align:center; margin-top:8px; font-size:0.88rem; font-weight:600; color:var(--verde); min-height:18px; }
+
+/* CHIPS */
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { padding:8px 13px; border:2px solid var(--borda); border-radius:20px; background:white; font-family:'DM Sans',sans-serif; font-size:0.87rem; font-weight:500; cursor:pointer; transition:all .15s; color:var(--texto); min-height:40px; display:flex; align-items:center; gap:5px; }
+.chip:hover { border-color:var(--verde2); background:var(--verde-bg); }
+.chip.on { background:var(--verde); border-color:var(--verde); color:white; }
+.chip .ck { display:none; }
+.chip.on .ck { display:inline; }
+.duo { display:flex; gap:10px; }
+.duo .chip { flex:1; justify-content:center; font-size:0.95rem; padding:12px; }
+
+/* LIKERT */
+.lik { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.lik-b { padding:8px 4px; border:2px solid var(--borda); border-radius:8px; background:white; font-family:'DM Sans',sans-serif; font-size:0.7rem; font-weight:500; cursor:pointer; text-align:center; min-height:48px; display:flex; align-items:center; justify-content:center; line-height:1.2; transition:all .15s; }
+.lik-b:hover { border-color:var(--verde2); }
+.lik-b.on { background:var(--verde); border-color:var(--verde); color:white; }
+
+/* QUESTÕES */
+.qlist { display:flex; flex-direction:column; gap:12px; }
+.qitem { background:var(--creme); border:1px solid var(--borda); border-radius:10px; padding:12px 13px; }
+.qtxt { font-size:0.88rem; font-weight:500; margin-bottom:9px; line-height:1.4; }
+.qn { display:inline-block; background:var(--verde); color:white; width:19px;height:19px; border-radius:50%; font-size:0.7rem; font-weight:700; text-align:center; line-height:19px; margin-right:6px; }
+
+/* SCORE BOX */
+.sbox { background:var(--verde-bg); border-radius:8px; padding:9px 13px; margin-top:11px; font-size:0.84rem; color:var(--verde); font-weight:600; display:none; }
+
+/* AVISO */
+.aviso { background:#FFF8E7; border:1px solid #FFCC80; border-radius:10px; padding:12px 14px; margin:0 13px 2px; font-size:0.84rem; color:#7C4700; line-height:1.5; }
+
+/* NAV */
+.nav { display:flex; gap:9px; padding:13px; position:sticky; bottom:0; background:var(--creme); border-top:1px solid var(--borda); z-index:50; }
+.btn-v { padding:12px 16px; border:2px solid var(--borda); border-radius:10px; background:white; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; color:var(--leve); min-width:80px; transition:all .15s; }
+.btn-v:hover { border-color:var(--verde); color:var(--verde); }
+.btn-a { flex:1; padding:14px; background:var(--verde); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.97rem; font-weight:600; color:white; cursor:pointer; transition:background .15s; }
+.btn-a:hover { background:#1f5237; }
+
+/* ========== MODO CLÍNICO ========== */
+#telaClinica { display:none; }
+.cl-hdr { background:#1B3A2D; color:white; padding:16px 18px; position:sticky; top:0; z-index:200; }
+.cl-hdr-in { display:flex; align-items:center; justify-content:space-between; }
+.cl-nome { font-family:'Lora',serif; font-size:1.05rem; font-weight:600; }
+.cl-sub { font-size:0.75rem; opacity:.6; margin-top:2px; }
+.cl-body { padding-bottom:80px; }
+
+/* SCORE CARDS */
+.sc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:14px 13px 0; }
+.sc { background:white; border:1px solid var(--borda); border-radius:10px; padding:11px 10px 9px; }
+.sc-lbl { font-size:0.68rem; color:var(--leve); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:3px; }
+.sc-val { font-size:1.1rem; font-weight:700; color:var(--verde); font-family:'Lora',serif; }
+.sc-int { font-size:0.68rem; color:var(--leve); margin-top:2px; line-height:1.3; }
+.sc.red .sc-val { color:#d62828; }
+.sc.yellow .sc-val { color:#e07b39; }
+.sc.green .sc-val { color:#52B788; }
+
+/* PRONTUÁRIO */
+.pront { font-size:0.84rem; line-height:1.8; color:#444; }
+.pront-bloco { margin-bottom:14px; }
+.pront-titulo { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--verde); margin-bottom:5px; }
+.pront-linha { margin-bottom:2px; }
+.pront-linha span { color:var(--leve); }
+.sem-dado { color:#ccc; font-style:italic; }
+
+/* ANOTAÇÕES */
+.nota-wrap { display:flex; flex-direction:column; gap:14px; }
+.nota-f label { font-weight:600; font-size:0.88rem; margin-bottom:5px; display:block; }
+.nota-ta { width:100%; padding:11px 13px; border:2px solid var(--borda); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--texto); background:var(--creme); resize:vertical; min-height:75px; transition:border-color .2s; }
+.nota-ta:focus { outline:none; border-color:var(--verde2); background:white; }
+
+/* BOTÕES CLÍNICOS */
+.cl-btns { display:flex; flex-direction:column; gap:8px; padding:0 13px; }
+.btn-prim { padding:14px; background:var(--verde); border:none; border-radius:10px; color:white; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-prim:hover { background:#1f5237; }
+.btn-sec { padding:12px; background:white; border:2px solid var(--borda); border-radius:10px; color:var(--texto); font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.9rem; cursor:pointer; }
+.btn-sec:hover { border-color:var(--verde); color:var(--verde); }
+
+/* STATUS */
+.status { margin:10px 13px; padding:12px 14px; border-radius:10px; font-size:0.86rem; font-weight:500; display:none; }
+.s-ok { background:var(--verde-bg); color:var(--verde); border:1px solid var(--verde2); }
+.s-err { background:#FFF8E7; color:#7C4700; border:1px solid #FFCC80; }
+.s-load { background:#EEF2FF; color:#3730A3; border:1px solid #818CF8; }
+
+/* MODAL SENHA */
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:999; display:flex; align-items:center; justify-content:center; padding:20px; }
+.modal { background:white; border-radius:16px; padding:28px 24px; width:100%; max-width:340px; text-align:center; }
+.modal h3 { font-family:'Lora',serif; color:var(--verde); font-size:1.1rem; margin-bottom:8px; }
+.modal p { font-size:0.85rem; color:var(--leve); margin-bottom:18px; }
+.modal input { width:100%; padding:13px 14px; border:2px solid var(--borda); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:1.1rem; text-align:center; letter-spacing:4px; margin-bottom:12px; }
+.modal input:focus { outline:none; border-color:var(--verde2); }
+.modal-btns { display:flex; gap:8px; }
+.modal-ok { flex:1; padding:13px; background:var(--verde); border:none; border-radius:9px; color:white; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer; }
+.modal-cancel { padding:13px 16px; border:2px solid var(--borda); border-radius:9px; background:white; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; color:var(--leve); }
+.modal-err { font-size:0.82rem; color:#d62828; margin-top:6px; display:none; }
+
+@media(max-width:460px){
+  .sc-grid { grid-template-columns:repeat(2,1fr); }
+  .eva-n { font-size:0.82rem; min-height:38px; }
+}
+</style>
+</head>
+<body>
+
+<!-- MODAL SENHA CLÍNICA -->
+<div class="modal-bg" id="modalSenha" style="display:none;">
+  <div class="modal">
+    <h3>🔐 Acesso Clínico</h3>
+    <p>Digite o código para acessar o prontuário do paciente</p>
+    <input type="password" id="inputSenha" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')confirmarSenha()">
+    <p class="modal-err" id="errSenha">Código incorreto. Tente novamente.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarSenha()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr" id="mainHdr">
+  <div class="hdr-logo">🌿</div>
+  <h1>Ficha do Paciente</h1>
+  <p>Dr. Victor Vaz · Especialista em DTM, Dor e Saúde Integrativa</p>
+</div>
+
+<!-- PROGRESSO -->
+<div class="prog-wrap" id="progWrap">
+  <div class="prog-bars" id="progBars"></div>
+  <div class="prog-info">Etapa <b id="progN">1</b> de <b>7</b> — <b id="progNome">Seus dados</b></div>
+</div>
+
+<!-- ======== SEÇÃO 1 — IDENTIFICAÇÃO ======== -->
+<div class="sec on" id="sec1">
+  <div class="intro">👋 Olá! Suas respostas chegam diretamente para o Dr. Victor antes da consulta. Leva cerca de 10 minutos.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">👤</div>Seus dados</div>
+    <div class="f"><label>Nome completo</label><input type="text" id="nome" placeholder="Como você se chama?"></div>
+    <div class="f"><label>Data de nascimento</label><input type="date" id="nasc"></div>
+    <div class="f">
+      <label>Sexo</label>
+      <div class="chips">
+        <button class="chip" data-g="sexo" data-v="Feminino" onclick="pick(this)"><span class="ck">✓</span> Feminino</button>
+        <button class="chip" data-g="sexo" data-v="Masculino" onclick="pick(this)"><span class="ck">✓</span> Masculino</button>
+        <button class="chip" data-g="sexo" data-v="Outro" onclick="pick(this)"><span class="ck">✓</span> Outro</button>
+      </div>
+    </div>
+    <div class="f"><label>WhatsApp</label><input type="tel" id="tel" placeholder="(47) 99999-9999"></div>
+    <div class="f"><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com"></div>
+    <div class="f"><label>Profissão</label><input type="text" id="prof" placeholder="O que você faz?"></div>
+    <div class="f">
+      <label>Seu nível de estresse no dia a dia (0 = tranquilo · 10 = extremo)</label>
+      <div class="eva">
+        <div class="eva-nums" id="evaEst"></div>
+        <div class="eva-labs"><span>😌 Tranquilo</span><span>🤯 Extremo</span></div>
+        <div class="eva-txt" id="txtEst">Toque em um número</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 2 — DOR ======== -->
+<div class="sec" id="sec2">
+  <div class="intro">🔍 Vamos entender o que está te incomodando. Sem resposta certa ou errada.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">😣</div>Sua principal queixa</div>
+    <div class="f"><label>O que te trouxe até o Dr. Victor?</label><textarea id="queixa" placeholder="Descreva com suas palavras... Ex: tenho dor de cabeça todo dia, minha mandíbula trava ao abrir a boca..."></textarea></div>
+    <div class="f">
+      <label>Há quanto tempo você sente isso?</label>
+      <div class="chips">
+        <button class="chip" data-g="tempo" data-v="Menos de 1 mês" onclick="pick(this)"><span class="ck">✓</span> Menos de 1 mês</button>
+        <button class="chip" data-g="tempo" data-v="1 a 6 meses" onclick="pick(this)"><span class="ck">✓</span> 1–6 meses</button>
+        <button class="chip" data-g="tempo" data-v="6 meses a 1 ano" onclick="pick(this)"><span class="ck">✓</span> 6m–1 ano</button>
+        <button class="chip" data-g="tempo" data-v="Mais de 1 ano" onclick="pick(this)"><span class="ck">✓</span> Mais de 1 ano</button>
+        <button class="chip" data-g="tempo" data-v="Mais de 5 anos" onclick="pick(this)"><span class="ck">✓</span> Mais de 5 anos</button>
+      </div>
+    </div>
+    <div class="f"><label>Teve algum evento que iniciou a dor?</label><input type="text" id="evento" placeholder="Ex: acidente, cirurgia, tensão no trabalho, luto... (opcional)"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">📍</div>Onde e como é a dor</div>
+    <div class="f">
+      <label>Onde você sente dor? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="locais">
+        <button class="chip" data-v="Cabeça/têmporas" onclick="multi(this)"><span class="ck">✓</span> Cabeça/têmporas</button>
+        <button class="chip" data-v="Rosto/bochechas" onclick="multi(this)"><span class="ck">✓</span> Rosto/bochechas</button>
+        <button class="chip" data-v="Mandíbula/queixo" onclick="multi(this)"><span class="ck">✓</span> Mandíbula/queixo</button>
+        <button class="chip" data-v="Ouvido/atrás da orelha" onclick="multi(this)"><span class="ck">✓</span> Ouvido</button>
+        <button class="chip" data-v="Pescoço/nuca" onclick="multi(this)"><span class="ck">✓</span> Pescoço/nuca</button>
+        <button class="chip" data-v="Ombros/costas" onclick="multi(this)"><span class="ck">✓</span> Ombros/costas</button>
+        <button class="chip" data-v="Dentes/boca" onclick="multi(this)"><span class="ck">✓</span> Dentes/boca</button>
+        <button class="chip" data-v="Outro" onclick="multi(this)"><span class="ck">✓</span> Outro</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Intensidade da dor agora (0 = sem dor · 10 = insuportável)</label>
+      <div class="eva"><div class="eva-nums" id="evaDor"></div><div class="eva-labs"><span>0 — Sem dor</span><span>10 — Insuportável</span></div><div class="eva-txt" id="txtDor">Toque em um número</div></div>
+    </div>
+    <div class="f">
+      <label>Como é a dor?</label>
+      <div class="chips">
+        <button class="chip" data-g="tipodor" data-v="Latejante/pulsante" onclick="pick(this)"><span class="ck">✓</span> Latejante/pulsante</button>
+        <button class="chip" data-g="tipodor" data-v="Queimação" onclick="pick(this)"><span class="ck">✓</span> Queimação</button>
+        <button class="chip" data-g="tipodor" data-v="Pressão/aperto" onclick="pick(this)"><span class="ck">✓</span> Pressão/aperto</button>
+        <button class="chip" data-g="tipodor" data-v="Pontada/facada" onclick="pick(this)"><span class="ck">✓</span> Pontada/facada</button>
+        <button class="chip" data-g="tipodor" data-v="Constante/surda" onclick="pick(this)"><span class="ck">✓</span> Constante/surda</button>
+        <button class="chip" data-g="tipodor" data-v="Formigamento/choque" onclick="pick(this)"><span class="ck">✓</span> Formigamento/choque</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>A dor é...</label>
+      <div class="chips">
+        <button class="chip" data-g="padrao" data-v="Contínua o dia todo" onclick="pick(this)"><span class="ck">✓</span> Contínua o dia todo</button>
+        <button class="chip" data-g="padrao" data-v="Vem e vai" onclick="pick(this)"><span class="ck">✓</span> Vem e vai</button>
+        <button class="chip" data-g="padrao" data-v="Só de manhã" onclick="pick(this)"><span class="ck">✓</span> Só de manhã</button>
+        <button class="chip" data-g="padrao" data-v="Piora à tarde/noite" onclick="pick(this)"><span class="ck">✓</span> Piora à tarde/noite</button>
+        <button class="chip" data-g="padrao" data-v="Ligada ao estresse" onclick="pick(this)"><span class="ck">✓</span> Ligada ao estresse</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>O que piora? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="piora">
+        <button class="chip" data-v="Mastigar" onclick="multi(this)"><span class="ck">✓</span> Mastigar</button>
+        <button class="chip" data-v="Falar/cantar" onclick="multi(this)"><span class="ck">✓</span> Falar/cantar</button>
+        <button class="chip" data-v="Abrir a boca" onclick="multi(this)"><span class="ck">✓</span> Abrir a boca</button>
+        <button class="chip" data-v="Estresse/ansiedade" onclick="multi(this)"><span class="ck">✓</span> Estresse/ansiedade</button>
+        <button class="chip" data-v="Frio/vento" onclick="multi(this)"><span class="ck">✓</span> Frio/vento</button>
+        <button class="chip" data-v="Acordar de manhã" onclick="multi(this)"><span class="ck">✓</span> Acordar de manhã</button>
+        <button class="chip" data-v="Mov. do pescoço" onclick="multi(this)"><span class="ck">✓</span> Mov. do pescoço</button>
+      </div>
+    </div>
+    <div class="f"><label>O que melhora?</label><input type="text" id="melhora" placeholder="Ex: calor, repouso, analgésico, massagem..."></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🔔</div>Outros sintomas</div>
+    <div class="chips" id="outrosint">
+      <button class="chip" data-v="Zumbido no ouvido" onclick="multi(this)"><span class="ck">✓</span> Zumbido no ouvido</button>
+      <button class="chip" data-v="Tontura/vertigem" onclick="multi(this)"><span class="ck">✓</span> Tontura/vertigem</button>
+      <button class="chip" data-v="Ouvido tapado" onclick="multi(this)"><span class="ck">✓</span> Ouvido tapado</button>
+      <button class="chip" data-v="Cansaço extremo" onclick="multi(this)"><span class="ck">✓</span> Cansaço extremo</button>
+      <button class="chip" data-v="Sensibilidade à luz" onclick="multi(this)"><span class="ck">✓</span> Sensib. à luz</button>
+      <button class="chip" data-v="Sensibilidade ao som" onclick="multi(this)"><span class="ck">✓</span> Sensib. ao som</button>
+      <button class="chip" data-v="Náusea" onclick="multi(this)"><span class="ck">✓</span> Náusea</button>
+      <button class="chip" data-v="Visão embaçada" onclick="multi(this)"><span class="ck">✓</span> Visão embaçada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 3 — SONO ======== -->
+<div class="sec" id="sec3">
+  <div class="intro">😴 O sono é fundamental na dor crônica. Suas respostas ajudam muito no diagnóstico.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🛌</div>Seu sono</div>
+    <div class="f">
+      <label>Como você avalia seu sono?</label>
+      <div class="chips">
+        <button class="chip" data-g="qsono" data-v="Ótimo" onclick="pick(this)"><span class="ck">✓</span> 😊 Ótimo</button>
+        <button class="chip" data-g="qsono" data-v="Bom" onclick="pick(this)"><span class="ck">✓</span> 🙂 Bom</button>
+        <button class="chip" data-g="qsono" data-v="Regular" onclick="pick(this)"><span class="ck">✓</span> 😐 Regular</button>
+        <button class="chip" data-g="qsono" data-v="Ruim" onclick="pick(this)"><span class="ck">✓</span> 😔 Ruim</button>
+        <button class="chip" data-g="qsono" data-v="Péssimo" onclick="pick(this)"><span class="ck">✓</span> 😩 Péssimo</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Horas de sono por noite?</label>
+      <div class="chips">
+        <button class="chip" data-g="horas" data-v="Menos de 5h" onclick="pick(this)"><span class="ck">✓</span> &lt;5h</button>
+        <button class="chip" data-g="horas" data-v="5–6h" onclick="pick(this)"><span class="ck">✓</span> 5–6h</button>
+        <button class="chip" data-g="horas" data-v="7–8h" onclick="pick(this)"><span class="ck">✓</span> 7–8h</button>
+        <button class="chip" data-g="horas" data-v="Mais de 8h" onclick="pick(this)"><span class="ck">✓</span> +8h</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Dificuldades para dormir? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="insonia">
+        <button class="chip" data-v="Dificuldade de pegar no sono" onclick="multi(this)"><span class="ck">✓</span> Pegar no sono</button>
+        <button class="chip" data-v="Acorda à noite" onclick="multi(this)"><span class="ck">✓</span> Acorda à noite</button>
+        <button class="chip" data-v="Acorda muito cedo" onclick="multi(this)"><span class="ck">✓</span> Acorda muito cedo</button>
+        <button class="chip" data-v="Nenhuma" onclick="multi(this)"><span class="ck">✓</span> Nenhuma</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Ronca?</label>
+      <div class="chips">
+        <button class="chip" data-g="ronco" data-v="Nunca/raramente" onclick="pick(this)"><span class="ck">✓</span> Nunca</button>
+        <button class="chip" data-g="ronco" data-v="Às vezes" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+        <button class="chip" data-g="ronco" data-v="Frequentemente" onclick="pick(this)"><span class="ck">✓</span> Frequentemente</button>
+        <button class="chip" data-g="ronco" data-v="Toda noite" onclick="pick(this)"><span class="ck">✓</span> Toda noite</button>
+        <button class="chip" data-g="ronco" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Já disseram que para de respirar enquanto dorme?</label>
+      <div class="duo">
+        <button class="chip" data-g="apneia" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+        <button class="chip" data-g="apneia" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+        <button class="chip" data-g="apneia" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Posição ao dormir?</label>
+      <div class="chips">
+        <button class="chip" data-g="posicao" data-v="De lado" onclick="pick(this)"><span class="ck">✓</span> De lado</button>
+        <button class="chip" data-g="posicao" data-v="De costas" onclick="pick(this)"><span class="ck">✓</span> De costas</button>
+        <button class="chip" data-g="posicao" data-v="De bruços" onclick="pick(this)"><span class="ck">✓</span> De bruços</button>
+        <button class="chip" data-g="posicao" data-v="Varia" onclick="pick(this)"><span class="ck">✓</span> Varia</button>
+      </div>
+    </div>
+  </div>
+  <!-- EPWORTH -->
+  <div class="card">
+    <div class="card-h"><div class="card-ico">💤</div>Sonolência diurna — Escala de Epworth</div>
+    <p class="hint">Qual a chance de você cochilar nessas situações? &nbsp;0 = nunca &nbsp;·&nbsp; 3 = alta chance</p>
+    <div class="qlist" id="epwQ"></div>
+    <div class="sbox" id="epwS"></div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 4 — BRUXISMO / ATM ======== -->
+<div class="sec" id="sec4">
+  <div class="intro">🦷 Agora vamos falar sobre a mandíbula, os dentes e seus hábitos.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🦷</div>Bruxismo</div>
+    <div class="f">
+      <label>Range ou aperta os dentes enquanto dorme?</label>
+      <div class="chips">
+        <button class="chip" data-g="bsono" data-v="Sim — já me avisaram" onclick="pick(this)"><span class="ck">✓</span> Sim — me avisaram</button>
+        <button class="chip" data-g="bsono" data-v="Talvez — acordo com dor" onclick="pick(this)"><span class="ck">✓</span> Talvez</button>
+        <button class="chip" data-g="bsono" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+        <button class="chip" data-g="bsono" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Durante o dia, aperta os dentes ou trava a mandíbula?</label>
+      <div class="chips">
+        <button class="chip" data-g="bdia" data-v="Sim — frequentemente" onclick="pick(this)"><span class="ck">✓</span> Sim, frequente</button>
+        <button class="chip" data-g="bdia" data-v="Às vezes — quando estressado" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+        <button class="chip" data-g="bdia" data-v="Raramente" onclick="pick(this)"><span class="ck">✓</span> Raramente</button>
+        <button class="chip" data-g="bdia" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Já usou ou usa placa dental?</label>
+      <div class="chips">
+        <button class="chip" data-g="placa" data-v="Sim — uso agora" onclick="pick(this)"><span class="ck">✓</span> Uso agora</button>
+        <button class="chip" data-g="placa" data-v="Já usei mas parei" onclick="pick(this)"><span class="ck">✓</span> Já usei</button>
+        <button class="chip" data-g="placa" data-v="Nunca" onclick="pick(this)"><span class="ck">✓</span> Nunca</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Hábitos? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="paraf">
+        <button class="chip" data-v="Morder unhas/objetos" onclick="multi(this)"><span class="ck">✓</span> Morder unhas/objetos</button>
+        <button class="chip" data-v="Chiclete frequente" onclick="multi(this)"><span class="ck">✓</span> Chiclete frequente</button>
+        <button class="chip" data-v="Apertar dentes sob tensão" onclick="multi(this)"><span class="ck">✓</span> Apertar sob tensão</button>
+        <button class="chip" data-v="Dentes sempre em contato" onclick="multi(this)"><span class="ck">✓</span> Dentes sempre tocando</button>
+        <button class="chip" data-v="Nenhum" onclick="multi(this)"><span class="ck">✓</span> Nenhum</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🫦</div>Mandíbula (ATM)</div>
+    <div class="f">
+      <label>Ouve estalos ao abrir/fechar a boca?</label>
+      <div class="chips">
+        <button class="chip" data-g="estalo" data-v="Sim — dos dois lados" onclick="pick(this)"><span class="ck">✓</span> Sim — dois lados</button>
+        <button class="chip" data-g="estalo" data-v="Sim — só de um lado" onclick="pick(this)"><span class="ck">✓</span> Sim — um lado</button>
+        <button class="chip" data-g="estalo" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Sua mandíbula já travou?</label>
+      <div class="duo">
+        <button class="chip" data-g="trava" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+        <button class="chip" data-g="trava" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Sente dor ao mastigar alimentos duros?</label>
+      <div class="chips">
+        <button class="chip" data-g="dormastigar" data-v="Sempre" onclick="pick(this)"><span class="ck">✓</span> Sempre</button>
+        <button class="chip" data-g="dormastigar" data-v="Às vezes" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+        <button class="chip" data-g="dormastigar" data-v="Raramente" onclick="pick(this)"><span class="ck">✓</span> Raramente</button>
+        <button class="chip" data-g="dormastigar" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Já teve diagnóstico de DTM?</label>
+      <div class="duo">
+        <button class="chip" data-g="dtmprev" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+        <button class="chip" data-g="dtmprev" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+        <button class="chip" data-g="dtmprev" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 5 — SAÚDE GERAL ======== -->
+<div class="sec" id="sec5">
+  <div class="intro">🩺 Sua saúde geral influencia diretamente na dor. Informações confidenciais.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🏥</div>Saúde geral</div>
+    <div class="f">
+      <label>Doenças diagnosticadas? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="doencas">
+        <button class="chip" data-v="Hipertensão" onclick="multi(this)"><span class="ck">✓</span> Hipertensão</button>
+        <button class="chip" data-v="Diabetes" onclick="multi(this)"><span class="ck">✓</span> Diabetes</button>
+        <button class="chip" data-v="Fibromialgia" onclick="multi(this)"><span class="ck">✓</span> Fibromialgia</button>
+        <button class="chip" data-v="Artrite/artrose" onclick="multi(this)"><span class="ck">✓</span> Artrite/artrose</button>
+        <button class="chip" data-v="Tireoide" onclick="multi(this)"><span class="ck">✓</span> Tireoide</button>
+        <button class="chip" data-v="Ansiedade/pânico" onclick="multi(this)"><span class="ck">✓</span> Ansiedade/pânico</button>
+        <button class="chip" data-v="Depressão" onclick="multi(this)"><span class="ck">✓</span> Depressão</button>
+        <button class="chip" data-v="Enxaqueca" onclick="multi(this)"><span class="ck">✓</span> Enxaqueca</button>
+        <button class="chip" data-v="Nenhuma" onclick="multi(this)"><span class="ck">✓</span> Nenhuma</button>
+        <button class="chip" data-v="Outra" onclick="multi(this)"><span class="ck">✓</span> Outra</button>
+      </div>
+    </div>
+    <div class="f"><label>Medicamentos em uso?</label><textarea id="meds" placeholder="Ex: Rivotril 0,5mg à noite, Sertralina 50mg... Se não usa, deixe em branco."></textarea></div>
+    <div class="f"><label>Suplementos?</label><textarea id="sups" placeholder="Ex: Magnésio, Vitamina D, Ômega 3... Se não usa, deixe em branco."></textarea></div>
+    <div class="f"><label>Tratamentos anteriores para a dor — o que ajudou ou não?</label><textarea id="tratant" placeholder="Ex: Fisioterapia ajudou um pouco. Remédio X não funcionou..."></textarea></div>
+    <div class="f">
+      <label>Tem exames de imagem recentes?</label>
+      <div class="chips">
+        <button class="chip" data-g="eximg" data-v="Sim — trarei na consulta" onclick="pick(this)"><span class="ck">✓</span> Sim — vou trazer</button>
+        <button class="chip" data-g="eximg" data-v="Sim — mas não tenho mais" onclick="pick(this)"><span class="ck">✓</span> Não tenho mais</button>
+        <button class="chip" data-g="eximg" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Fez polissonografia (exame do sono)?</label>
+      <div class="duo">
+        <button class="chip" data-g="psg" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+        <button class="chip" data-g="psg" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Como está sua alimentação?</label>
+      <div class="chips">
+        <button class="chip" data-g="alim" data-v="Saudável" onclick="pick(this)"><span class="ck">✓</span> Saudável</button>
+        <button class="chip" data-g="alim" data-v="Regular" onclick="pick(this)"><span class="ck">✓</span> Regular</button>
+        <button class="chip" data-g="alim" data-v="Ruim — muito processado/açúcar" onclick="pick(this)"><span class="ck">✓</span> Ruim</button>
+      </div>
+    </div>
+    <div class="f">
+      <label>Pratica atividade física?</label>
+      <div class="chips">
+        <button class="chip" data-g="atfis" data-v="Regularmente (3x+/semana)" onclick="pick(this)"><span class="ck">✓</span> Regularmente</button>
+        <button class="chip" data-g="atfis" data-v="Às vezes — irregular" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+        <button class="chip" data-g="atfis" data-v="Não pratico" onclick="pick(this)"><span class="ck">✓</span> Não pratico</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 6 — PSICOSSOCIAL ======== -->
+<div class="sec" id="sec6">
+  <div class="intro">🧠 Emoções afetam diretamente a dor crônica. Responda honestamente — sem julgamentos.</div>
+  <div class="aviso">⚠️ Essas perguntas fazem parte de questionários médicos validados. Ajudam o Dr. Victor a entender sua saúde de forma completa.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">😰</div>Ansiedade — GAD-7</div>
+    <p class="hint"><b>Nas últimas 2 semanas</b>, com que frequência você teve esses sentimentos?</p>
+    <div class="qlist" id="gad7Q"></div>
+    <div class="sbox" id="gad7S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">😔</div>Humor — PHQ-9</div>
+    <p class="hint"><b>Nas últimas 2 semanas</b>, com que frequência você teve esses sentimentos?</p>
+    <div class="qlist" id="phq9Q"></div>
+    <div class="sbox" id="phq9S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">⚡</div>Tipo de dor — DN4</div>
+    <p class="hint">Sua dor tem alguma dessas características? <span style="font-weight:400">(pode marcar mais de um)</span></p>
+    <div class="chips" id="dn4">
+      <button class="chip" data-v="Queimação" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Queimação</button>
+      <button class="chip" data-v="Frio doloroso" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Frio doloroso</button>
+      <button class="chip" data-v="Choque elétrico" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Choque elétrico</button>
+      <button class="chip" data-v="Formigamento" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Formigamento</button>
+      <button class="chip" data-v="Alfinetadas" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Alfinetadas</button>
+      <button class="chip" data-v="Dormência" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Dormência</button>
+      <button class="chip" data-v="Coceira na área" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Coceira na área</button>
+    </div>
+    <div class="sbox" id="dn4S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">🌪️</div>Pensamentos sobre a dor — PCS</div>
+    <p class="hint">Quando está com dor, com que frequência esses pensamentos aparecem?</p>
+    <div class="qlist" id="pcsQ"></div>
+    <div class="sbox" id="pcsS"></div>
+  </div>
+</div>
+
+<!-- ======== SEÇÃO 7 — CONTEXTO ======== -->
+<div class="sec" id="sec7">
+  <div class="intro">✨ Última etapa! Mais algumas perguntas abertas.</div>
+  <div class="card">
+    <div class="card-h"><div class="card-ico">💬</div>Contexto de vida</div>
+    <div class="f"><label>Algo na sua vida agora pode estar influenciando sua dor?</label><div class="hint">Trabalho, família, perdas, mudanças — à vontade (opcional)</div><textarea id="contexto" placeholder="Ex: estou passando por muito estresse no trabalho, tive uma perda recente..."></textarea></div>
+    <div class="f"><label>O que você espera dessa consulta?</label><textarea id="expect" placeholder="Ex: quero entender por que tenho dor há tanto tempo, quero evitar cirurgia..."></textarea></div>
+    <div class="f"><label>Algo mais que quer contar?</label><textarea id="obs" placeholder="Opcional"></textarea></div>
+  </div>
+  <div class="card" style="background:var(--verde);border:none;color:white;">
+    <div style="text-align:center;padding:4px 0;">
+      <div style="font-size:2rem;margin-bottom:8px;">🔒</div>
+      <p style="font-size:0.84rem;opacity:.85;line-height:1.6;">Suas informações são <strong>confidenciais</strong> e usadas apenas pelo Dr. Victor para seu atendimento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======== TELA FINAL PACIENTE ======== -->
+<div class="sec" id="secFim">
+  <div class="card" style="text-align:center;padding:40px 20px;">
+    <div style="font-size:3.5rem;margin-bottom:14px;">✅</div>
+    <h2 style="font-family:'Lora',serif;color:var(--verde);font-size:1.3rem;margin-bottom:10px;">Ficha enviada!</h2>
+    <p style="color:var(--leve);font-size:0.9rem;max-width:320px;margin:0 auto 22px;line-height:1.6;">O Dr. Victor recebeu suas informações e vai chegar na consulta preparado para te atender.</p>
+    <a href="https://wa.me/5547999356119" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:#25D366;color:white;border-radius:12px;font-weight:600;font-size:0.93rem;text-decoration:none;">💬 Falar com a clínica</a>
+  </div>
+</div>
+
+<!-- ======== MODO CLÍNICO ======== -->
+<div id="telaClinica">
+  <div class="cl-hdr">
+    <div class="cl-hdr-in">
+      <div>
+        <div class="cl-nome" id="clNome">Paciente</div>
+        <div class="cl-sub" id="clSub">Prontuário · Dr. Victor Vaz</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-prim" style="padding:8px 13px;font-size:0.8rem;width:auto;background:#40916C;" onclick="toggleAba('aba-pront')" id="tab-pront">📋 Prontuário</button>
+        <button class="btn-prim" style="padding:8px 13px;font-size:0.8rem;width:auto;background:#555;" onclick="toggleAba('aba-editar')" id="tab-editar">✏️ Editar dados</button>
+        <button class="btn-prim" style="padding:8px 13px;font-size:0.8rem;width:auto;background:#1B3A2D;" onclick="toggleAba('aba-consulta')" id="tab-consulta">🩺 Consulta</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cl-body">
+
+    <!-- STATUS GERAL -->
+    <div class="status" id="statusIA" style="margin:10px 13px;"></div>
+
+    <!-- ===== ABA: PRONTUÁRIO ===== -->
+    <div id="aba-pront">
+      <div class="sc-grid" id="scGrid"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="card-h"><div class="card-ico">📋</div>Anamnese completa</div>
+        <div class="pront" id="prontario"></div>
+      </div>
+      <div style="padding:0 13px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-prim" onclick="enviarIASaude()">🤖 Enviar para IA Saúde</button>
+        <button class="btn-sec" onclick="copiarTudo()">📋 Copiar prontuário</button>
+      </div>
+    </div>
+
+    <!-- ===== ABA: EDITAR DADOS ===== -->
+    <div id="aba-editar" style="display:none;">
+      <div class="card">
+        <div class="card-h"><div class="card-ico">✏️</div>Editar dados do paciente</div>
+        <p class="hint" style="margin-bottom:16px;">Corrija ou acrescente informações relatadas na consulta. Clique em <strong>Salvar alterações</strong> para atualizar.</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <div style="background:#F0FAF4;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#2D6A4F;letter-spacing:.5px;margin-bottom:12px;">👤 Identificação</div>
+            <div style="display:grid;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Nome</label><input type="text" id="e_nome" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Nascimento</label><input type="date" id="e_nasc" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Sexo</label>
+                  <select id="e_sexo" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                    <option value="">—</option><option value="Feminino">Feminino</option><option value="Masculino">Masculino</option><option value="Outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">WhatsApp</label><input type="tel" id="e_tel" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Profissão</label><input type="text" id="e_prof" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#FFF8F0;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#c05621;letter-spacing:.5px;margin-bottom:12px;">😣 Queixa e Dor</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Queixa principal</label><textarea id="e_queixa" class="nota-ta"></textarea></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Tempo de evolução</label><input type="text" id="e_tempo" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+                <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">EVA atual (0–10)</label><input type="number" id="e_eva" min="0" max="10" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Locais da dor</label><input type="text" id="e_locais" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Tipo de dor</label><input type="text" id="e_tipodor" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">O que piora</label><input type="text" id="e_piora" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">O que melhora</label><input type="text" id="e_melhora" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Outros sintomas</label><input type="text" id="e_outrosint" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Evento desencadeante</label><input type="text" id="e_evento" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            </div>
+          </div>
+
+          <div style="background:#F0F4FF;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#3730A3;letter-spacing:.5px;margin-bottom:12px;">😴 Sono</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Qualidade do sono</label>
+                <select id="e_qsono" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Ótimo</option><option>Bom</option><option>Regular</option><option>Ruim</option><option>Péssimo</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Horas/noite</label>
+                <select id="e_horas" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Menos de 5h</option><option>5–6h</option><option>7–8h</option><option>Mais de 8h</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Ronco</label>
+                <select id="e_ronco" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Nunca/raramente</option><option>Às vezes</option><option>Frequentemente</option><option>Toda noite</option><option>Não sei</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Apneia relatada</label>
+                <select id="e_apneia" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim</option><option>Não</option><option>Não sei</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px;"><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Epworth (0–24)</label><input type="number" id="e_epworth" min="0" max="24" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+
+          <div style="background:#FFF0F4;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#9b2226;letter-spacing:.5px;margin-bottom:12px;">🦷 Bruxismo / ATM</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Bruxismo noturno</label>
+                <select id="e_bsono" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim — já me avisaram</option><option>Talvez — acordo com dor</option><option>Não</option><option>Não sei</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Bruxismo diurno</label>
+                <select id="e_bdia" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim — frequentemente</option><option>Às vezes — quando estressado</option><option>Raramente</option><option>Não</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Placa dental</label>
+                <select id="e_placa" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim — uso agora</option><option>Já usei mas parei</option><option>Nunca</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Estalo ATM</label>
+                <select id="e_estalo" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim — dos dois lados</option><option>Sim — só de um lado</option><option>Não</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Travamento ATM</label>
+                <select id="e_trava" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim</option><option>Não</option>
+                </select>
+              </div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">DTM prévio</label>
+                <select id="e_dtmprev" class="nota-ta" style="min-height:0;padding:9px 12px;">
+                  <option value="">—</option><option>Sim</option><option>Não</option><option>Não sei</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px;"><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Parafunções</label><input type="text" id="e_paraf" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+          </div>
+
+          <div style="background:#F5F0FF;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#5b21b6;letter-spacing:.5px;margin-bottom:12px;">🏥 Saúde Geral</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Doenças</label><input type="text" id="e_doencas" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Medicamentos</label><textarea id="e_meds" class="nota-ta" style="min-height:60px;"></textarea></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Suplementos</label><textarea id="e_sups" class="nota-ta" style="min-height:60px;"></textarea></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Tratamentos anteriores</label><textarea id="e_tratant" class="nota-ta" style="min-height:60px;"></textarea></div>
+            </div>
+          </div>
+
+          <div style="background:#F0FAF4;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#2D6A4F;letter-spacing:.5px;margin-bottom:12px;">🧠 Scores Psicossociais</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">GAD-7 (0–21)</label><input type="number" id="e_gad7" min="0" max="21" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">PHQ-9 (0–27)</label><input type="number" id="e_phq9" min="0" max="27" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">PCS (0–16)</label><input type="number" id="e_pcs" min="0" max="16" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">DN4 (0–7)</label><input type="number" id="e_dn4" min="0" max="7" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            </div>
+          </div>
+
+          <div style="background:#FFF8E7;border-radius:10px;padding:14px 16px;">
+            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;color:#92400e;letter-spacing:.5px;margin-bottom:12px;">💬 Contexto</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Contexto de vida</label><textarea id="e_contexto" class="nota-ta"></textarea></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Expectativa</label><textarea id="e_expect" class="nota-ta" style="min-height:60px;"></textarea></div>
+              <div><label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:4px;">Observações adicionais</label><textarea id="e_obs" class="nota-ta" style="min-height:60px;"></textarea></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="padding:0 13px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-prim" onclick="salvarEdicao()">💾 Salvar alterações</button>
+        <button class="btn-sec" onclick="reenviarIASaude()">🤖 Salvar + Reenviar para IA Saúde</button>
+      </div>
+    </div>
+
+    <!-- ===== ABA: CONSULTA ===== -->
+    <div id="aba-consulta" style="display:none;">
+      <div class="card">
+        <div class="card-h"><div class="card-ico">🩺</div>Anotações da consulta</div>
+        <p class="hint" style="margin-bottom:16px;">Preencha durante ou após a consulta. Tudo vai junto para a IA Saúde.</p>
+        <div class="nota-wrap">
+          <div class="nota-f"><label>Exame físico — ATM, músculos, cervical, postura</label><textarea class="nota-ta" id="nExame" placeholder="Ex: Abertura bucal 38mm com desvio à direita. Dor à palpação pterigóideo lateral bilateral. Estalo recíproco ATM D..."></textarea></div>
+          <div class="nota-f"><label>Hipóteses diagnósticas (6 Eixos Integrativos + STAB)</label><textarea class="nota-ta" id="nHip" placeholder="Ex: DTM miofascial bilateral DEFINIDO. Bruxismo do sono PROVÁVEL. Sensibilização central. Eixo sono: apneia a investigar..."></textarea></div>
+          <div class="nota-f"><label>Exames solicitados</label><textarea class="nota-ta" id="nExSol" placeholder="Ex: TCFC ATM bilateral, Polissonografia, Hemograma + PCR + Magnésio + D3 + TSH/T4L..."></textarea></div>
+          <div class="nota-f"><label>Conduta / plano de tratamento</label><textarea class="nota-ta" id="nConduta" placeholder="Ex: Fase 1 — Placa Oclusal Estabilizadora + Agulhamento Seco 1x/sem x 6 sessões + Magnésio Di-malato 300mg/noite..."></textarea></div>
+          <div class="nota-f"><label>Observações adicionais</label><textarea class="nota-ta" id="nObs" placeholder="Livre..."></textarea></div>
+        </div>
+      </div>
+      <div style="padding:0 13px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-prim" onclick="enviarIASaude()">🤖 Enviar anamnese + consulta para IA Saúde</button>
+        <button class="btn-sec" onclick="copiarTudo()">📋 Copiar prontuário completo</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+// ============================
+// ABAS DO MODO CLÍNICO
+// ============================
+function toggleAba(id) {
+  ['aba-pront','aba-editar','aba-consulta'].forEach(a => {
+    document.getElementById(a).style.display = a===id ? 'block' : 'none';
+  });
+  const labels = {'aba-pront':'tab-pront','aba-editar':'tab-editar','aba-consulta':'tab-consulta'};
+  Object.values(labels).forEach(t => {
+    const el = document.getElementById(t);
+    if(el) el.style.background = '#555';
+  });
+  const ativos = {'aba-pront':'#40916C','aba-editar':'#2D6A4F','aba-consulta':'#1B3A2D'};
+  const tabAtivo = document.getElementById(labels[id]);
+  if(tabAtivo) tabAtivo.style.background = ativos[id];
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============================
+// POPULAR FORMULÁRIO DE EDIÇÃO
+// ============================
+function popularFormEdicao() {
+  const set = (id, val) => { const el=document.getElementById(id); if(el && val!==undefined && val!==null) el.value = Array.isArray(val) ? val.join(', ') : val; };
+  set('e_nome', D.nome);
+  set('e_nasc', D.nasc);
+  set('e_sexo', D.sexo);
+  set('e_tel', D.tel);
+  set('e_prof', D.prof);
+  set('e_queixa', D.queixa);
+  set('e_tempo', D.tempo);
+  set('e_eva', D.dor);
+  set('e_locais', D.locais);
+  set('e_tipodor', D.tipodor);
+  set('e_piora', D.piora);
+  set('e_melhora', D.melhora);
+  set('e_outrosint', D.outrosint);
+  set('e_evento', D.evento);
+  set('e_qsono', D.qsono);
+  set('e_horas', D.horas);
+  set('e_ronco', D.ronco);
+  set('e_apneia', D.apneia);
+  set('e_epworth', D.sc_epw);
+  set('e_bsono', D.bsono);
+  set('e_bdia', D.bdia);
+  set('e_placa', D.placa);
+  set('e_estalo', D.estalo);
+  set('e_trava', D.trava);
+  set('e_dtmprev', D.dtmprev);
+  set('e_paraf', D.paraf);
+  set('e_doencas', D.doencas);
+  set('e_meds', D.meds);
+  set('e_sups', D.sups);
+  set('e_tratant', D.tratant);
+  set('e_gad7', D.sc_gad7);
+  set('e_phq9', D.sc_phq9);
+  set('e_pcs', D.sc_pcs);
+  set('e_dn4', D.sc_dn4);
+  set('e_contexto', D.contexto);
+  set('e_expect', D.expect);
+  set('e_obs', D.obs);
+}
+
+// ============================
+// SALVAR EDIÇÃO — ATUALIZA D e API
+// ============================
+function salvarEdicao() {
+  const get = id => { const el=document.getElementById(id); return el ? el.value.trim() : ''; };
+  const getArr = id => { const v=get(id); return v ? v.split(',').map(x=>x.trim()).filter(Boolean) : []; };
+
+  // Atualiza objeto D
+  D.nome = get('e_nome');
+  D.nasc = get('e_nasc');
+  D.sexo = get('e_sexo');
+  D.tel = get('e_tel');
+  D.prof = get('e_prof');
+  D.queixa = get('e_queixa');
+  D.tempo = get('e_tempo');
+  D.dor = get('e_eva') !== '' ? parseInt(get('e_eva')) : D.dor;
+  D.locais = getArr('e_locais');
+  D.tipodor = get('e_tipodor');
+  D.piora = getArr('e_piora');
+  D.melhora = get('e_melhora');
+  D.outrosint = getArr('e_outrosint');
+  D.evento = get('e_evento');
+  D.qsono = get('e_qsono');
+  D.horas = get('e_horas');
+  D.ronco = get('e_ronco');
+  D.apneia = get('e_apneia');
+  D.sc_epw = get('e_epworth') !== '' ? parseInt(get('e_epworth')) : D.sc_epw;
+  D.bsono = get('e_bsono');
+  D.bdia = get('e_bdia');
+  D.placa = get('e_placa');
+  D.estalo = get('e_estalo');
+  D.trava = get('e_trava');
+  D.dtmprev = get('e_dtmprev');
+  D.paraf = getArr('e_paraf');
+  D.doencas = getArr('e_doencas');
+  D.meds = get('e_meds');
+  D.sups = get('e_sups');
+  D.tratant = get('e_tratant');
+  D.sc_gad7 = get('e_gad7') !== '' ? parseInt(get('e_gad7')) : D.sc_gad7;
+  D.sc_phq9 = get('e_phq9') !== '' ? parseInt(get('e_phq9')) : D.sc_phq9;
+  D.sc_pcs = get('e_pcs') !== '' ? parseInt(get('e_pcs')) : D.sc_pcs;
+  D.sc_dn4 = get('e_dn4') !== '' ? parseInt(get('e_dn4')) : D.sc_dn4;
+  D.contexto = get('e_contexto');
+  D.expect = get('e_expect');
+  D.obs = get('e_obs');
+  D._editado = new Date().toISOString();
+
+  // Salva local
+  try{ localStorage.setItem('drvictor_ficha_editada', JSON.stringify(D)); }catch(e){}
+
+  // Atualiza header
+  document.getElementById('clNome').textContent = D.nome || 'Paciente';
+
+  // Popular formulário de edição com dados atuais
+  popularFormEdicao();
+
+  // Atualiza prontuário e scores
+  buildScores();
+  document.getElementById('prontario').innerHTML = buildPront();
+
+  // Tenta salvar na API Railway (PUT paciente se tiver ID, senão POST)
+  const payload = {
+    nome: D.nome,
+    celular: D.tel,
+    email: D.email,
+    data_nascimento: D.nasc,
+    sexo: D.sexo,
+    profissao: D.prof,
+    observacoes: JSON.stringify({
+      queixa: D.queixa, locais: D.locais, eva: D.dor, sono: D.qsono,
+      bruxismo: D.bsono, dtm: D.dtmprev, scores: {gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4,epworth:D.sc_epw},
+      meds: D.meds, doencas: D.doencas
+    })
+  };
+
+  const url = D._paciente_id
+    ? `https://clinica-production-22e0.up.railway.app/pacientes/${D._paciente_id}`
+    : `https://clinica-production-22e0.up.railway.app/pacientes`;
+  const method = D._paciente_id ? 'PUT' : 'POST';
+
+  fetch(url, { method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+  .then(r => r.json())
+  .then(resp => {
+    if(resp && resp.id) D._paciente_id = resp.id;
+    status('✅ Dados salvos com sucesso!', 's-ok');
+    setTimeout(()=>{ document.getElementById('statusIA').style.display='none'; }, 3000);
+  })
+  .catch(() => { status('✅ Dados atualizados localmente. Salvo no dispositivo.', 's-ok'); setTimeout(()=>{ document.getElementById('statusIA').style.display='none'; }, 3000); });
+}
+
+function reenviarIASaude() {
+  salvarEdicao();
+  setTimeout(enviarIASaude, 500);
+}
+
+// ============================
+// BOTÃO CLÍNICO NA TELA FINAL
+// ============================
+function mostrarBotaoClinico(){
+  const fim=document.getElementById('secFim');
+  if(!fim) return;
+  const btn=document.createElement('button');
+  btn.style.cssText='display:block;margin:16px auto 0;padding:11px 20px;background:#1B3A2D;border:none;border-radius:10px;color:white;font-family:DM Sans,sans-serif;font-weight:600;font-size:0.88rem;cursor:pointer;';
+  btn.textContent='🔐 Acesso clínico';
+  btn.onclick=abrirModalSenha;
+  fim.querySelector('.card').appendChild(btn);
+}
+// URL ?clinico=1 pula senha e abre direto (uso interno)
+if(new URLSearchParams(location.search).get('clinico')==='1') window.addEventListener('load',()=>setTimeout(abrirClinico,200));
+// Após envio, insere botão clínico
+const _origEnviar=enviarFicha;
+window.enviarFicha=function(){ _origEnviar(); setTimeout(mostrarBotaoClinico,400); };
+</script>
+</body>
+</html>
