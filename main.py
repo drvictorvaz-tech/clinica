@@ -1134,3 +1134,6 @@ ALTER TABLE public.arquivos ENABLE ROW LEVEL SECURITY;"""
         "results": results,
         "table_exists": table_exists,
     }
+
+from anamnese_router import router_anamnese
+app.include_router(router_anamnese)
