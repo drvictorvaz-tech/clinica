@@ -3,32 +3,976 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Ficha do Paciente — Dr. Victor Vaz</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0d7377,#14a085);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;color:#1a2535}
-.card{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:40px 28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.leaf{font-size:48px;margin-bottom:8px}
-h1{font-size:22px;color:#0d7377;margin-bottom:6px}
-.sub{font-size:14px;color:#6b7280;margin-bottom:22px}
-.box{background:#f0f9f8;border:1px solid #cdeae7;border-radius:12px;padding:18px;font-size:15px;line-height:1.6;color:#1a2535;margin-bottom:22px}
-.box b{color:#0d7377}
-.wa{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 22px;border-radius:12px}
-.foot{margin-top:20px;font-size:12px;color:#9ca3af}
+:root {
+  --v: #2D6A4F; --v2: #40916C; --vbg: #D8F3DC;
+  --creme: #FEFAE0; --txt: #1a1a1a; --leve: #5a5a5a; --borda: #C8D5C9;
+  --sombra: 0 2px 14px rgba(45,106,79,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--creme); color: var(--txt); font-size: 16px; line-height: 1.65; }
+.hdr { background: var(--v); color: white; padding: 24px 20px 20px; text-align: center; }
+.hdr-logo { font-size: 2rem; margin-bottom: 8px; }
+.hdr h1 { font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 600; margin-bottom: 4px; }
+.hdr p { font-size: 0.85rem; opacity: 0.8; }
+.prog-wrap { background: var(--vbg); padding: 12px 18px 10px; position: sticky; top: 0; z-index: 99; border-bottom: 1px solid var(--borda); }
+.prog-bars { display: flex; gap: 4px; margin-bottom: 6px; }
+.prog-bar { flex: 1; height: 5px; border-radius: 3px; background: var(--borda); transition: background .3s; }
+.prog-bar.done { background: var(--v2); }
+.prog-bar.active { background: var(--v); }
+.prog-info { font-size: 0.78rem; color: var(--leve); }
+.prog-info b { color: var(--v); }
+.sec { display: none; }
+.sec.on { display: block; animation: fu .3s ease; }
+@keyframes fu { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.card { background: white; margin: 16px 13px; border-radius: 14px; padding: 20px 18px; box-shadow: var(--sombra); border: 1px solid var(--borda); }
+.card-h { display: flex; align-items: center; gap: 9px; font-family: 'Lora', serif; font-size: 1.05rem; color: var(--v); font-weight: 600; margin-bottom: 18px; padding-bottom: 11px; border-bottom: 2px solid var(--vbg); }
+.ico { width: 30px; height: 30px; background: var(--vbg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+.intro { background: var(--vbg); margin: 16px 13px 0; padding: 14px 16px; border-radius: 12px; border-left: 4px solid var(--v2); font-size: 0.9rem; color: var(--v); font-weight: 500; line-height: 1.5; }
+.f { margin-bottom: 20px; }
+.f:last-child { margin-bottom: 0; }
+.f label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; }
+.hint { font-size: 0.8rem; color: var(--leve); margin-bottom: 7px; line-height: 1.35; }
+input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number], select, textarea {
+  width: 100%; padding: 11px 13px; border: 2px solid var(--borda); border-radius: 9px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.97rem; color: var(--txt);
+  background: var(--creme); -webkit-appearance: none; transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--v2); background: white; }
+textarea { resize: vertical; min-height: 75px; }
+.eva { background: var(--creme); border: 2px solid var(--borda); border-radius: 11px; padding: 14px 12px 11px; }
+.eva-nums { display: flex; gap: 3px; margin-bottom: 7px; }
+.eva-n { flex:1; padding: 8px 2px; border: 2px solid var(--borda); border-radius: 7px; background: white; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-align: center; min-height: 42px; font-family: 'DM Sans', sans-serif; color: var(--leve); transition: all .15s; }
+.eva-n:hover { border-color: var(--v2); }
+.eva-n.on { background: var(--v); border-color: var(--v); color: white; }
+.eva-n[data-v="0"].on,.eva-n[data-v="1"].on,.eva-n[data-v="2"].on { background:#52B788;border-color:#52B788; }
+.eva-n[data-v="3"].on,.eva-n[data-v="4"].on { background:#f4a261;border-color:#f4a261; }
+.eva-n[data-v="5"].on,.eva-n[data-v="6"].on { background:#e76f51;border-color:#e76f51; }
+.eva-n[data-v="7"].on,.eva-n[data-v="8"].on { background:#d62828;border-color:#d62828; }
+.eva-n[data-v="9"].on,.eva-n[data-v="10"].on { background:#9b2226;border-color:#9b2226; }
+.eva-labs { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--leve); }
+.eva-txt { text-align:center; margin-top:8px; font-size:0.88rem; font-weight:600; color:var(--v); min-height:18px; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { padding:8px 13px; border:2px solid var(--borda); border-radius:20px; background:white; font-family:'DM Sans',sans-serif; font-size:0.87rem; font-weight:500; cursor:pointer; transition:all .15s; color:var(--txt); min-height:40px; display:flex; align-items:center; gap:5px; }
+.chip:hover { border-color:var(--v2); background:var(--vbg); }
+.chip.on { background:var(--v); border-color:var(--v); color:white; }
+.chip .ck { display:none; }
+.chip.on .ck { display:inline; }
+.duo { display:flex; gap:10px; }
+.duo .chip { flex:1; justify-content:center; font-size:0.95rem; padding:12px; }
+.lik { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.lik-b { padding:8px 4px; border:2px solid var(--borda); border-radius:8px; background:white; font-family:'DM Sans',sans-serif; font-size:0.7rem; font-weight:500; cursor:pointer; text-align:center; min-height:48px; display:flex; align-items:center; justify-content:center; line-height:1.2; transition:all .15s; }
+.lik-b:hover { border-color:var(--v2); }
+.lik-b.on { background:var(--v); border-color:var(--v); color:white; }
+.qlist { display:flex; flex-direction:column; gap:12px; }
+.qitem { background:var(--creme); border:1px solid var(--borda); border-radius:10px; padding:12px 13px; }
+.qtxt { font-size:0.88rem; font-weight:500; margin-bottom:9px; line-height:1.4; }
+.qn { display:inline-block; background:var(--v); color:white; width:19px;height:19px; border-radius:50%; font-size:0.7rem; font-weight:700; text-align:center; line-height:19px; margin-right:6px; }
+.sbox { background:var(--vbg); border-radius:8px; padding:9px 13px; margin-top:11px; font-size:0.84rem; color:var(--v); font-weight:600; display:none; }
+.aviso { background:#FFF8E7; border:1px solid #FFCC80; border-radius:10px; padding:12px 14px; margin:0 13px 2px; font-size:0.84rem; color:#7C4700; line-height:1.5; }
+.nav { display:flex; gap:9px; padding:13px; position:sticky; bottom:0; background:var(--creme); border-top:1px solid var(--borda); z-index:50; }
+.btn-v { padding:12px 16px; border:2px solid var(--borda); border-radius:10px; background:white; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; color:var(--leve); min-width:80px; transition:all .15s; }
+.btn-v:hover { border-color:var(--v); color:var(--v); }
+.btn-a { flex:1; padding:14px; background:var(--v); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.97rem; font-weight:600; color:white; cursor:pointer; transition:background .15s; }
+.btn-a:hover { background:#1f5237; }
+/* CLÍNICO */
+#telaClinica { display:none; }
+.cl-hdr { background:#1B3A2D; color:white; padding:14px 16px; position:sticky; top:0; z-index:200; }
+.cl-hdr-in { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.cl-nome { font-family:'Lora',serif; font-size:1.05rem; font-weight:600; }
+.cl-sub { font-size:0.73rem; opacity:.6; margin-top:2px; }
+.cl-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.cl-tab { padding:8px 14px; border:none; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.82rem; cursor:pointer; transition:all .2s; }
+.cl-tab.active { background:var(--v2); color:white; }
+.cl-tab.inactive { background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.8); }
+.cl-body { padding-bottom:80px; }
+.sc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:14px 13px 0; }
+.sc { background:white; border:1px solid var(--borda); border-radius:10px; padding:11px 10px 9px; }
+.sc-lbl { font-size:0.66rem; color:var(--leve); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:3px; }
+.sc-val { font-size:1.1rem; font-weight:700; color:var(--v); font-family:'Lora',serif; }
+.sc-int { font-size:0.67rem; color:var(--leve); margin-top:2px; line-height:1.3; }
+.sc.red .sc-val { color:#d62828; }
+.sc.yellow .sc-val { color:#e07b39; }
+.sc.green .sc-val { color:#52B788; }
+.pront { font-size:0.84rem; line-height:1.8; color:#444; }
+.pb { margin-bottom:14px; }
+.pt { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--v); margin-bottom:5px; }
+.pl { margin-bottom:2px; }
+.pl span { color:var(--leve); }
+.sem { color:#ccc; font-style:italic; }
+.nota-ta { width:100%; padding:11px 13px; border:2px solid var(--borda); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:0.9rem; color:var(--txt); background:var(--creme); resize:vertical; min-height:75px; transition:border-color .2s; }
+.nota-ta:focus { outline:none; border-color:var(--v2); background:white; }
+.btn-prim { width:100%; padding:14px; background:var(--v); border:none; border-radius:10px; color:white; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px; }
+.btn-prim:hover { background:#1f5237; }
+.btn-sec { width:100%; padding:12px; background:white; border:2px solid var(--borda); border-radius:10px; color:var(--txt); font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.9rem; cursor:pointer; margin-bottom:8px; }
+.btn-sec:hover { border-color:var(--v); color:var(--v); }
+.status { margin:10px 13px; padding:12px 14px; border-radius:10px; font-size:0.86rem; font-weight:500; display:none; }
+.s-ok { background:var(--vbg); color:var(--v); border:1px solid var(--v2); }
+.s-err { background:#FFF8E7; color:#7C4700; border:1px solid #FFCC80; }
+.s-load { background:#EEF2FF; color:#3730A3; border:1px solid #818CF8; }
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:999; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-bg.show { display:flex; }
+.modal { background:white; border-radius:16px; padding:28px 24px; width:100%; max-width:320px; text-align:center; }
+.modal h3 { font-family:'Lora',serif; color:var(--v); font-size:1.1rem; margin-bottom:8px; }
+.modal p { font-size:0.85rem; color:var(--leve); margin-bottom:16px; }
+.modal input { width:100%; padding:13px; border:2px solid var(--borda); border-radius:9px; font-family:'DM Sans',sans-serif; font-size:1.2rem; text-align:center; letter-spacing:6px; margin-bottom:10px; }
+.modal input:focus { outline:none; border-color:var(--v2); }
+.modal-btns { display:flex; gap:8px; }
+.modal-ok { flex:1; padding:13px; background:var(--v); border:none; border-radius:9px; color:white; font-family:'DM Sans',sans-serif; font-weight:600; font-size:0.95rem; cursor:pointer; }
+.modal-cancel { padding:13px 16px; border:2px solid var(--borda); border-radius:9px; background:white; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; color:var(--leve); }
+.modal-err { font-size:0.82rem; color:#d62828; margin-top:6px; display:none; }
+.ef { margin-bottom:14px; }
+.ef label { font-weight:600; font-size:0.85rem; margin-bottom:5px; display:block; color:var(--txt); }
+.eg2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ebloco { border-radius:10px; padding:14px 16px; margin-bottom:10px; }
+.ebloco-titulo { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+@media(max-width:460px){
+  .sc-grid { grid-template-columns:repeat(2,1fr); }
+  .eva-n { font-size:0.82rem; min-height:38px; }
+  .eg2 { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
-  <div class="card">
-    <div class="leaf">&#127807;</div>
-    <h1>Ficha em ajuste</h1>
-    <p class="sub">Dr. Victor Vaz &middot; DTM, Dor e Sa&uacute;de Integrativa</p>
-    <div class="box">
-      Estamos fazendo uma <b>pequena melhoria</b> na ficha online. &#128736;&#65039;<br><br>
-      Por favor, tente novamente em alguns minutos &mdash; ou, se preferir, preenchemos juntos na sua consulta, sem problema nenhum. &#128522;
+
+<!-- MODAL SENHA -->
+<div class="modal-bg" id="modalSenha">
+  <div class="modal">
+    <h3>🔐 Acesso Clínico</h3>
+    <p>Digite o código de acesso</p>
+    <input type="password" id="inputSenha" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')confirmarSenha()">
+    <p class="modal-err" id="errSenha">Código incorreto.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarSenha()">Entrar</button>
     </div>
-    <a class="wa" href="https://wa.me/5547999198161" target="_blank" rel="noopener">&#128172; Falar no WhatsApp</a>
-    <div class="foot">Obrigado pela compreens&atilde;o.</div>
   </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr" id="mainHdr">
+  <div class="hdr-logo">🌿</div>
+  <h1>Ficha do Paciente</h1>
+  <p>Dr. Victor Vaz · Especialista em DTM, Dor e Saúde Integrativa</p>
+</div>
+
+<!-- PROGRESSO -->
+<div class="prog-wrap" id="progWrap">
+  <div class="prog-bars" id="progBars"></div>
+  <div class="prog-info">Etapa <b id="progN">1</b> de <b>7</b> — <b id="progNome">Seus dados</b></div>
+</div>
+
+<!-- SEC 1 -->
+<div class="sec on" id="sec1">
+  <div class="intro">👋 Olá! Suas respostas chegam diretamente para o Dr. Victor. Leva cerca de 10 minutos.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">👤</div>Seus dados</div>
+    <div class="f"><label>Nome completo</label><input type="text" id="nome" placeholder="Como você se chama?"></div>
+    <div class="f"><label>Data de nascimento</label><input type="date" id="nasc"></div>
+    <div class="f"><label>Sexo</label><div class="chips">
+      <button class="chip" data-g="sexo" data-v="Feminino" onclick="pick(this)"><span class="ck">✓</span> Feminino</button>
+      <button class="chip" data-g="sexo" data-v="Masculino" onclick="pick(this)"><span class="ck">✓</span> Masculino</button>
+      <button class="chip" data-g="sexo" data-v="Outro" onclick="pick(this)"><span class="ck">✓</span> Outro</button>
+    </div></div>
+    <div class="f"><label>WhatsApp</label><input type="tel" id="tel" placeholder="(47) 99999-9999"></div>
+    <div class="f"><label>E-mail</label><input type="email" id="email" placeholder="seu@email.com"></div>
+    <div class="f"><label>Profissão</label><input type="text" id="prof" placeholder="O que você faz?"></div>
+    <div class="f"><label>Nível de estresse no dia a dia (0 = tranquilo · 10 = extremo)</label>
+      <div class="eva"><div class="eva-nums" id="evaEst"></div><div class="eva-labs"><span>😌 Tranquilo</span><span>🤯 Extremo</span></div><div class="eva-txt" id="txtEst">Toque em um número</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 2 -->
+<div class="sec" id="sec2">
+  <div class="intro">🔍 Vamos entender o que está te incomodando. Sem resposta certa ou errada.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">😣</div>Sua principal queixa</div>
+    <div class="f"><label>O que te trouxe até o Dr. Victor?</label><textarea id="queixa" placeholder="Descreva com suas palavras..."></textarea></div>
+    <div class="f"><label>Há quanto tempo você sente isso?</label><div class="chips">
+      <button class="chip" data-g="tempo" data-v="Menos de 1 mês" onclick="pick(this)"><span class="ck">✓</span> &lt;1 mês</button>
+      <button class="chip" data-g="tempo" data-v="1 a 6 meses" onclick="pick(this)"><span class="ck">✓</span> 1–6 meses</button>
+      <button class="chip" data-g="tempo" data-v="6 meses a 1 ano" onclick="pick(this)"><span class="ck">✓</span> 6m–1 ano</button>
+      <button class="chip" data-g="tempo" data-v="Mais de 1 ano" onclick="pick(this)"><span class="ck">✓</span> +1 ano</button>
+      <button class="chip" data-g="tempo" data-v="Mais de 5 anos" onclick="pick(this)"><span class="ck">✓</span> +5 anos</button>
+    </div></div>
+    <div class="f"><label>Algum evento que iniciou a dor?</label><input type="text" id="evento" placeholder="Ex: acidente, cirurgia, tensão, luto... (opcional)"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">📍</div>Onde e como é a dor</div>
+    <div class="f"><label>Onde você sente dor? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="locais">
+        <button class="chip" data-v="Cabeça/têmporas" onclick="multi(this)"><span class="ck">✓</span> Cabeça/têmporas</button>
+        <button class="chip" data-v="Rosto/bochechas" onclick="multi(this)"><span class="ck">✓</span> Rosto/bochechas</button>
+        <button class="chip" data-v="Mandíbula/queixo" onclick="multi(this)"><span class="ck">✓</span> Mandíbula/queixo</button>
+        <button class="chip" data-v="Ouvido/atrás da orelha" onclick="multi(this)"><span class="ck">✓</span> Ouvido</button>
+        <button class="chip" data-v="Pescoço/nuca" onclick="multi(this)"><span class="ck">✓</span> Pescoço/nuca</button>
+        <button class="chip" data-v="Ombros/costas" onclick="multi(this)"><span class="ck">✓</span> Ombros/costas</button>
+        <button class="chip" data-v="Dentes/boca" onclick="multi(this)"><span class="ck">✓</span> Dentes/boca</button>
+        <button class="chip" data-v="Outro" onclick="multi(this)"><span class="ck">✓</span> Outro</button>
+      </div>
+    </div>
+    <div class="f"><label>Intensidade da dor agora (0 = sem dor · 10 = insuportável)</label>
+      <div class="eva"><div class="eva-nums" id="evaDor"></div><div class="eva-labs"><span>0 — Sem dor</span><span>10 — Insuportável</span></div><div class="eva-txt" id="txtDor">Toque em um número</div></div>
+    </div>
+    <div class="f"><label>Como é a dor?</label><div class="chips">
+      <button class="chip" data-g="tipodor" data-v="Latejante/pulsante" onclick="pick(this)"><span class="ck">✓</span> Latejante</button>
+      <button class="chip" data-g="tipodor" data-v="Queimação" onclick="pick(this)"><span class="ck">✓</span> Queimação</button>
+      <button class="chip" data-g="tipodor" data-v="Pressão/aperto" onclick="pick(this)"><span class="ck">✓</span> Pressão/aperto</button>
+      <button class="chip" data-g="tipodor" data-v="Pontada/facada" onclick="pick(this)"><span class="ck">✓</span> Pontada/facada</button>
+      <button class="chip" data-g="tipodor" data-v="Constante/surda" onclick="pick(this)"><span class="ck">✓</span> Constante/surda</button>
+      <button class="chip" data-g="tipodor" data-v="Formigamento/choque" onclick="pick(this)"><span class="ck">✓</span> Formigamento</button>
+    </div></div>
+    <div class="f"><label>A dor é...</label><div class="chips">
+      <button class="chip" data-g="padrao" data-v="Contínua o dia todo" onclick="pick(this)"><span class="ck">✓</span> Contínua</button>
+      <button class="chip" data-g="padrao" data-v="Vem e vai" onclick="pick(this)"><span class="ck">✓</span> Vem e vai</button>
+      <button class="chip" data-g="padrao" data-v="Só de manhã" onclick="pick(this)"><span class="ck">✓</span> Só de manhã</button>
+      <button class="chip" data-g="padrao" data-v="Piora à tarde/noite" onclick="pick(this)"><span class="ck">✓</span> Piora à tarde</button>
+      <button class="chip" data-g="padrao" data-v="Ligada ao estresse" onclick="pick(this)"><span class="ck">✓</span> Ligada ao estresse</button>
+    </div></div>
+    <div class="f"><label>O que piora? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="piora">
+        <button class="chip" data-v="Mastigar" onclick="multi(this)"><span class="ck">✓</span> Mastigar</button>
+        <button class="chip" data-v="Falar/cantar" onclick="multi(this)"><span class="ck">✓</span> Falar/cantar</button>
+        <button class="chip" data-v="Abrir a boca" onclick="multi(this)"><span class="ck">✓</span> Abrir a boca</button>
+        <button class="chip" data-v="Estresse/ansiedade" onclick="multi(this)"><span class="ck">✓</span> Estresse</button>
+        <button class="chip" data-v="Frio/vento" onclick="multi(this)"><span class="ck">✓</span> Frio/vento</button>
+        <button class="chip" data-v="Acordar de manhã" onclick="multi(this)"><span class="ck">✓</span> Manhã</button>
+        <button class="chip" data-v="Movimento do pescoço" onclick="multi(this)"><span class="ck">✓</span> Pescoço</button>
+      </div>
+    </div>
+    <div class="f"><label>O que melhora?</label><input type="text" id="melhora" placeholder="Ex: calor, repouso, analgésico..."></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🔔</div>Outros sintomas <span style="font-weight:400;font-size:0.85rem">(pode marcar mais de um)</span></div>
+    <div class="chips" id="outrosint">
+      <button class="chip" data-v="Zumbido no ouvido" onclick="multi(this)"><span class="ck">✓</span> Zumbido</button>
+      <button class="chip" data-v="Tontura/vertigem" onclick="multi(this)"><span class="ck">✓</span> Tontura/vertigem</button>
+      <button class="chip" data-v="Ouvido tapado" onclick="multi(this)"><span class="ck">✓</span> Ouvido tapado</button>
+      <button class="chip" data-v="Cansaço extremo" onclick="multi(this)"><span class="ck">✓</span> Cansaço extremo</button>
+      <button class="chip" data-v="Sensibilidade à luz" onclick="multi(this)"><span class="ck">✓</span> Sensib. à luz</button>
+      <button class="chip" data-v="Sensibilidade ao som" onclick="multi(this)"><span class="ck">✓</span> Sensib. ao som</button>
+      <button class="chip" data-v="Náusea" onclick="multi(this)"><span class="ck">✓</span> Náusea</button>
+      <button class="chip" data-v="Visão embaçada" onclick="multi(this)"><span class="ck">✓</span> Visão embaçada</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEC 3 -->
+<div class="sec" id="sec3">
+  <div class="intro">😴 O sono é fundamental na dor crônica. Responda com calma.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🛌</div>Seu sono</div>
+    <div class="f"><label>Como você avalia seu sono?</label><div class="chips">
+      <button class="chip" data-g="qsono" data-v="Ótimo" onclick="pick(this)"><span class="ck">✓</span> 😊 Ótimo</button>
+      <button class="chip" data-g="qsono" data-v="Bom" onclick="pick(this)"><span class="ck">✓</span> 🙂 Bom</button>
+      <button class="chip" data-g="qsono" data-v="Regular" onclick="pick(this)"><span class="ck">✓</span> 😐 Regular</button>
+      <button class="chip" data-g="qsono" data-v="Ruim" onclick="pick(this)"><span class="ck">✓</span> 😔 Ruim</button>
+      <button class="chip" data-g="qsono" data-v="Péssimo" onclick="pick(this)"><span class="ck">✓</span> 😩 Péssimo</button>
+    </div></div>
+    <div class="f"><label>Horas por noite?</label><div class="chips">
+      <button class="chip" data-g="horas" data-v="Menos de 5h" onclick="pick(this)"><span class="ck">✓</span> &lt;5h</button>
+      <button class="chip" data-g="horas" data-v="5–6h" onclick="pick(this)"><span class="ck">✓</span> 5–6h</button>
+      <button class="chip" data-g="horas" data-v="7–8h" onclick="pick(this)"><span class="ck">✓</span> 7–8h</button>
+      <button class="chip" data-g="horas" data-v="Mais de 8h" onclick="pick(this)"><span class="ck">✓</span> +8h</button>
+    </div></div>
+    <div class="f"><label>Dificuldades? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="insonia">
+        <button class="chip" data-v="Dificuldade de pegar no sono" onclick="multi(this)"><span class="ck">✓</span> Pegar no sono</button>
+        <button class="chip" data-v="Acorda à noite" onclick="multi(this)"><span class="ck">✓</span> Acorda à noite</button>
+        <button class="chip" data-v="Acorda muito cedo" onclick="multi(this)"><span class="ck">✓</span> Acorda cedo</button>
+        <button class="chip" data-v="Nenhuma" onclick="multi(this)"><span class="ck">✓</span> Nenhuma</button>
+      </div>
+    </div>
+    <div class="f"><label>Ronca?</label><div class="chips">
+      <button class="chip" data-g="ronco" data-v="Nunca/raramente" onclick="pick(this)"><span class="ck">✓</span> Nunca</button>
+      <button class="chip" data-g="ronco" data-v="Às vezes" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+      <button class="chip" data-g="ronco" data-v="Frequentemente" onclick="pick(this)"><span class="ck">✓</span> Frequente</button>
+      <button class="chip" data-g="ronco" data-v="Toda noite" onclick="pick(this)"><span class="ck">✓</span> Toda noite</button>
+      <button class="chip" data-g="ronco" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+    </div></div>
+    <div class="f"><label>Já disseram que para de respirar dormindo?</label><div class="duo">
+      <button class="chip" data-g="apneia" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+      <button class="chip" data-g="apneia" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      <button class="chip" data-g="apneia" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+    </div></div>
+    <div class="f"><label>Posição ao dormir?</label><div class="chips">
+      <button class="chip" data-g="posicao" data-v="De lado" onclick="pick(this)"><span class="ck">✓</span> De lado</button>
+      <button class="chip" data-g="posicao" data-v="De costas" onclick="pick(this)"><span class="ck">✓</span> De costas</button>
+      <button class="chip" data-g="posicao" data-v="De bruços" onclick="pick(this)"><span class="ck">✓</span> De bruços</button>
+      <button class="chip" data-g="posicao" data-v="Varia" onclick="pick(this)"><span class="ck">✓</span> Varia</button>
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">💤</div>Sonolência diurna — Escala de Epworth</div>
+    <p class="hint">Qual a chance de cochilar nessas situações? 0 = nunca · 3 = alta chance</p>
+    <div class="qlist" id="epwQ"></div>
+    <div class="sbox" id="epwS"></div>
+  </div>
+</div>
+
+<!-- SEC 4 -->
+<div class="sec" id="sec4">
+  <div class="intro">🦷 Vamos falar sobre a mandíbula, os dentes e seus hábitos.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🦷</div>Bruxismo</div>
+    <div class="f"><label>Range ou aperta os dentes enquanto dorme?</label><div class="chips">
+      <button class="chip" data-g="bsono" data-v="Sim — já me avisaram" onclick="pick(this)"><span class="ck">✓</span> Sim — me avisaram</button>
+      <button class="chip" data-g="bsono" data-v="Talvez — acordo com dor" onclick="pick(this)"><span class="ck">✓</span> Talvez</button>
+      <button class="chip" data-g="bsono" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      <button class="chip" data-g="bsono" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+    </div></div>
+    <div class="f"><label>Durante o dia, aperta os dentes ou trava a mandíbula?</label><div class="chips">
+      <button class="chip" data-g="bdia" data-v="Sim — frequentemente" onclick="pick(this)"><span class="ck">✓</span> Frequente</button>
+      <button class="chip" data-g="bdia" data-v="Às vezes — quando estressado" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+      <button class="chip" data-g="bdia" data-v="Raramente" onclick="pick(this)"><span class="ck">✓</span> Raramente</button>
+      <button class="chip" data-g="bdia" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Já usou ou usa placa dental?</label><div class="chips">
+      <button class="chip" data-g="placa" data-v="Sim — uso agora" onclick="pick(this)"><span class="ck">✓</span> Uso agora</button>
+      <button class="chip" data-g="placa" data-v="Já usei mas parei" onclick="pick(this)"><span class="ck">✓</span> Já usei</button>
+      <button class="chip" data-g="placa" data-v="Nunca" onclick="pick(this)"><span class="ck">✓</span> Nunca</button>
+    </div></div>
+    <div class="f"><label>Hábitos? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="paraf">
+        <button class="chip" data-v="Morder unhas/objetos" onclick="multi(this)"><span class="ck">✓</span> Morder unhas/objetos</button>
+        <button class="chip" data-v="Chiclete frequente" onclick="multi(this)"><span class="ck">✓</span> Chiclete frequente</button>
+        <button class="chip" data-v="Apertar dentes sob tensão" onclick="multi(this)"><span class="ck">✓</span> Apertar sob tensão</button>
+        <button class="chip" data-v="Dentes sempre em contato" onclick="multi(this)"><span class="ck">✓</span> Dentes sempre tocando</button>
+        <button class="chip" data-v="Nenhum" onclick="multi(this)"><span class="ck">✓</span> Nenhum</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🫦</div>Mandíbula (ATM)</div>
+    <div class="f"><label>Ouve estalos ao abrir/fechar a boca?</label><div class="chips">
+      <button class="chip" data-g="estalo" data-v="Sim — dos dois lados" onclick="pick(this)"><span class="ck">✓</span> Dois lados</button>
+      <button class="chip" data-g="estalo" data-v="Sim — só de um lado" onclick="pick(this)"><span class="ck">✓</span> Um lado</button>
+      <button class="chip" data-g="estalo" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Mandíbula já travou?</label><div class="duo">
+      <button class="chip" data-g="trava" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+      <button class="chip" data-g="trava" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Dor ao mastigar alimentos duros?</label><div class="chips">
+      <button class="chip" data-g="dormastigar" data-v="Sempre" onclick="pick(this)"><span class="ck">✓</span> Sempre</button>
+      <button class="chip" data-g="dormastigar" data-v="Às vezes" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+      <button class="chip" data-g="dormastigar" data-v="Raramente" onclick="pick(this)"><span class="ck">✓</span> Raramente</button>
+      <button class="chip" data-g="dormastigar" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Já teve diagnóstico de DTM?</label><div class="duo">
+      <button class="chip" data-g="dtmprev" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+      <button class="chip" data-g="dtmprev" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+      <button class="chip" data-g="dtmprev" data-v="Não sei" onclick="pick(this)"><span class="ck">✓</span> Não sei</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- SEC 5 -->
+<div class="sec" id="sec5">
+  <div class="intro">🩺 Sua saúde geral influencia diretamente na dor. Informações confidenciais.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🏥</div>Saúde geral</div>
+    <div class="f"><label>Doenças diagnosticadas? <span style="font-weight:400;font-size:0.8rem;color:var(--leve)">(pode marcar mais de um)</span></label>
+      <div class="chips" id="doencas">
+        <button class="chip" data-v="Hipertensão" onclick="multi(this)"><span class="ck">✓</span> Hipertensão</button>
+        <button class="chip" data-v="Diabetes" onclick="multi(this)"><span class="ck">✓</span> Diabetes</button>
+        <button class="chip" data-v="Fibromialgia" onclick="multi(this)"><span class="ck">✓</span> Fibromialgia</button>
+        <button class="chip" data-v="Artrite/artrose" onclick="multi(this)"><span class="ck">✓</span> Artrite/artrose</button>
+        <button class="chip" data-v="Tireoide" onclick="multi(this)"><span class="ck">✓</span> Tireoide</button>
+        <button class="chip" data-v="Ansiedade/pânico" onclick="multi(this)"><span class="ck">✓</span> Ansiedade/pânico</button>
+        <button class="chip" data-v="Depressão" onclick="multi(this)"><span class="ck">✓</span> Depressão</button>
+        <button class="chip" data-v="Enxaqueca" onclick="multi(this)"><span class="ck">✓</span> Enxaqueca</button>
+        <button class="chip" data-v="Nenhuma" onclick="multi(this)"><span class="ck">✓</span> Nenhuma</button>
+        <button class="chip" data-v="Outra" onclick="multi(this)"><span class="ck">✓</span> Outra</button>
+      </div>
+    </div>
+    <div class="f"><label>Medicamentos em uso?</label><textarea id="meds" placeholder="Ex: Rivotril 0,5mg à noite... Se não usa, deixe em branco."></textarea></div>
+    <div class="f"><label>Suplementos?</label><textarea id="sups" placeholder="Ex: Magnésio, Vitamina D... Se não usa, deixe em branco."></textarea></div>
+    <div class="f"><label>Tratamentos anteriores para a dor?</label><textarea id="tratant" placeholder="O que ajudou ou não ajudou..."></textarea></div>
+    <div class="f"><label>Tem exames de imagem recentes?</label><div class="chips">
+      <button class="chip" data-g="eximg" data-v="Sim — trarei na consulta" onclick="pick(this)"><span class="ck">✓</span> Sim — vou trazer</button>
+      <button class="chip" data-g="eximg" data-v="Sim — mas não tenho mais" onclick="pick(this)"><span class="ck">✓</span> Não tenho mais</button>
+      <button class="chip" data-g="eximg" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Fez polissonografia?</label><div class="duo">
+      <button class="chip" data-g="psg" data-v="Sim" onclick="pick(this)"><span class="ck">✓</span> Sim</button>
+      <button class="chip" data-g="psg" data-v="Não" onclick="pick(this)"><span class="ck">✓</span> Não</button>
+    </div></div>
+    <div class="f"><label>Como está sua alimentação?</label><div class="chips">
+      <button class="chip" data-g="alim" data-v="Saudável" onclick="pick(this)"><span class="ck">✓</span> Saudável</button>
+      <button class="chip" data-g="alim" data-v="Regular" onclick="pick(this)"><span class="ck">✓</span> Regular</button>
+      <button class="chip" data-g="alim" data-v="Ruim" onclick="pick(this)"><span class="ck">✓</span> Ruim</button>
+    </div></div>
+    <div class="f"><label>Pratica atividade física?</label><div class="chips">
+      <button class="chip" data-g="atfis" data-v="Regularmente (3x+/semana)" onclick="pick(this)"><span class="ck">✓</span> Regularmente</button>
+      <button class="chip" data-g="atfis" data-v="Às vezes" onclick="pick(this)"><span class="ck">✓</span> Às vezes</button>
+      <button class="chip" data-g="atfis" data-v="Não pratico" onclick="pick(this)"><span class="ck">✓</span> Não pratico</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- SEC 6 -->
+<div class="sec" id="sec6">
+  <div class="intro">🧠 Emoções afetam diretamente a dor crônica. Responda honestamente.</div>
+  <div class="aviso">⚠️ Essas perguntas fazem parte de questionários médicos validados — ajudam o Dr. Victor a entender sua saúde completa.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">😰</div>Ansiedade — GAD-7</div>
+    <p class="hint"><b>Nas últimas 2 semanas</b>, com que frequência você teve esses sentimentos?</p>
+    <div class="qlist" id="gad7Q"></div><div class="sbox" id="gad7S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">😔</div>Humor — PHQ-9</div>
+    <p class="hint"><b>Nas últimas 2 semanas</b>, com que frequência você teve esses sentimentos?</p>
+    <div class="qlist" id="phq9Q"></div><div class="sbox" id="phq9S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">⚡</div>Tipo de dor — DN4</div>
+    <p class="hint">Sua dor tem alguma dessas características? <span style="font-weight:400">(pode marcar mais de um)</span></p>
+    <div class="chips" id="dn4">
+      <button class="chip" data-v="Queimação" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Queimação</button>
+      <button class="chip" data-v="Frio doloroso" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Frio doloroso</button>
+      <button class="chip" data-v="Choque elétrico" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Choque elétrico</button>
+      <button class="chip" data-v="Formigamento" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Formigamento</button>
+      <button class="chip" data-v="Alfinetadas" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Alfinetadas</button>
+      <button class="chip" data-v="Dormência" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Dormência</button>
+      <button class="chip" data-v="Coceira na área" onclick="multi(this);calcDN4()"><span class="ck">✓</span> Coceira na área</button>
+    </div>
+    <div class="sbox" id="dn4S"></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><div class="ico">🌪️</div>Pensamentos sobre a dor — PCS</div>
+    <p class="hint">Quando está com dor, com que frequência esses pensamentos aparecem?</p>
+    <div class="qlist" id="pcsQ"></div><div class="sbox" id="pcsS"></div>
+  </div>
+</div>
+
+<!-- SEC 7 -->
+<div class="sec" id="sec7">
+  <div class="intro">✨ Última etapa! Mais algumas perguntas abertas.</div>
+  <div class="card">
+    <div class="card-h"><div class="ico">💬</div>Contexto de vida</div>
+    <div class="f"><label>Algo na sua vida agora pode estar influenciando sua dor?</label><textarea id="contexto" placeholder="Trabalho, família, perdas, mudanças... (opcional)"></textarea></div>
+    <div class="f"><label>O que você espera dessa consulta?</label><textarea id="expect" placeholder="Ex: entender por que tenho dor há tanto tempo..."></textarea></div>
+    <div class="f"><label>Algo mais que quer contar?</label><textarea id="obs" placeholder="Opcional"></textarea></div>
+  </div>
+  <div class="card" style="background:var(--v);border:none;color:white;">
+    <div style="text-align:center;padding:4px 0;">
+      <div style="font-size:2rem;margin-bottom:8px;">🔒</div>
+      <p style="font-size:0.84rem;opacity:.85;line-height:1.6;">Suas informações são <strong>confidenciais</strong> e usadas apenas pelo Dr. Victor para seu atendimento.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TELA FINAL PACIENTE -->
+<div class="sec" id="secFim">
+  <div class="card" style="text-align:center;padding:40px 20px;">
+    <div style="font-size:3.5rem;margin-bottom:14px;">✅</div>
+    <h2 style="font-family:'Lora',serif;color:var(--v);font-size:1.3rem;margin-bottom:10px;">Ficha enviada!</h2>
+    <p style="color:var(--leve);font-size:0.9rem;max-width:320px;margin:0 auto 22px;line-height:1.6;">O Dr. Victor recebeu suas informações e vai chegar na consulta preparado para te atender.</p>
+    <a href="https://wa.me/5547999356119" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:#25D366;color:white;border-radius:12px;font-weight:600;font-size:0.93rem;text-decoration:none;">💬 Falar com a clínica</a>
+    <div id="btnClinico" style="margin-top:16px;"></div>
+  </div>
+</div>
+
+<!-- MODO CLÍNICO -->
+<div id="telaClinica">
+  <div class="cl-hdr">
+    <div class="cl-hdr-in">
+      <div>
+        <div class="cl-nome" id="clNome">Paciente</div>
+        <div class="cl-sub" id="clSub">Dr. Victor Vaz · DTM, Dor e Saúde Integrativa</div>
+      </div>
+    </div>
+    <div class="cl-tabs">
+      <button class="cl-tab active" id="tab0" onclick="aba(0)">📋 Prontuário</button>
+      <button class="cl-tab inactive" id="tab1" onclick="aba(1)">✏️ Editar dados</button>
+      <button class="cl-tab inactive" id="tab2" onclick="aba(2)">🩺 Consulta</button>
+    </div>
+  </div>
+  <div class="cl-body">
+    <div class="status" id="statusIA"></div>
+
+    <!-- ABA 0: PRONTUÁRIO -->
+    <div id="aba0">
+      <div class="sc-grid" id="scGrid"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="card-h"><div class="ico">📋</div>Anamnese completa</div>
+        <div class="pront" id="prontario"></div>
+      </div>
+      <div style="padding:0 13px;">
+        <button class="btn-prim" onclick="enviarIA()">🤖 Enviar para IA Saúde</button>
+        <button class="btn-sec" onclick="copiar()">📋 Copiar prontuário</button>
+      </div>
+    </div>
+
+    <!-- ABA 1: EDITAR -->
+    <div id="aba1" style="display:none;">
+      <div class="card">
+        <div class="card-h"><div class="ico">✏️</div>Editar dados do paciente</div>
+        <p class="hint" style="margin-bottom:16px;">Corrija ou acrescente informações relatadas na consulta. Clique em <b>Salvar</b> para atualizar.</p>
+
+        <div class="ebloco" style="background:#F0FAF4;">
+          <div class="ebloco-titulo" style="color:#2D6A4F;">👤 IDENTIFICAÇÃO</div>
+          <div class="ef"><label>Nome</label><input type="text" id="e_nome" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          <div class="eg2">
+            <div class="ef"><label>Nascimento</label><input type="date" id="e_nasc" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>Sexo</label><select id="e_sexo" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+          </div>
+          <div class="eg2">
+            <div class="ef"><label>WhatsApp</label><input type="tel" id="e_tel" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>Profissão</label><input type="text" id="e_prof" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+        </div>
+
+        <div class="ebloco" style="background:#FFF8F0;">
+          <div class="ebloco-titulo" style="color:#c05621;">😣 DOR</div>
+          <div class="ef"><label>Queixa principal</label><textarea id="e_queixa" class="nota-ta"></textarea></div>
+          <div class="eg2">
+            <div class="ef"><label>Tempo de evolução</label><input type="text" id="e_tempo" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>EVA atual (0–10)</label><input type="number" id="e_eva" min="0" max="10" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+          <div class="ef"><label>Locais da dor</label><input type="text" id="e_locais" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+          <div class="eg2">
+            <div class="ef"><label>Tipo de dor</label><input type="text" id="e_tipodor" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>Padrão</label><input type="text" id="e_padrao" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+          <div class="ef"><label>O que piora</label><input type="text" id="e_piora" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+          <div class="ef"><label>O que melhora</label><input type="text" id="e_melhora" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          <div class="ef"><label>Outros sintomas</label><input type="text" id="e_outrosint" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+          <div class="ef"><label>Evento desencadeante</label><input type="text" id="e_evento" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+        </div>
+
+        <div class="ebloco" style="background:#F0F4FF;">
+          <div class="ebloco-titulo" style="color:#3730A3;">😴 SONO</div>
+          <div class="eg2">
+            <div class="ef"><label>Qualidade</label><select id="e_qsono" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Ótimo</option><option>Bom</option><option>Regular</option><option>Ruim</option><option>Péssimo</option></select></div>
+            <div class="ef"><label>Horas/noite</label><select id="e_horas" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Menos de 5h</option><option>5–6h</option><option>7–8h</option><option>Mais de 8h</option></select></div>
+            <div class="ef"><label>Ronco</label><select id="e_ronco" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Nunca/raramente</option><option>Às vezes</option><option>Frequentemente</option><option>Toda noite</option><option>Não sei</option></select></div>
+            <div class="ef"><label>Apneia relatada</label><select id="e_apneia" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim</option><option>Não</option><option>Não sei</option></select></div>
+            <div class="ef"><label>Epworth (0–24)</label><input type="number" id="e_epworth" min="0" max="24" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+        </div>
+
+        <div class="ebloco" style="background:#FFF0F4;">
+          <div class="ebloco-titulo" style="color:#9b2226;">🦷 BRUXISMO / ATM</div>
+          <div class="eg2">
+            <div class="ef"><label>Bruxismo noturno</label><select id="e_bsono" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim — já me avisaram</option><option>Talvez — acordo com dor</option><option>Não</option><option>Não sei</option></select></div>
+            <div class="ef"><label>Bruxismo diurno</label><select id="e_bdia" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim — frequentemente</option><option>Às vezes — quando estressado</option><option>Raramente</option><option>Não</option></select></div>
+            <div class="ef"><label>Placa dental</label><select id="e_placa" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim — uso agora</option><option>Já usei mas parei</option><option>Nunca</option></select></div>
+            <div class="ef"><label>Estalo ATM</label><select id="e_estalo" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim — dos dois lados</option><option>Sim — só de um lado</option><option>Não</option></select></div>
+            <div class="ef"><label>Travamento ATM</label><select id="e_trava" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim</option><option>Não</option></select></div>
+            <div class="ef"><label>DTM prévio</label><select id="e_dtmprev" class="nota-ta" style="min-height:0;padding:9px 12px;"><option value="">—</option><option>Sim</option><option>Não</option><option>Não sei</option></select></div>
+          </div>
+          <div class="ef"><label>Parafunções</label><input type="text" id="e_paraf" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+        </div>
+
+        <div class="ebloco" style="background:#F5F0FF;">
+          <div class="ebloco-titulo" style="color:#5b21b6;">🏥 SAÚDE GERAL</div>
+          <div class="ef"><label>Doenças</label><input type="text" id="e_doencas" class="nota-ta" style="min-height:0;padding:9px 12px;" placeholder="Separados por vírgula"></div>
+          <div class="ef"><label>Medicamentos</label><textarea id="e_meds" class="nota-ta" style="min-height:60px;"></textarea></div>
+          <div class="ef"><label>Suplementos</label><textarea id="e_sups" class="nota-ta" style="min-height:60px;"></textarea></div>
+          <div class="ef"><label>Tratamentos anteriores</label><textarea id="e_tratant" class="nota-ta" style="min-height:60px;"></textarea></div>
+        </div>
+
+        <div class="ebloco" style="background:#F0FAF4;">
+          <div class="ebloco-titulo" style="color:#2D6A4F;">🧠 SCORES</div>
+          <div class="eg2">
+            <div class="ef"><label>GAD-7 (0–21)</label><input type="number" id="e_gad7" min="0" max="21" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>PHQ-9 (0–27)</label><input type="number" id="e_phq9" min="0" max="27" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>PCS (0–16)</label><input type="number" id="e_pcs" min="0" max="16" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+            <div class="ef"><label>DN4 (0–7)</label><input type="number" id="e_dn4" min="0" max="7" class="nota-ta" style="min-height:0;padding:9px 12px;"></div>
+          </div>
+        </div>
+
+        <div class="ebloco" style="background:#FFF8E7;">
+          <div class="ebloco-titulo" style="color:#92400e;">💬 CONTEXTO</div>
+          <div class="ef"><label>Contexto de vida</label><textarea id="e_contexto" class="nota-ta"></textarea></div>
+          <div class="ef"><label>Expectativa</label><textarea id="e_expect" class="nota-ta" style="min-height:60px;"></textarea></div>
+          <div class="ef"><label>Observações</label><textarea id="e_obs" class="nota-ta" style="min-height:60px;"></textarea></div>
+        </div>
+      </div>
+      <div style="padding:0 13px;">
+        <button class="btn-prim" onclick="salvarEd()">💾 Salvar alterações</button>
+        <button class="btn-sec" onclick="salvarEd();setTimeout(enviarIA,600)">🤖 Salvar + Reenviar para IA Saúde</button>
+      </div>
+    </div>
+
+    <!-- ABA 2: CONSULTA -->
+    <div id="aba2" style="display:none;">
+      <div class="card">
+        <div class="card-h"><div class="ico">🩺</div>Anotações da consulta</div>
+        <p class="hint" style="margin-bottom:16px;">Preencha durante ou após a consulta. Vai junto para a IA Saúde.</p>
+        <div class="ef"><label>Exame físico — ATM, músculos, cervical, postura</label><textarea class="nota-ta" id="nExame" placeholder="Ex: Abertura bucal 38mm com desvio à direita. Dor à palpação pterigóideo lateral bilateral..."></textarea></div>
+        <div class="ef"><label>Hipóteses diagnósticas (6 Eixos Integrativos + STAB)</label><textarea class="nota-ta" id="nHip" placeholder="Ex: DTM miofascial bilateral DEFINIDO. Bruxismo do sono PROVÁVEL. Sensibilização central..."></textarea></div>
+        <div class="ef"><label>Exames solicitados</label><textarea class="nota-ta" id="nExSol" placeholder="Ex: TCFC ATM, Polissonografia, Hemograma + PCR + Magnésio + D3 + TSH/T4L..."></textarea></div>
+        <div class="ef"><label>Conduta / plano de tratamento</label><textarea class="nota-ta" id="nConduta" placeholder="Ex: Placa Oclusal Estabilizadora + Agulhamento Seco + Magnésio Di-malato..."></textarea></div>
+        <div class="ef"><label>Observações adicionais</label><textarea class="nota-ta" id="nObs" placeholder="Livre..."></textarea></div>
+      </div>
+      <div style="padding:0 13px;">
+        <button class="btn-prim" onclick="enviarIA()">🤖 Enviar anamnese + consulta para IA Saúde</button>
+        <button class="btn-sec" onclick="copiar()">📋 Copiar prontuário completo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav" id="navBar">
+  <button class="btn-v" id="btnV" onclick="voltar()" style="display:none">← Voltar</button>
+  <button class="btn-a" id="btnA" onclick="avancar()">Continuar →</button>
+</div>
+
+<script>
+const D = {};
+let cur = 1;
+const TOT = 7;
+const SENHA = 'victor1';
+const NOMES = ['Seus dados','Dor e sintomas','Sono','Bruxismo e ATM','Saúde geral','Emocional','Finalizar'];
+const API = 'https://clinica-production-22e0.up.railway.app';
+
+const T_EST = ['😌 Tranquilo','🙂 Quase sem','🙂 Leve','😐 Leve-moderado','😐 Moderado','😐 Mod-alto','😟 Bastante','😟 Muito','😰 Intenso','😰 Muito intenso','🤯 Extremo'];
+const T_DOR = ['😊 Sem dor','🙂 Mínima','😐 Muito leve','😐 Leve','😕 Moderada','😟 Mod-intensa','😟 Intensa','😣 Muito intensa','😖 Fortíssima','😩 Quase insuportável','😭 Insuportável'];
+
+const GAD7 = ['Sentir nervosismo, ansiedade ou tensão','Não conseguir controlar as preocupações','Preocupar-se muito com coisas diferentes','Dificuldade para relaxar','Ficar tão agitado que é difícil ficar parado','Ficar facilmente irritado','Sentir medo como se algo terrível fosse acontecer'];
+const PHQ9 = ['Pouco interesse ou prazer em fazer as coisas','Sentir-se para baixo, deprimido ou sem esperança','Dificuldade para dormir ou dormir demais','Sentir-se cansado ou sem energia','Falta de apetite ou comer demais','Sentir-se mal consigo mesmo','Dificuldade de concentração','Mover ou falar mais devagar / agitação','Pensamentos de se machucar'];
+const PCS  = ['Fico preocupado que a dor nunca vai parar','Fico com medo de que a dor vai piorar','Não consigo parar de pensar na dor','Sinto que não aguento mais a dor'];
+const EPW  = ['Sentado lendo','Assistindo TV','Sentado em lugar público','Passageiro de carro por 1h','Deitado descansando à tarde','Sentado conversando','Sentado após o almoço','No carro parado no trânsito'];
+const F4   = ['0 — Nunca','1 — Alguns dias','2 — Mais da metade','3 — Quase todo dia'];
+const I5   = ['0 — Nunca','1 — Às vezes','2 — Metade','3 — Quase sempre','4 — Sempre'];
+
+window.onload = () => {
+  buildEVA('evaEst','est','txtEst',T_EST);
+  buildEVA('evaDor','dor','txtDor',T_DOR);
+  buildEpworth();
+  buildLikert('gad7Q',GAD7,F4,'gad7','gad7S',t=>t<=4?`GAD-7: ${t}/21 — 🟢 Mínima`:t<=9?`GAD-7: ${t}/21 — 🟡 Leve`:t<=14?`GAD-7: ${t}/21 — 🟠 Moderada`:`GAD-7: ${t}/21 — 🔴 Grave`);
+  buildLikert('phq9Q',PHQ9,F4,'phq9','phq9S',t=>t<=4?`PHQ-9: ${t}/27 — 🟢 Normal`:t<=9?`PHQ-9: ${t}/27 — 🟡 Leve`:t<=14?`PHQ-9: ${t}/27 — 🟠 Moderado`:t<=19?`PHQ-9: ${t}/27 — 🔴 Mod-grave`:`PHQ-9: ${t}/27 — 🔴 Grave`);
+  buildLikert('pcsQ', PCS, I5, 'pcs','pcsS', t=>t<=8?`PCS: ${t}/16 — 🟢 Baixa`:t<=12?`PCS: ${t}/16 — 🟡 Moderada`:`PCS: ${t}/16 — 🔴 Elevada`);
+  renderProg();
+};
+
+function buildEVA(cid,campo,tid,textos) {
+  const c = document.getElementById(cid); c.innerHTML = '';
+  for (let i=0;i<=10;i++) {
+    const b = document.createElement('button');
+    b.className='eva-n'; b.setAttribute('data-v',i); b.textContent=i; b.type='button';
+    b.onclick = () => { c.querySelectorAll('.eva-n').forEach(x=>x.classList.remove('on')); b.classList.add('on'); D[campo]=i; document.getElementById(tid).textContent=textos[i]; salvarLocal(); };
+    c.appendChild(b);
+  }
+}
+
+function buildEpworth() {
+  const c = document.getElementById('epwQ'); c.innerHTML=''; D.epw=new Array(8).fill(null);
+  EPW.forEach((p,i) => {
+    const div = document.createElement('div'); div.className='qitem';
+    div.innerHTML=`<div class="qtxt"><span class="qn">${i+1}</span>${p}</div><div class="lik" id="epw${i}"></div>`;
+    c.appendChild(div);
+    const lk = document.getElementById('epw'+i);
+    F4.forEach((op,j) => { const b=document.createElement('button'); b.className='lik-b'; b.type='button'; b.textContent=op; b.onclick=()=>{ lk.querySelectorAll('.lik-b').forEach(x=>x.classList.remove('on')); b.classList.add('on'); D.epw[i]=j; calcEpw(); salvarLocal(); }; lk.appendChild(b); });
+  });
+}
+function calcEpw() {
+  if (D.epw.filter(v=>v!==null).length<8) return;
+  const t=D.epw.reduce((s,v)=>s+v,0); D.sc_epw=t;
+  const s=document.getElementById('epwS');
+  s.textContent=t<=10?`Epworth: ${t}/24 — 🟢 Normal`:t<=15?`Epworth: ${t}/24 — 🟡 Moderada`:`Epworth: ${t}/24 — 🔴 Excessiva`;
+  s.style.display='block';
+}
+
+function buildLikert(cid,pergs,opts,campo,sid,scoreFn) {
+  const c=document.getElementById(cid); c.innerHTML=''; D[campo]=new Array(pergs.length).fill(null);
+  const cols=opts.length===5?'repeat(5,1fr)':'repeat(4,1fr)';
+  pergs.forEach((p,i) => {
+    const div=document.createElement('div'); div.className='qitem';
+    div.innerHTML=`<div class="qtxt"><span class="qn">${i+1}</span>${p}</div><div class="lik" id="${campo}_${i}" style="grid-template-columns:${cols}"></div>`;
+    c.appendChild(div);
+    const lk=document.getElementById(`${campo}_${i}`);
+    opts.forEach((op,j) => { const b=document.createElement('button'); b.className='lik-b'; b.type='button'; b.textContent=op; b.style.fontSize='0.68rem'; b.onclick=()=>{ lk.querySelectorAll('.lik-b').forEach(x=>x.classList.remove('on')); b.classList.add('on'); D[campo][i]=j; if(D[campo].filter(v=>v!==null).length===pergs.length){ const t=D[campo].reduce((s,v)=>s+v,0); D[`sc_${campo}`]=t; const box=document.getElementById(sid); box.textContent=scoreFn(t); box.style.display='block'; } salvarLocal(); }; lk.appendChild(b); });
+  });
+}
+
+function calcDN4() {
+  const sel=getM('dn4'); D.dn4=sel; D.sc_dn4=sel.length;
+  const s=document.getElementById('dn4S');
+  s.textContent=sel.length>=4?`DN4: ${sel.length}/7 — 🔴 Sugestivo neuropático (≥4)`:`DN4: ${sel.length}/7 — 🟢 Abaixo do limiar`;
+  s.style.display='block';
+}
+
+function pick(btn) {
+  const g=btn.getAttribute('data-g');
+  document.querySelectorAll(`[data-g="${g}"]`).forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); D[g]=btn.getAttribute('data-v'); salvarLocal();
+}
+function multi(btn) { btn.classList.toggle('on'); salvarLocal(); }
+function getM(id) { const c=document.getElementById(id); if(!c) return []; return Array.from(c.querySelectorAll('.on')).map(b=>b.getAttribute('data-v')); }
+function gv(id) { const el=document.getElementById(id); return el?el.value.trim():''; }
+function gArr(id) { const v=gv(id); return v?v.split(',').map(x=>x.trim()).filter(Boolean):[]; }
+
+function renderProg() {
+  const el=document.getElementById('progBars'); el.innerHTML='';
+  for(let i=1;i<=TOT;i++) { const d=document.createElement('div'); d.className='prog-bar'+(i<cur?' done':i===cur?' active':''); el.appendChild(d); }
+  document.getElementById('progN').textContent=cur;
+  document.getElementById('progNome').textContent=NOMES[cur-1];
+}
+
+function coletarTudo() {
+  D.nome=gv('nome'); D.nasc=gv('nasc'); D.tel=gv('tel'); D.email=gv('email'); D.prof=gv('prof');
+  D.queixa=gv('queixa'); D.evento=gv('evento'); D.melhora=gv('melhora');
+  D.locais=getM('locais'); D.piora=getM('piora'); D.outrosint=getM('outrosint');
+  D.insonia=getM('insonia'); D.paraf=getM('paraf'); D.doencas=getM('doencas');
+  D.meds=gv('meds'); D.sups=gv('sups'); D.tratant=gv('tratant');
+  D.dn4=getM('dn4'); D.sc_dn4=(D.dn4||[]).length;
+  D.contexto=gv('contexto'); D.expect=gv('expect'); D.obs=gv('obs');
+  D._ts=new Date().toISOString();
+}
+
+function salvarLocal() {
+  coletarTudo();
+  try { localStorage.setItem('drvictor_ficha', JSON.stringify(D)); } catch(e) {}
+}
+
+function avancar() {
+  salvarLocal();
+  if (cur===TOT) { enviarFicha(); return; }
+  document.getElementById('sec'+cur).classList.remove('on');
+  cur++;
+  document.getElementById('sec'+cur).classList.add('on');
+  renderProg();
+  document.getElementById('btnV').style.display=cur>1?'block':'none';
+  document.getElementById('btnA').textContent=cur===TOT?'✅ Enviar ficha':'Continuar →';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function voltar() {
+  document.getElementById('sec'+cur).classList.remove('on');
+  cur--;
+  document.getElementById('sec'+cur).classList.add('on');
+  renderProg();
+  document.getElementById('btnV').style.display=cur>1?'block':'none';
+  document.getElementById('btnA').textContent='Continuar →';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function enviarFicha() {
+  salvarLocal();
+  try { localStorage.setItem('drvictor_final_'+Date.now(), JSON.stringify(D)); } catch(e) {}
+  fetch(API+'/anamnese-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fonte:'ficha_online_v3',ts:D._ts,paciente:D,scores:{eva:D.dor,estresse:D.est,epworth:D.sc_epw,gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4}})}).then(r=>r.json()).then(resp=>{if(resp&&resp.analise_ia_saude){D._analise=resp.analise_ia_saude;D._id=resp.id;}}).catch(()=>{});
+  document.getElementById('sec7').classList.remove('on');
+  document.getElementById('secFim').classList.add('on');
+  document.getElementById('navBar').style.display='none';
+  document.getElementById('progWrap').style.display='none';
+  setTimeout(()=>{
+    const div=document.getElementById('btnClinico');
+    div.innerHTML='<button onclick="abrirModal()" style="padding:10px 18px;background:#1B3A2D;border:none;border-radius:9px;color:white;font-family:DM Sans,sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;margin-top:8px;">🔐 Acesso clínico</button>';
+  },400);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// MODAL
+function abrirModal() { document.getElementById('modalSenha').classList.add('show'); setTimeout(()=>document.getElementById('inputSenha').focus(),100); }
+function fecharModal() { document.getElementById('modalSenha').classList.remove('show'); document.getElementById('inputSenha').value=''; document.getElementById('errSenha').style.display='none'; }
+function confirmarSenha() {
+  if(document.getElementById('inputSenha').value.trim()===SENHA) { fecharModal(); abrirClinico(); }
+  else { document.getElementById('errSenha').style.display='block'; document.getElementById('inputSenha').value=''; document.getElementById('inputSenha').focus(); }
+}
+
+// ABRIR CLÍNICO
+function abrirClinico() {
+  coletarTudo();
+  document.getElementById('mainHdr').style.display='none';
+  document.getElementById('progWrap').style.display='none';
+  document.getElementById('navBar').style.display='none';
+  for(let i=1;i<=7;i++) document.getElementById('sec'+i).style.display='none';
+  document.getElementById('secFim').style.display='none';
+  document.getElementById('telaClinica').style.display='block';
+  document.getElementById('clNome').textContent=D.nome||'Paciente';
+  document.getElementById('clSub').textContent=(D.tel?'📱 '+D.tel+' · ':'')+`Dr. Victor Vaz · DTM, Dor e Saúde Integrativa`;
+  popularForm();
+  buildScores();
+  document.getElementById('prontario').innerHTML=buildPront();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function aba(n) {
+  [0,1,2].forEach(i=>{
+    document.getElementById('aba'+i).style.display=i===n?'block':'none';
+    const t=document.getElementById('tab'+i);
+    t.className='cl-tab '+(i===n?'active':'inactive');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function popularForm() {
+  const s=(id,val)=>{ const el=document.getElementById(id); if(el&&val!=null) el.value=Array.isArray(val)?val.join(', '):val; };
+  s('e_nome',D.nome); s('e_nasc',D.nasc); s('e_sexo',D.sexo); s('e_tel',D.tel); s('e_prof',D.prof);
+  s('e_queixa',D.queixa); s('e_tempo',D.tempo); s('e_eva',D.dor); s('e_locais',D.locais);
+  s('e_tipodor',D.tipodor); s('e_padrao',D.padrao); s('e_piora',D.piora); s('e_melhora',D.melhora);
+  s('e_outrosint',D.outrosint); s('e_evento',D.evento); s('e_qsono',D.qsono); s('e_horas',D.horas);
+  s('e_ronco',D.ronco); s('e_apneia',D.apneia); s('e_epworth',D.sc_epw);
+  s('e_bsono',D.bsono); s('e_bdia',D.bdia); s('e_placa',D.placa); s('e_estalo',D.estalo);
+  s('e_trava',D.trava); s('e_dtmprev',D.dtmprev); s('e_paraf',D.paraf);
+  s('e_doencas',D.doencas); s('e_meds',D.meds); s('e_sups',D.sups); s('e_tratant',D.tratant);
+  s('e_gad7',D.sc_gad7); s('e_phq9',D.sc_phq9); s('e_pcs',D.sc_pcs); s('e_dn4',D.sc_dn4);
+  s('e_contexto',D.contexto); s('e_expect',D.expect); s('e_obs',D.obs);
+}
+
+function salvarEd() {
+  D.nome=gv('e_nome'); D.nasc=gv('e_nasc'); D.sexo=gv('e_sexo'); D.tel=gv('e_tel'); D.prof=gv('e_prof');
+  D.queixa=gv('e_queixa'); D.tempo=gv('e_tempo'); D.dor=gv('e_eva')!==''?parseInt(gv('e_eva')):D.dor;
+  D.locais=gArr('e_locais'); D.tipodor=gv('e_tipodor'); D.padrao=gv('e_padrao');
+  D.piora=gArr('e_piora'); D.melhora=gv('e_melhora'); D.outrosint=gArr('e_outrosint'); D.evento=gv('e_evento');
+  D.qsono=gv('e_qsono'); D.horas=gv('e_horas'); D.ronco=gv('e_ronco'); D.apneia=gv('e_apneia');
+  D.sc_epw=gv('e_epworth')!==''?parseInt(gv('e_epworth')):D.sc_epw;
+  D.bsono=gv('e_bsono'); D.bdia=gv('e_bdia'); D.placa=gv('e_placa'); D.estalo=gv('e_estalo');
+  D.trava=gv('e_trava'); D.dtmprev=gv('e_dtmprev'); D.paraf=gArr('e_paraf');
+  D.doencas=gArr('e_doencas'); D.meds=gv('e_meds'); D.sups=gv('e_sups'); D.tratant=gv('e_tratant');
+  D.sc_gad7=gv('e_gad7')!==''?parseInt(gv('e_gad7')):D.sc_gad7;
+  D.sc_phq9=gv('e_phq9')!==''?parseInt(gv('e_phq9')):D.sc_phq9;
+  D.sc_pcs=gv('e_pcs')!==''?parseInt(gv('e_pcs')):D.sc_pcs;
+  D.sc_dn4=gv('e_dn4')!==''?parseInt(gv('e_dn4')):D.sc_dn4;
+  D.contexto=gv('e_contexto'); D.expect=gv('e_expect'); D.obs=gv('e_obs');
+  D._editado=new Date().toISOString();
+  try { localStorage.setItem('drvictor_editado', JSON.stringify(D)); } catch(e) {}
+  document.getElementById('clNome').textContent=D.nome||'Paciente';
+  buildScores();
+  document.getElementById('prontario').innerHTML=buildPront();
+  const payload={nome:D.nome,celular:D.tel,email:D.email,data_nascimento:D.nasc,sexo:D.sexo,profissao:D.prof,observacoes:JSON.stringify({queixa:D.queixa,locais:D.locais,eva:D.dor,sono:D.qsono,bruxismo:D.bsono,dtm:D.dtmprev,scores:{gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4,epworth:D.sc_epw},meds:D.meds,doencas:D.doencas})};
+  const url=D._pid?`${API}/pacientes/${D._pid}`:`${API}/pacientes`;
+  fetch(url,{method:D._pid?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json()).then(r=>{if(r&&r.id)D._pid=r.id;}).catch(()=>{});
+  st('✅ Dados salvos!','s-ok'); setTimeout(()=>{ document.getElementById('statusIA').style.display='none'; },3000);
+}
+
+function buildScores() {
+  const g=document.getElementById('scGrid'); g.innerHTML='';
+  const dados=[
+    {l:'Dor (EVA)',v:D.dor!=null?D.dor+'/10':'—',c:D.dor>=7?'red':D.dor>=4?'yellow':'green',i:D.dor>=7?'Intensa':D.dor>=4?'Moderada':D.dor!=null?'Leve':''},
+    {l:'Estresse',v:D.est!=null?D.est+'/10':'—',c:D.est>=7?'red':D.est>=5?'yellow':'green',i:D.est>=7?'Elevado':D.est>=5?'Moderado':D.est!=null?'Baixo':''},
+    {l:'Epworth',v:D.sc_epw!=null?D.sc_epw+'/24':'—',c:D.sc_epw>=16?'red':D.sc_epw>=11?'yellow':'green',i:D.sc_epw>=16?'Excessiva':D.sc_epw>=11?'Moderada':D.sc_epw!=null?'Normal':''},
+    {l:'GAD-7',v:D.sc_gad7!=null?D.sc_gad7+'/21':'—',c:D.sc_gad7>=15?'red':D.sc_gad7>=10?'yellow':'green',i:D.sc_gad7>=15?'Grave':D.sc_gad7>=10?'Moderada':D.sc_gad7!=null?'Leve':''},
+    {l:'PHQ-9',v:D.sc_phq9!=null?D.sc_phq9+'/27':'—',c:D.sc_phq9>=15?'red':D.sc_phq9>=10?'yellow':'green',i:D.sc_phq9>=15?'Grave':D.sc_phq9>=10?'Moderado':D.sc_phq9!=null?'Leve':''},
+    {l:'DN4',v:D.sc_dn4!=null?D.sc_dn4+'/7':'—',c:D.sc_dn4>=4?'red':'green',i:D.sc_dn4>=4?'Sugest. neuropático':D.sc_dn4!=null?'Não sugestivo':''},
+    {l:'PCS',v:D.sc_pcs!=null?D.sc_pcs+'/16':'—',c:D.sc_pcs>=13?'red':D.sc_pcs>=9?'yellow':'green',i:D.sc_pcs>=13?'Elevada':D.sc_pcs>=9?'Moderada':D.sc_pcs!=null?'Baixa':''},
+  ];
+  dados.forEach(s=>{ const d=document.createElement('div'); d.className=`sc ${s.c}`; d.innerHTML=`<div class="sc-lbl">${s.l}</div><div class="sc-val">${s.v}</div><div class="sc-int">${s.i}</div>`; g.appendChild(d); });
+}
+
+function buildPront() {
+  const v=x=>(x&&String(x).trim())?x:'<span class="sem">—</span>';
+  const a=x=>(x&&x.length)?x.join(', '):'<span class="sem">—</span>';
+  return `<div class="pront">
+<div class="pb"><div class="pt">👤 Identificação</div>
+<div class="pl"><span>Nome:</span> ${v(D.nome)} · <span>Nasc:</span> ${v(D.nasc)} · <span>Sexo:</span> ${v(D.sexo)}</div>
+<div class="pl"><span>Tel:</span> ${v(D.tel)} · <span>E-mail:</span> ${v(D.email)} · <span>Profissão:</span> ${v(D.prof)}</div>
+<div class="pl"><span>Estresse:</span> ${D.est!=null?D.est+'/10':v(null)}</div></div>
+<div class="pb"><div class="pt">😣 Dor e Queixa</div>
+<div class="pl"><b>${v(D.queixa)}</b></div>
+<div class="pl"><span>Tempo:</span> ${v(D.tempo)} · <span>Evento:</span> ${v(D.evento)}</div>
+<div class="pl"><span>Locais:</span> ${a(D.locais)}</div>
+<div class="pl"><span>EVA:</span> <b>${D.dor!=null?D.dor+'/10':v(null)}</b> · <span>Tipo:</span> ${v(D.tipodor)} · <span>Padrão:</span> ${v(D.padrao)}</div>
+<div class="pl"><span>Piora:</span> ${a(D.piora)} · <span>Melhora:</span> ${v(D.melhora)}</div>
+<div class="pl"><span>Outros sint.:</span> ${a(D.outrosint)}</div></div>
+<div class="pb"><div class="pt">😴 Sono</div>
+<div class="pl"><span>Qualidade:</span> ${v(D.qsono)} · <span>Horas:</span> ${v(D.horas)}</div>
+<div class="pl"><span>Insônia:</span> ${a(D.insonia)} · <span>Ronco:</span> ${v(D.ronco)} · <span>Apneia:</span> ${v(D.apneia)}</div>
+<div class="pl"><span>Posição:</span> ${v(D.posicao)} · <span>Epworth:</span> <b>${D.sc_epw!=null?D.sc_epw+'/24':v(null)}</b></div></div>
+<div class="pb"><div class="pt">🦷 Bruxismo / ATM</div>
+<div class="pl"><span>Brux. noturno:</span> ${v(D.bsono)} · <span>Diurno:</span> ${v(D.bdia)}</div>
+<div class="pl"><span>Placa:</span> ${v(D.placa)} · <span>Parafunções:</span> ${a(D.paraf)}</div>
+<div class="pl"><span>Estalo ATM:</span> ${v(D.estalo)} · <span>Travamento:</span> ${v(D.trava)} · <span>Dor mastigar:</span> ${v(D.dormastigar)} · <span>DTM prévio:</span> ${v(D.dtmprev)}</div></div>
+<div class="pb"><div class="pt">🏥 Saúde Geral</div>
+<div class="pl"><span>Doenças:</span> ${a(D.doencas)}</div>
+<div class="pl"><span>Medicamentos:</span> ${v(D.meds)}</div>
+<div class="pl"><span>Suplementos:</span> ${v(D.sups)}</div>
+<div class="pl"><span>Tratamentos ant.:</span> ${v(D.tratant)}</div>
+<div class="pl"><span>Exames imagem:</span> ${v(D.eximg)} · <span>PSG:</span> ${v(D.psg)} · <span>Alim.:</span> ${v(D.alim)} · <span>At. física:</span> ${v(D.atfis)}</div></div>
+<div class="pb"><div class="pt">🧠 Psicossocial</div>
+<div class="pl"><b>GAD-7:</b> ${D.sc_gad7!=null?D.sc_gad7+'/21':v(null)} · <b>PHQ-9:</b> ${D.sc_phq9!=null?D.sc_phq9+'/27':v(null)}</div>
+<div class="pl"><b>PCS:</b> ${D.sc_pcs!=null?D.sc_pcs+'/16':v(null)} · <b>DN4:</b> ${D.sc_dn4!=null?D.sc_dn4+'/7':v(null)}</div>
+<div class="pl"><span>DN4 itens:</span> ${a(D.dn4)}</div></div>
+<div class="pb"><div class="pt">💬 Contexto</div>
+<div class="pl">${v(D.contexto)}</div>
+<div class="pl"><span>Expectativa:</span> ${v(D.expect)}</div>
+<div class="pl"><span>Obs.:</span> ${v(D.obs)}</div></div>
+${D._analise?`<div class="pb" style="background:#F0FAF4;border-radius:10px;padding:14px;"><div class="pt">🤖 Análise — IA Saúde</div><div style="font-size:0.83rem;line-height:1.8;white-space:pre-wrap;color:#333;">${D._analise}</div></div>`:'<div style="font-size:0.77rem;color:#aaa;font-style:italic;margin-top:10px;">⏳ Análise da IA Saúde aparece aqui após o envio...</div>'}
+<div style="font-size:0.74rem;color:var(--leve);margin-top:10px;">Preenchido em: ${new Date(D._ts||Date.now()).toLocaleString('pt-BR')}</div>
+</div>`;
+}
+
+function notas() {
+  return {exame:gv('nExame'),hipoteses:gv('nHip'),exames_sol:gv('nExSol'),conduta:gv('nConduta'),obs:gv('nObs')};
+}
+
+function enviarIA() {
+  coletarTudo();
+  const payload={fonte:'ficha_clinica_v3',ts:new Date().toISOString(),paciente:D,anotacoes:notas(),scores:{eva:D.dor,estresse:D.est,epworth:D.sc_epw,gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4}};
+  st('⏳ Enviando para IA Saúde...','s-load');
+  fetch(API+'/anamnese-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(r=>r.json())
+  .then(resp=>{
+    if(resp&&resp.analise_ia_saude){D._analise=resp.analise_ia_saude;document.getElementById('prontario').innerHTML=buildPront();}
+    st('✅ Enviado! Prontuário atualizado com análise da IA Saúde.','s-ok');
+  })
+  .catch(()=>st('⚠️ IA Saúde offline. Use "Copiar prontuário" para colar manualmente.','s-err'));
+  try{localStorage.setItem('drvictor_clinico_'+Date.now(),JSON.stringify(payload));}catch(e){}
+}
+
+function copiar() {
+  coletarTudo();
+  const n=notas();
+  const v=x=>(x&&String(x).trim())?x:'—';
+  const a=x=>(x&&x.length)?x.join(', '):'—';
+  const txt=[
+    '=== ANAMNESE · DR. VICTOR VAZ ===',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    '','--- PACIENTE ---',
+    `Nome: ${v(D.nome)} | Nasc: ${v(D.nasc)} | Sexo: ${v(D.sexo)}`,
+    `Tel: ${v(D.tel)} | E-mail: ${v(D.email)} | Profissão: ${v(D.prof)}`,
+    `Estresse: ${D.est!=null?D.est+'/10':'—'}`,
+    '','--- DOR ---',
+    `Queixa: ${v(D.queixa)}`,
+    `Tempo: ${v(D.tempo)} | Evento: ${v(D.evento)}`,
+    `Locais: ${a(D.locais)}`,
+    `EVA: ${D.dor!=null?D.dor+'/10':'—'} | Tipo: ${v(D.tipodor)} | Padrão: ${v(D.padrao)}`,
+    `Piora: ${a(D.piora)} | Melhora: ${v(D.melhora)}`,
+    `Outros: ${a(D.outrosint)}`,
+    '','--- SONO ---',
+    `Qualidade: ${v(D.qsono)} | Horas: ${v(D.horas)}`,
+    `Insônia: ${a(D.insonia)} | Ronco: ${v(D.ronco)} | Apneia: ${v(D.apneia)}`,
+    `Posição: ${v(D.posicao)} | Epworth: ${D.sc_epw!=null?D.sc_epw+'/24':'—'}`,
+    '','--- BRUXISMO / ATM ---',
+    `Brux. noturno: ${v(D.bsono)} | Diurno: ${v(D.bdia)}`,
+    `Placa: ${v(D.placa)} | Parafunções: ${a(D.paraf)}`,
+    `Estalo: ${v(D.estalo)} | Travamento: ${v(D.trava)} | Dor mastigar: ${v(D.dormastigar)} | DTM prévio: ${v(D.dtmprev)}`,
+    '','--- SAÚDE GERAL ---',
+    `Doenças: ${a(D.doencas)}`,
+    `Medicamentos: ${v(D.meds)}`,
+    `Suplementos: ${v(D.sups)}`,
+    `Tratamentos ant.: ${v(D.tratant)}`,
+    `Exames imagem: ${v(D.eximg)} | PSG: ${v(D.psg)} | Alim.: ${v(D.alim)} | At. física: ${v(D.atfis)}`,
+    '','--- PSICOSSOCIAL ---',
+    `GAD-7: ${D.sc_gad7!=null?D.sc_gad7+'/21':'—'} | PHQ-9: ${D.sc_phq9!=null?D.sc_phq9+'/27':'—'}`,
+    `PCS: ${D.sc_pcs!=null?D.sc_pcs+'/16':'—'} | DN4: ${D.sc_dn4!=null?D.sc_dn4+'/7':'—'} | Itens: ${a(D.dn4)}`,
+    '','--- CONTEXTO ---',
+    `${v(D.contexto)}`,
+    `Expectativa: ${v(D.expect)} | Obs: ${v(D.obs)}`,
+    '','--- ANOTAÇÕES DA CONSULTA ---',
+    `Exame físico: ${v(n.exame)}`,
+    `Hipóteses (6 Eixos + STAB): ${v(n.hipoteses)}`,
+    `Exames solicitados: ${v(n.exames_sol)}`,
+    `Conduta: ${v(n.conduta)}`,
+    `Obs. adicionais: ${v(n.obs)}`,
+  ].join('\n');
+  navigator.clipboard.writeText(txt).then(()=>st('✅ Copiado! Cole na IA Saúde.','s-ok')).catch(()=>alert('Copie o conteúdo manualmente.'));
+}
+
+function st(msg,cls) {
+  const el=document.getElementById('statusIA');
+  el.textContent=msg; el.className='status '+cls; el.style.display='block';
+}
+
+// URL ?clinico=1 abre direto sem senha
+if(new URLSearchParams(location.search).get('clinico')==='1') window.addEventListener('load',()=>setTimeout(abrirClinico,200));
+</script>
 </body>
 </html>
