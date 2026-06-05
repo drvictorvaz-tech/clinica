@@ -155,67 +155,49 @@ REGRAS:
     except Exception as e:
         pass  # log do erro
 
-    # 5. Salva no Supabase (durável + visível para o Dr.)
-    try:
-        from supabase import create_client
-        _u = os.environ.get("SUPABASE_URL", "")
-        _k = os.environ.get("SUPABASE_KEY", "")
-        if _u and _k:
-            create_client(_u, _k).table("anamneses_online").insert({
-                "nome": nome,
-                "telefone": paciente.get("tel", "") or paciente.get("celular", ""),
-                "nascimento": paciente.get("nasc", "") or paciente.get("data_nascimento", ""),
-                "paciente": paciente,
-                "scores": scores,
-                "anotacoes": anotacoes,
-                "analise_ia": analise_ia,
-                "fonte": payload.fonte or "ficha_online",
-            }).execute()
-    except Exception:
-        pass
-
-    # 6. AUTOMATICO: cria/acha o paciente e lanca a anamnese como evolucao na ficha
-    try:
-        from supabase import create_client as _cc
-        _u2 = os.environ.get("SUPABASE_URL", "")
-        _k2 = os.environ.get("SUPABASE_KEY", "")
-        if _u2 and _k2:
-            _cli = _cc(_u2, _k2)
-            _cel = paciente.get("tel", "") or paciente.get("celular", "")
-            _pid = None
-            try:
-                if _cel:
-                    _ex = _cli.table("pacientes").select("id").eq("celular", _cel).limit(1).execute()
-                    if _ex.data:
-                        _pid = _ex.data[0]["id"]
-                if not _pid and nome:
-                    _ex2 = _cli.table("pacientes").select("id").ilike("nome", nome).limit(1).execute()
-                    if _ex2.data:
-                        _pid = _ex2.data[0]["id"]
-            except Exception:
+    # 5. AUTOMATICO: cria/acha o paciente e lanca a anamnese como evolucao na ficha
+    if str(payload.fonte or "").startswith("ficha"):
+        try:
+            from supabase import create_client as _cc
+            _u2 = os.environ.get("SUPABASE_URL", "")
+            _k2 = os.environ.get("SUPABASE_KEY", "")
+            if _u2 and _k2:
+                _cli = _cc(_u2, _k2)
+                _cel = paciente.get("tel", "") or paciente.get("celular", "")
                 _pid = None
-            if not _pid:
-                _novo = _cli.table("pacientes").insert({
-                    "nome": nome or "Paciente",
-                    "celular": _cel,
-                    "email": paciente.get("email", ""),
-                    "data_nascimento": (paciente.get("nasc") or None),
-                    "sexo": paciente.get("sexo", ""),
-                    "profissao": paciente.get("prof", ""),
-                    "observacoes": "Cadastrado pela ficha de anamnese online",
-                }).execute()
-                if _novo.data:
-                    _pid = _novo.data[0]["id"]
-            if _pid:
-                _cli.table("evolucoes").insert({
-                    "paciente_id": _pid,
-                    "tipo": "anamnese_online",
-                    "queixa_principal": paciente.get("queixa", ""),
-                    "anamnese": contexto_clinico,
-                    "diagnostico": (analise_ia or "")[:8000],
-                }).execute()
-    except Exception:
-        pass
+                try:
+                    if _cel:
+                        _ex = _cli.table("pacientes").select("id").eq("celular", _cel).limit(1).execute()
+                        if _ex.data:
+                            _pid = _ex.data[0]["id"]
+                    if not _pid and nome:
+                        _ex2 = _cli.table("pacientes").select("id").ilike("nome", nome).limit(1).execute()
+                        if _ex2.data:
+                            _pid = _ex2.data[0]["id"]
+                except Exception:
+                    _pid = None
+                if not _pid:
+                    _novo = _cli.table("pacientes").insert({
+                        "nome": nome or "Paciente",
+                        "celular": _cel,
+                        "email": paciente.get("email", ""),
+                        "data_nascimento": (paciente.get("nasc") or None),
+                        "sexo": paciente.get("sexo", ""),
+                        "profissao": paciente.get("prof", ""),
+                        "observacoes": "Cadastrado pela ficha de anamnese online",
+                    }).execute()
+                    if _novo.data:
+                        _pid = _novo.data[0]["id"]
+                if _pid:
+                    _cli.table("evolucoes").insert({
+                        "paciente_id": _pid,
+                        "tipo": "anamnese_online",
+                        "queixa_principal": paciente.get("queixa", ""),
+                        "anamnese": contexto_clinico,
+                        "diagnostico": (analise_ia or "")[:8000],
+                    }).execute()
+        except Exception:
+            pass
 
     return {
         "status": "ok",
