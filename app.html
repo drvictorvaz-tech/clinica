@@ -4292,5 +4292,7 @@ function loadAgenda(){IASAG_render();}
   _wrapOpen(); if(document.readyState!=='complete') window.addEventListener('load',_wrapOpen);
   try{if(typeof IAS_curPid!=='undefined'&&IAS_curPid)window.__iasLoadPid(String(IAS_curPid));}catch(e){}
  })();</script>
+
+<script>(function(){function add(){try{var nav=document.querySelector("nav");if(!nav||document.getElementById("ias-anamnese-nav"))return;var d=document.createElement("div");d.className="nav-item";d.id="ias-anamnese-nav";d.innerHTML="<span class=\"nav-icon\">\uD83D\uDCCB</span> Anamneses Online";d.onclick=function(){window.open("anamneses.html","_blank");};nav.appendChild(d);}catch(e){}}if(document.readyState!=="loading")add();else document.addEventListener("DOMContentLoaded",add);setTimeout(add,1500);})();</script>
 </body>
 </html>
