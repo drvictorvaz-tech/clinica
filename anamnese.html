@@ -632,6 +632,21 @@ const TOT = 7;
 const SENHA = 'victor1';
 const NOMES = ['Seus dados','Dor e sintomas','Sono','Bruxismo e ATM','Saúde geral','Emocional','Finalizar'];
 const API = 'https://clinica-production-22e0.up.railway.app';
+const SB_URL = 'https://aejaulnwurvumxgtlirw.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+function salvarFichaSupabase(extra){
+  try{
+    var payload = {
+      nome: D.nome||'', telefone: D.tel||D.celular||'', nascimento: D.nasc||'',
+      paciente: D,
+      scores: {eva:D.dor,estresse:D.est,epworth:D.sc_epw,gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4},
+      anotacoes: (extra&&extra.anotacoes)||{},
+      analise_ia: (extra&&extra.analise)||D._analise||'',
+      fonte: 'ficha_online'
+    };
+    return fetch(SB_URL+'/rest/v1/anamneses_online',{method:'POST',headers:{'apikey':SB_ANON,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+  }catch(e){ return Promise.resolve(); }
+}
 
 const T_EST = ['😌 Tranquilo','🙂 Quase sem','🙂 Leve','😐 Leve-moderado','😐 Moderado','😐 Mod-alto','😟 Bastante','😟 Muito','😰 Intenso','😰 Muito intenso','🤯 Extremo'];
 const T_DOR = ['😊 Sem dor','🙂 Mínima','😐 Muito leve','😐 Leve','😕 Moderada','😟 Mod-intensa','😟 Intensa','😣 Muito intensa','😖 Fortíssima','😩 Quase insuportável','😭 Insuportável'];
@@ -757,6 +772,9 @@ function voltar() {
 function enviarFicha() {
   salvarLocal();
   try { localStorage.setItem('drvictor_final_'+Date.now(), JSON.stringify(D)); } catch(e) {}
+  // GARANTIDO: grava a ficha direto no Supabase (visivel para o Dr.)
+  salvarFichaSupabase({});
+  // Complementar: pede analise da IA ao backend (best-effort)
   fetch(API+'/anamnese-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fonte:'ficha_online_v3',ts:D._ts,paciente:D,scores:{eva:D.dor,estresse:D.est,epworth:D.sc_epw,gad7:D.sc_gad7,phq9:D.sc_phq9,pcs:D.sc_pcs,dn4:D.sc_dn4}})}).then(r=>r.json()).then(resp=>{if(resp&&resp.analise_ia_saude){D._analise=resp.analise_ia_saude;D._id=resp.id;}}).catch(()=>{});
   document.getElementById('sec7').classList.remove('on');
   document.getElementById('secFim').classList.add('on');

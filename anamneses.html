@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Anamneses recebidas — Dr. Victor Vaz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f0f4f8;color:#1a2535;padding:0 0 40px}
+header{background:linear-gradient(135deg,#0d7377,#14a085);color:#fff;padding:20px 16px;position:sticky;top:0;z-index:10}
+header h1{font-size:18px}header p{font-size:13px;opacity:.85;margin-top:2px}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+.bar{display:flex;gap:8px;align-items:center;margin:12px 0}
+.bar input{flex:1;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+.btn{background:#0d7377;color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.btn.sec{background:#fff;color:#0d7377;border:1px solid #0d7377}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;overflow:hidden}
+.ch{padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ch:hover{background:#f8fafc}
+.nm{font-weight:700;font-size:15px}
+.meta{font-size:12px;color:#6b7280;margin-top:3px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:#e2e8f0;color:#475569;white-space:nowrap}
+.body{display:none;padding:0 16px 16px;border-top:1px solid #eef2f6}
+.body.open{display:block}
+.sec{margin-top:14px}
+.sec h3{font-size:13px;color:#0d7377;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:8px}
+.row{display:flex;gap:8px;font-size:13.5px;padding:3px 0}
+.row .k{color:#6b7280;min-width:160px;font-weight:600}
+.row .v{flex:1;white-space:pre-wrap}
+.scores{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.score{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600}
+.analise{background:#f0f9f8;border:1px solid #cdeae7;border-radius:8px;padding:12px;margin-top:10px;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+.empty{text-align:center;color:#6b7280;padding:50px 20px}
+#gate{position:fixed;inset:0;background:linear-gradient(135deg,#0d7377,#14a085);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+#gate.hide{display:none}
+.gbox{background:#fff;border-radius:16px;padding:32px 26px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.gbox h2{color:#0d7377;margin-bottom:6px}.gbox p{font-size:13px;color:#6b7280;margin-bottom:18px}
+.gbox input{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;margin-bottom:12px}
+.gbox .btn{width:100%}
+.err{color:#c00;font-size:13px;margin-top:8px;display:none}
+.muted{font-size:12px;color:#9ca3af;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="gbox">
+    <div style="font-size:40px">🔐</div>
+    <h2>Anamneses recebidas</h2>
+    <p>Acesso do Dr. Victor</p>
+    <input id="pw" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()">
+    <button class="btn" onclick="entrar()">Entrar</button>
+    <div class="err" id="gerr">Senha incorreta</div>
+  </div>
+</div>
+
+<header>
+  <div class="wrap" style="padding:0">
+    <h1>🌿 Anamneses recebidas</h1>
+    <p>Dr. Victor Vaz · fichas enviadas pelos pacientes</p>
+  </div>
+</header>
+<div class="wrap">
+  <div class="bar">
+    <input id="busca" placeholder="Buscar por nome..." oninput="render()">
+    <button class="btn sec" onclick="carregar()">↻ Atualizar</button>
+  </div>
+  <div id="lista"><div class="empty">Carregando…</div></div>
+</div>
+
+<script>
+const SB_URL='https://aejaulnwurvumxgtlirw.supabase.co';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+const API='https://clinica-production-22e0.up.railway.app';
+const SENHA='victor1';
+let DADOS=[];
+
+function entrar(){
+  if(document.getElementById('pw').value.trim()===SENHA){ document.getElementById('gate').classList.add('hide'); carregar(); }
+  else document.getElementById('gerr').style.display='block';
+}
+
+function _sess(){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/sb-.*-auth-token/.test(k)){try{return{k:k,o:JSON.parse(localStorage.getItem(k))};}catch(e){}}}return null;}
+async function _token(){
+  const s=_sess(); if(!s||!s.o) return null;
+  let t=s.o.access_token, exp=s.o.expires_at||0;
+  if(exp && exp < Math.floor(Date.now()/1000)+30 && s.o.refresh_token){
+    try{ const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.o.refresh_token})}); const j=await r.json(); if(j.access_token){ t=j.access_token; const ns=Object.assign({},s.o,j); if(j.expires_in)ns.expires_at=Math.floor(Date.now()/1000)+j.expires_in; localStorage.setItem(s.k,JSON.stringify(ns)); } }catch(e){}
+  }
+  return t;
+}
+
+async function carregar(){
+  document.getElementById('lista').innerHTML='<div class="empty">Carregando…</div>';
+  const tk=await _token();
+  if(!tk){ document.getElementById('lista').innerHTML='<div class="empty">Para ver as fichas, abra primeiro o app <b>IA SAÚDE</b> e faça login na mesma janela do navegador. Depois volte aqui e toque em ↻ Atualizar.</div>'; return; }
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/anamneses_online?select=*&order=criado_em.desc',{headers:{apikey:SB_ANON,Authorization:'Bearer '+tk}});
+    if(!r.ok){ document.getElementById('lista').innerHTML='<div class="empty">Erro ao carregar ('+r.status+'). Tente novamente.</div>'; return; }
+    DADOS=await r.json(); render();
+  }catch(e){ document.getElementById('lista').innerHTML='<div class="empty">Falha de conexão.</div>'; }
+}
+
+const LBL={nome:'Nome',nasc:'Nascimento',sexo:'Sexo',tel:'WhatsApp',prof:'Profissão',est:'Estresse (0-10)',queixa:'Queixa principal',tempo:'Tempo de evolução',evento:'Evento desencadeante',locais:'Locais da dor',dor:'EVA (0-10)',tipodor:'Tipo de dor',padrao:'Padrão',piora:'Piora com',melhora:'Melhora com',outrosint:'Outros sintomas',qsono:'Qualidade do sono',horas:'Horas de sono',insonia:'Insônia',ronco:'Ronco',apneia:'Apneia',posicao:'Posição ao dormir',bsono:'Bruxismo noturno',bdia:'Bruxismo diurno',placa:'Placa dental',paraf:'Parafunções',estalo:'Estalo ATM',trava:'Travamento',dormastigar:'Dor ao mastigar',dtmprev:'DTM prévio',doencas:'Doenças',meds:'Medicamentos',sups:'Suplementos',tratant:'Tratamentos anteriores',eximg:'Exames de imagem',psg:'Polissonografia',alim:'Alimentação',atfis:'Atividade física',contexto:'Contexto de vida',expect:'Expectativa',obs:'Observações'};
+const SKIP=['_ts','_analise','_id','_pid','_editado','sc_epw','sc_gad7','sc_phq9','sc_pcs','sc_dn4'];
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fdt(s){try{const d=new Date(s);return d.toLocaleString('pt-BR');}catch(e){return s||'';}}
+function val(v){return Array.isArray(v)?v.join(', '):(v==null?'':v);}
+
+function render(){
+  const q=(document.getElementById('busca').value||'').toLowerCase();
+  const arr=DADOS.filter(x=>!q || (x.nome||'').toLowerCase().includes(q));
+  if(!arr.length){ document.getElementById('lista').innerHTML='<div class="empty">Nenhuma anamnese recebida ainda.</div>'; return; }
+  document.getElementById('lista').innerHTML=arr.map((x,i)=>{
+    const p=x.paciente||{}, sc=x.scores||{};
+    const scores=[['EVA',sc.eva],['Estresse',sc.estresse],['Epworth',sc.epworth],['GAD-7',sc.gad7],['PHQ-9',sc.phq9],['PCS',sc.pcs],['DN4',sc.dn4]].filter(s=>s[1]!=null&&s[1]!=='').map(s=>`<span class="score">${s[0]}: ${esc(s[1])}</span>`).join('');
+    const campos=Object.keys(p).filter(k=>SKIP.indexOf(k)<0 && val(p[k])!=='' ).map(k=>`<div class="row"><div class="k">${esc(LBL[k]||k)}</div><div class="v">${esc(val(p[k]))}</div></div>`).join('');
+    const analise = x.analise_ia ? `<div class="sec"><h3>Análise IA Saúde</h3><div class="analise">${esc(x.analise_ia)}</div></div>` : `<div class="sec"><button class="btn" onclick="gerar('${x.id}',${i})">🤖 Gerar análise da IA Saúde</button> <span id="ga${i}" style="font-size:12px;color:#6b7280"></span></div>`;
+    return `<div class="card">
+      <div class="ch" onclick="toggle(${i})">
+        <div><div class="nm">${esc(x.nome||'(sem nome)')}</div><div class="meta">${esc(x.telefone||'')} · ${fdt(x.criado_em)}</div></div>
+        <span class="tag">${esc(x.status||'nova')}</span>
+      </div>
+      <div class="body" id="b${i}">
+        <div class="sec"><h3>Pontuações</h3><div class="scores">${scores||'<span class="meta">—</span>'}</div></div>
+        <div class="sec"><h3>Respostas</h3>${campos||'<div class="meta">Sem respostas detalhadas.</div>'}</div>
+        ${analise}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggle(i){document.getElementById('b'+i).classList.toggle('open');}
+
+async function gerar(id,i){
+  const x=DADOS.find(d=>d.id===id); if(!x)return;
+  const el=document.getElementById('ga'+i); el.textContent='Gerando análise… (pode levar alguns segundos)';
+  try{
+    const r=await fetch(API+'/anamnese-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fonte:'painel_dr',paciente:x.paciente||{},scores:x.scores||{},anotacoes:x.anotacoes||{}})});
+    const j=await r.json();
+    if(j&&j.analise_ia_saude){
+      x.analise_ia=j.analise_ia_saude;
+      const tk=await _token();
+      if(tk){ try{ await fetch(SB_URL+'/rest/v1/anamneses_online?id=eq.'+id,{method:'PATCH',headers:{apikey:SB_ANON,Authorization:'Bearer '+tk,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({analise_ia:j.analise_ia_saude})}); }catch(e){} }
+      render(); setTimeout(()=>document.getElementById('b'+i).classList.add('open'),50);
+    } else { el.textContent='Não foi possível gerar agora.'; }
+  }catch(e){ el.textContent='Falha ao gerar. Tente de novo.'; }
+}
+</script>
+</body>
+</html>
