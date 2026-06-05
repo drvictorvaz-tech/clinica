@@ -155,6 +155,25 @@ REGRAS:
     except Exception as e:
         pass  # log do erro
 
+    # 5. Salva no Supabase (durável + visível para o Dr.)
+    try:
+        from supabase import create_client
+        _u = os.environ.get("SUPABASE_URL", "")
+        _k = os.environ.get("SUPABASE_KEY", "")
+        if _u and _k:
+            create_client(_u, _k).table("anamneses_online").insert({
+                "nome": nome,
+                "telefone": paciente.get("tel", "") or paciente.get("celular", ""),
+                "nascimento": paciente.get("nasc", "") or paciente.get("data_nascimento", ""),
+                "paciente": paciente,
+                "scores": scores,
+                "anotacoes": anotacoes,
+                "analise_ia": analise_ia,
+                "fonte": payload.fonte or "ficha_online",
+            }).execute()
+    except Exception:
+        pass
+
     return {
         "status": "ok",
         "id": ficha_completa["id"],
