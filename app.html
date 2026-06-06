@@ -4260,9 +4260,9 @@ function loadAgenda(){IASAG_render();}
   window.IAS_evoSb=window.IAS_evoSb||{};
   window.__iasLoadPid=async function(pid){pid=String(pid);try{
     var ra=await sbf('anotacoes?paciente_id=eq.'+encodeURIComponent(pid)+'&order=data.desc&select=id,data,usuario,texto');
-    if(ra.ok){var aa=await ra.json();window.data=window.data||{};data.annotations=data.annotations||{};data.annotations[pid]=aa.map(function(r){return{id:r.id,d:r.data,u:r.usuario,t:r.texto,sb:true};});}
+    if(ra.ok){var aa=await ra.json();window.data=window.data||{};data.annotations=data.annotations||{};if(aa&&aa.length)data.annotations[pid]=aa.map(function(r){return{id:r.id,d:r.data,u:r.usuario,t:r.texto,sb:true};});}
     var re=await sbf('evolucoes_notas?paciente_id=eq.'+encodeURIComponent(pid)+'&order=data.desc&select=id,data,usuario,texto');
-    if(re.ok){var ee=await re.json();window.IAS_evoSb[pid]=ee.map(function(r){return{id:r.id,date:r.data,texto:r.texto,u:r.usuario};});}
+    if(re.ok){var ee=await re.json();if(ee&&ee.length)window.IAS_evoSb[pid]=ee.map(function(r){return{id:r.id,date:r.data,texto:r.texto,u:r.usuario};});}
     if(String(IAS_curPid)===pid&&window.IAS_reFicha)IAS_reFicha();
   }catch(e){console.warn('iasLoad',e);}};
   window.IAS_anotacoesHtml=function(pid){
