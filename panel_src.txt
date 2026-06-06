@@ -71,7 +71,7 @@ header h1{font-size:18px}header p{font-size:13px;opacity:.85;margin-top:2px}
 </div>
 <script>
 const SB_URL='https://aejaulnwurvumxgtlirw.supabase.co';
-const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImФub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
 const API='https://clinica-production-22e0.up.railway.app';
 const SBKEY='sb-aejaulnwurvumxgtlirw-auth-token';
 let DADOS=[];
