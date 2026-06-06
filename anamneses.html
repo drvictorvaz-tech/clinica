@@ -36,105 +36,99 @@ header h1{font-size:18px}header p{font-size:13px;opacity:.85;margin-top:2px}
 #gate.hide{display:none}
 .gbox{background:#fff;border-radius:16px;padding:32px 26px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .gbox h2{color:#0d7377;margin-bottom:6px}.gbox p{font-size:13px;color:#6b7280;margin-bottom:18px}
-.gbox input{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px;margin-bottom:12px}
-.gbox .btn{width:100%}
-.err{color:#c00;font-size:13px;margin-top:8px;display:none}
-.muted{font-size:12px;color:#9ca3af;text-align:center;margin-top:10px}
+.gbox label{display:block;text-align:left;font-size:12px;font-weight:600;color:#1a2535;margin:10px 0 4px}
+.gbox input{width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:10px;font-size:16px}
+.gbox .btn{width:100%;margin-top:18px}
+.err{color:#c00;font-size:13px;margin-top:10px;display:none}
 </style>
 </head>
 <body>
 <div id="gate">
   <div class="gbox">
-    <div style="font-size:40px">🔐</div>
+    <div style="font-size:40px">CADEADO</div>
     <h2>Anamneses recebidas</h2>
     <p>Acesso do Dr. Victor</p>
-    <input id="pw" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')entrar()">
+    <label>Email</label>
+    <input id="em" type="email" value="drvictorvaz@gmail.com" autocomplete="username">
+    <label>Senha</label>
+    <input id="pw" type="password" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
     <button class="btn" onclick="entrar()">Entrar</button>
-    <div class="err" id="gerr">Senha incorreta</div>
+    <div class="err" id="gerr">Email ou senha incorretos</div>
   </div>
 </div>
-
 <header>
   <div class="wrap" style="padding:0">
-    <h1>🌿 Anamneses recebidas</h1>
-    <p>Dr. Victor Vaz · fichas enviadas pelos pacientes</p>
+    <h1>Anamneses recebidas</h1>
+    <p>Dr. Victor Vaz - fichas enviadas pelos pacientes</p>
   </div>
 </header>
 <div class="wrap">
   <div class="bar">
     <input id="busca" placeholder="Buscar por nome..." oninput="render()">
-    <button class="btn sec" onclick="carregar()">↻ Atualizar</button>
+    <button class="btn sec" onclick="carregar()">Atualizar</button>
   </div>
-  <div id="lista"><div class="empty">Carregando…</div></div>
+  <div id="lista"><div class="empty">Carregando...</div></div>
 </div>
-
 <script>
 const SB_URL='https://aejaulnwurvumxgtlirw.supabase.co';
-const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
+const SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFlamF1bG53dXJ2dW14Z3RsaXJ3Iiwicm9sZSI6ImФub24iLCJpYXQiOjE3Nzc3ODM1MTksImV4cCI6MjA5MzM1OTUxOX0.RtyvmyzlskNvkdcMIArC51fwK8LFyH7qcVxKHj4Z5Qo';
 const API='https://clinica-production-22e0.up.railway.app';
-const SENHA='IASaude2026!';
+const SBKEY='sb-aejaulnwurvumxgtlirw-auth-token';
 let DADOS=[];
-
-function entrar(){
-  if(document.getElementById('pw').value.trim()===SENHA){ document.getElementById('gate').classList.add('hide'); carregar(); }
-  else document.getElementById('gerr').style.display='block';
-}
-
-function _sess(){for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/sb-.*-auth-token/.test(k)){try{return{k:k,o:JSON.parse(localStorage.getItem(k))};}catch(e){}}}return null;}
+function _sess(){ try{ return JSON.parse(localStorage.getItem(SBKEY)); }catch(e){ return null; } }
 async function _token(){
-  const s=_sess(); if(!s||!s.o) return null;
-  let t=s.o.access_token, exp=s.o.expires_at||0;
-  if(exp && exp < Math.floor(Date.now()/1000)+30 && s.o.refresh_token){
-    try{ const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.o.refresh_token})}); const j=await r.json(); if(j.access_token){ t=j.access_token; const ns=Object.assign({},s.o,j); if(j.expires_in)ns.expires_at=Math.floor(Date.now()/1000)+j.expires_in; localStorage.setItem(s.k,JSON.stringify(ns)); } }catch(e){}
+  let o=_sess(); if(!o||!o.access_token) return null;
+  if((o.expires_at||0) < Math.floor(Date.now()/1000)+30 && o.refresh_token){
+    try{ const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:o.refresh_token})}); const j=await r.json(); if(j.access_token){ o=Object.assign({},o,j); o.expires_at=Math.floor(Date.now()/1000)+(j.expires_in||3600); localStorage.setItem(SBKEY,JSON.stringify(o)); } else { return null; } }catch(e){ return null; }
   }
-  return t;
+  return o.access_token;
 }
-
+async function entrar(){
+  const email=document.getElementById('em').value.trim();
+  const pass=document.getElementById('pw').value;
+  document.getElementById('gerr').style.display='none';
+  try{
+    const r=await fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:SB_ANON,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const j=await r.json();
+    if(!r.ok||!j.access_token){ document.getElementById('gerr').style.display='block'; return; }
+    j.expires_at=Math.floor(Date.now()/1000)+(j.expires_in||3600);
+    localStorage.setItem(SBKEY,JSON.stringify(j));
+    document.getElementById('gate').classList.add('hide');
+    carregar();
+  }catch(e){ document.getElementById('gerr').style.display='block'; }
+}
 async function carregar(){
-  document.getElementById('lista').innerHTML='<div class="empty">Carregando…</div>';
+  document.getElementById('lista').innerHTML='<div class="empty">Carregando...</div>';
   const tk=await _token();
-  if(!tk){ document.getElementById('lista').innerHTML='<div class="empty">Para ver as fichas, abra primeiro o app <b>IA SAÚDE</b> e faça login na mesma janela do navegador. Depois volte aqui e toque em ↻ Atualizar.</div>'; return; }
+  if(!tk){ document.getElementById('gate').classList.remove('hide'); return; }
   try{
     const r=await fetch(SB_URL+'/rest/v1/anamneses_online?select=*&order=criado_em.desc',{headers:{apikey:SB_ANON,Authorization:'Bearer '+tk}});
-    if(!r.ok){ document.getElementById('lista').innerHTML='<div class="empty">Erro ao carregar ('+r.status+'). Tente novamente.</div>'; return; }
+    if(r.status===401){ document.getElementById('gate').classList.remove('hide'); return; }
+    if(!r.ok){ document.getElementById('lista').innerHTML='<div class="empty">Erro ao carregar.</div>'; return; }
     DADOS=await r.json(); render();
-  }catch(e){ document.getElementById('lista').innerHTML='<div class="empty">Falha de conexão.</div>'; }
+  }catch(e){ document.getElementById('lista').innerHTML='<div class="empty">Falha de conexao.</div>'; }
 }
-
-const LBL={nome:'Nome',nasc:'Nascimento',sexo:'Sexo',tel:'WhatsApp',prof:'Profissão',est:'Estresse (0-10)',queixa:'Queixa principal',tempo:'Tempo de evolução',evento:'Evento desencadeante',locais:'Locais da dor',dor:'EVA (0-10)',tipodor:'Tipo de dor',padrao:'Padrão',piora:'Piora com',melhora:'Melhora com',outrosint:'Outros sintomas',qsono:'Qualidade do sono',horas:'Horas de sono',insonia:'Insônia',ronco:'Ronco',apneia:'Apneia',posicao:'Posição ao dormir',bsono:'Bruxismo noturno',bdia:'Bruxismo diurno',placa:'Placa dental',paraf:'Parafunções',estalo:'Estalo ATM',trava:'Travamento',dormastigar:'Dor ao mastigar',dtmprev:'DTM prévio',doencas:'Doenças',meds:'Medicamentos',sups:'Suplementos',tratant:'Tratamentos anteriores',eximg:'Exames de imagem',psg:'Polissonografia',alim:'Alimentação',atfis:'Atividade física',contexto:'Contexto de vida',expect:'Expectativa',obs:'Observações'};
-const SKIP=['_ts','_analise','_id','_pid','_editado','sc_epw','sc_gad7','sc_phq9','sc_pcs','sc_dn4'];
-
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function fdt(s){try{const d=new Date(s);return d.toLocaleString('pt-BR');}catch(e){return s||'';}}
+const LBL={nome:'Nome',nasc:'Nascimento',sexo:'Sexo',tel:'WhatsApp',prof:'Profissao',est:'Estresse (0-10)',queixa:'Queixa principal',tempo:'Tempo de evolucao',evento:'Evento desencadeante',locais:'Locais da dor',dor:'EVA (0-10)',tipodor:'Tipo de dor',padrao:'Padrao',piora:'Piora com',melhora:'Melhora com',outrosint:'Outros sintomas',qsono:'Qualidade do sono',horas:'Horas de sono',insonia:'Insonia',ronco:'Ronco',apneia:'Apneia',posicao:'Posicao ao dormir',bsono:'Bruxismo noturno',bdia:'Bruxismo diurno',placa:'Placa dental',paraf:'Parafuncoes',estalo:'Estalo ATM',trava:'Travamento',dormastigar:'Dor ao mastigar',dtmprev:'DTM previo',doencas:'Doencas',meds:'Medicamentos',sups:'Suplementos',tratant:'Tratamentos anteriores',eximg:'Exames de imagem',psg:'Polissonografia',alim:'Alimentacao',atfis:'Atividade fisica',contexto:'Contexto de vida',expect:'Expectativa',obs:'Observacoes'};
+const SKIP=['_ts','_analise','_id','_pid','_editado','sc_epw','sc_gad7','sc_phq9','sc_pcs','sc_dn4','epw','gad7','phq9','pcs','dn4'];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fdt(s){try{return new Date(s).toLocaleString('pt-BR');}catch(e){return s||'';}}
 function val(v){return Array.isArray(v)?v.join(', '):(v==null?'':v);}
-
 function render(){
   const q=(document.getElementById('busca').value||'').toLowerCase();
-  const arr=DADOS.filter(x=>!q || (x.nome||'').toLowerCase().includes(q));
+  const arr=DADOS.filter(function(x){return !q || (x.nome||'').toLowerCase().indexOf(q)>=0;});
   if(!arr.length){ document.getElementById('lista').innerHTML='<div class="empty">Nenhuma anamnese recebida ainda.</div>'; return; }
-  document.getElementById('lista').innerHTML=arr.map((x,i)=>{
+  document.getElementById('lista').innerHTML=arr.map(function(x,i){
     const p=x.paciente||{}, sc=x.scores||{};
-    const scores=[['EVA',sc.eva],['Estresse',sc.estresse],['Epworth',sc.epworth],['GAD-7',sc.gad7],['PHQ-9',sc.phq9],['PCS',sc.pcs],['DN4',sc.dn4]].filter(s=>s[1]!=null&&s[1]!=='').map(s=>`<span class="score">${s[0]}: ${esc(s[1])}</span>`).join('');
-    const campos=Object.keys(p).filter(k=>SKIP.indexOf(k)<0 && val(p[k])!=='' ).map(k=>`<div class="row"><div class="k">${esc(LBL[k]||k)}</div><div class="v">${esc(val(p[k]))}</div></div>`).join('');
-    const analise = x.analise_ia ? `<div class="sec"><h3>Análise IA Saúde</h3><div class="analise">${esc(x.analise_ia)}</div></div>` : `<div class="sec"><button class="btn" onclick="gerar('${x.id}',${i})">🤖 Gerar análise da IA Saúde</button> <span id="ga${i}" style="font-size:12px;color:#6b7280"></span></div>`;
-    return `<div class="card">
-      <div class="ch" onclick="toggle(${i})">
-        <div><div class="nm">${esc(x.nome||'(sem nome)')}</div><div class="meta">${esc(x.telefone||'')} · ${fdt(x.criado_em)}</div></div>
-        <span class="tag">${esc(x.status||'nova')}</span>
-      </div>
-      <div class="body" id="b${i}">
-        <div class="sec"><h3>Pontuações</h3><div class="scores">${scores||'<span class="meta">—</span>'}</div></div>
-        <div class="sec"><h3>Respostas</h3>${campos||'<div class="meta">Sem respostas detalhadas.</div>'}</div>
-        ${analise}
-      </div>
-    </div>`;
+    const scores=[['EVA',sc.eva],['Estresse',sc.estresse],['Epworth',sc.epworth],['GAD-7',sc.gad7],['PHQ-9',sc.phq9],['PCS',sc.pcs],['DN4',sc.dn4]].filter(function(s){return s[1]!=null&&s[1]!=='';}).map(function(s){return '<span class="score">'+s[0]+': '+esc(s[1])+'</span>';}).join('');
+    const campos=Object.keys(p).filter(function(k){return SKIP.indexOf(k)<0 && val(p[k])!=='';}).map(function(k){return '<div class="row"><div class="k">'+esc(LBL[k]||k)+'</div><div class="v">'+esc(val(p[k]))+'</div></div>';}).join('');
+    const analise = x.analise_ia ? '<div class="sec"><h3>Analise IA Saude</h3><div class="analise">'+esc(x.analise_ia)+'</div></div>' : '<div class="sec"><button class="btn" onclick="gerar(\''+x.id+'\','+i+')">Gerar analise da IA Saude</button> <span id="ga'+i+'" style="font-size:12px;color:#6b7280"></span></div>';
+    return '<div class="card"><div class="ch" onclick="toggle('+i+')"><div><div class="nm">'+esc(x.nome||'(sem nome)')+'</div><div class="meta">'+esc(x.telefone||'')+' - '+fdt(x.criado_em)+'</div></div><span class="tag">'+esc(x.status||'nova')+'</span></div><div class="body" id="b'+i+'"><div class="sec"><h3>Pontuacoes</h3><div class="scores">'+(scores||'<span class="meta">-</span>')+'</div></div><div class="sec"><h3>Respostas</h3>'+(campos||'<div class="meta">Sem respostas.</div>')+'</div>'+analise+'</div></div>';
   }).join('');
 }
 function toggle(i){document.getElementById('b'+i).classList.toggle('open');}
-
 async function gerar(id,i){
-  const x=DADOS.find(d=>d.id===id); if(!x)return;
-  const el=document.getElementById('ga'+i); el.textContent='Gerando análise… (pode levar alguns segundos)';
+  const x=DADOS.find(function(d){return d.id===id;}); if(!x)return;
+  const el=document.getElementById('ga'+i); el.textContent='Gerando analise...';
   try{
     const r=await fetch(API+'/anamnese-paciente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fonte:'painel_dr',paciente:x.paciente||{},scores:x.scores||{},anotacoes:x.anotacoes||{}})});
     const j=await r.json();
@@ -142,10 +136,11 @@ async function gerar(id,i){
       x.analise_ia=j.analise_ia_saude;
       const tk=await _token();
       if(tk){ try{ await fetch(SB_URL+'/rest/v1/anamneses_online?id=eq.'+id,{method:'PATCH',headers:{apikey:SB_ANON,Authorization:'Bearer '+tk,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({analise_ia:j.analise_ia_saude})}); }catch(e){} }
-      render(); setTimeout(()=>document.getElementById('b'+i).classList.add('open'),50);
-    } else { el.textContent='Não foi possível gerar agora.'; }
-  }catch(e){ el.textContent='Falha ao gerar. Tente de novo.'; }
+      render(); setTimeout(function(){document.getElementById('b'+i).classList.add('open');},50);
+    } else { el.textContent='Nao foi possivel gerar agora.'; }
+  }catch(e){ el.textContent='Falha ao gerar.'; }
 }
+window.addEventListener('load', async function(){ const tk=await _token(); if(tk){ document.getElementById('gate').classList.add('hide'); carregar(); } });
 </script>
 </body>
 </html>
