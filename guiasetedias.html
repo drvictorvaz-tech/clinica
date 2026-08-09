@@ -164,19 +164,28 @@ section{padding:64px 0}
 .selos{display:flex; justify-content:center; flex-wrap:wrap; gap:18px; margin-top:22px; font-size:12.5px; color:var(--muted); font-weight:600}
 .selos span{display:flex; align-items:center; gap:6px}
 
-/* COMPLEMENTOS / BÔNUS (order bumps) */
-.bonus-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr)); gap:16px; max-width:980px; margin:0 auto}
-.bonus{background:var(--white); border:1px solid var(--line); border-radius:16px; padding:24px 22px; display:flex; flex-direction:column;
-  box-shadow:0 6px 18px rgba(20,33,61,.05); transition:transform .16s, box-shadow .16s}
-.bonus:hover{transform:translateY(-3px); box-shadow:0 14px 30px rgba(20,33,61,.1)}
-.bonus .btag{align-self:flex-start; background:rgba(200,162,75,.16); color:var(--gold-d); font-size:11px; font-weight:800;
-  letter-spacing:1px; text-transform:uppercase; padding:5px 12px; border-radius:20px; margin-bottom:14px; border:1px solid rgba(200,162,75,.35)}
-.bonus h3{font-size:16px; margin-bottom:8px}
-.bonus p{font-size:13.8px; color:var(--muted); flex-grow:1}
-.bonus .price{margin-top:16px; padding-top:14px; border-top:1px dashed var(--line); font-size:15px; font-weight:800; color:var(--navy)}
-.bonus .price s{color:var(--muted); font-weight:600; font-size:13px; margin-right:6px}
-.bonus .price b{color:var(--gold-d)}
-.bonus-note{text-align:center; max-width:660px; margin:24px auto 0; font-size:13.5px; color:var(--muted)}
+/* 5 GUIAS BÔNUS (order bumps) — estilo Código Divino */
+.bonus-dark{background:radial-gradient(130% 100% at 50% -12%, #294a7d 0%, #16264a 44%, #0b1226 100%); position:relative; overflow:hidden}
+.bonus-dark .sec-head h2{color:#fff}
+.bonus-dark .sec-head p{color:#bcc9df}
+.bonus-shelf{display:flex; justify-content:center; align-items:flex-end; gap:16px; flex-wrap:wrap; max-width:960px; margin:10px auto 0; position:relative; z-index:1}
+.bonus-shelf::after{content:""; position:absolute; left:5%; right:5%; bottom:-16px; height:74px;
+  background:radial-gradient(ellipse at center, rgba(200,162,75,.42), transparent 72%); filter:blur(9px); z-index:0}
+.mcover{width:160px; aspect-ratio:1/1.46; border-radius:9px; padding:18px 13px; display:flex; flex-direction:column; text-align:center;
+  position:relative; overflow:hidden; z-index:1;
+  background:radial-gradient(120% 90% at 50% 80%, #294a7d 0%, #16264a 45%, #0a1024 100%);
+  box-shadow:0 22px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(200,162,75,.28); transition:transform .2s ease}
+.mcover:hover{transform:translateY(-8px)}
+.mcover::before{content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:linear-gradient(180deg,#C8A24B,#8a6a24)}
+.mcover .mk{font-size:8px; letter-spacing:1.6px; color:var(--gold); text-transform:uppercase; font-weight:800}
+.mcover .mi{font-size:34px; margin:12px 0 8px; filter:drop-shadow(0 4px 10px rgba(246,169,75,.45))}
+.mcover .mt{font-size:13px; font-weight:900; color:#fff; line-height:1.16}
+.mcover .mstars{margin-top:auto; font-size:11px; color:var(--gold); letter-spacing:1.5px}
+.bonus-price{text-align:center; margin:42px auto 0; color:#e6ecf6; font-size:17px}
+.bonus-price s{color:#8a97ad; margin-right:8px; font-weight:600}
+.bonus-price b{color:var(--gold); font-weight:900; font-size:20px}
+.bonus-note2{text-align:center; max-width:620px; margin:12px auto 0; font-size:13.5px; color:#9fb0cc}
+@media(max-width:820px){ .mcover{width:132px} }
 
 /* GARANTIA */
 .garantia{max-width:720px; margin:0 auto; text-align:center; background:var(--white); border:1px solid var(--line);
@@ -432,49 +441,24 @@ footer a{color:var(--gold)}
   </div>
 </section>
 
-<!-- COMPLEMENTOS / ORDER BUMPS -->
-<section>
+<!-- COMPLEMENTOS / ORDER BUMPS (estilo Código Divino) -->
+<section class="dark bonus-dark">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">Turbine seus resultados</div>
-      <h2>Complementos exclusivos no checkout</h2>
-      <p>Ao finalizar sua compra, você pode adicionar — com um único clique, sem sair da tela de pagamento — guias que potencializam o protocolo. Cada um sai por apenas <b>R$ 39,90</b> (metade do valor normal).</p>
+      <div class="eyebrow" style="color:var(--gold)">5 Guias Complementares</div>
+      <h2>Turbine seus resultados no checkout</h2>
+      <p>Na hora de finalizar a compra, você pode adicionar — com um clique — estes 5 guias que aprofundam e potencializam o protocolo.</p>
     </div>
-    <div class="bonus-list">
-      <div class="bonus">
-        <span class="btag">Complemento 1</span>
-        <h3>Receitas Saudáveis e Nutritivas</h3>
-        <p>Cardápio de receitas anti-inflamatórias práticas para acelerar seus resultados no dia a dia.</p>
-        <div class="price"><s>R$ 79,90</s> <b>R$ 39,90</b> no checkout</div>
-      </div>
-      <div class="bonus">
-        <span class="btag">Complemento 2</span>
-        <h3>Protocolo SOS — Crises de Dor</h3>
-        <p>Um passo a passo objetivo do que fazer nos momentos de crise aguda de dor, para agir na hora certa.</p>
-        <div class="price"><s>R$ 79,90</s> <b>R$ 39,90</b> no checkout</div>
-      </div>
-      <div class="bonus">
-        <span class="btag">Complemento 3</span>
-        <h3>Guia de Mobilidade Integrativa</h3>
-        <p>Exercícios de mobilidade e descompressão neural para aliviar tensões e recuperar o movimento.</p>
-        <div class="price"><s>R$ 79,90</s> <b>R$ 39,90</b> no checkout</div>
-      </div>
-      <div class="bonus">
-        <span class="btag">Complemento 4</span>
-        <h3>Libertação Total — Café e Açúcar</h3>
-        <p>O método anti-abstinência para vencer a dependência de café e açúcar sem sofrimento.</p>
-        <div class="price"><s>R$ 79,90</s> <b>R$ 39,90</b> no checkout</div>
-      </div>
-      <div class="bonus">
-        <span class="btag">Complemento 5</span>
-        <h3>Desativação Neural no Exercício Mental</h3>
-        <p>A técnica mental para desativar o gatilho da dor e reduzir a percepção dolorosa.</p>
-        <div class="price"><s>R$ 79,90</s> <b>R$ 39,90</b> no checkout</div>
-      </div>
+    <div class="bonus-shelf">
+      <div class="mcover"><div class="mk">Complemento</div><div class="mi">🥗</div><div class="mt">Receitas Saudáveis e Nutritivas</div><div class="mstars">★★★★★</div></div>
+      <div class="mcover"><div class="mk">Complemento</div><div class="mi">🚨</div><div class="mt">Protocolo SOS — Crises de Dor</div><div class="mstars">★★★★★</div></div>
+      <div class="mcover"><div class="mk">Complemento</div><div class="mi">🧘</div><div class="mt">Guia de Mobilidade Integrativa</div><div class="mstars">★★★★★</div></div>
+      <div class="mcover"><div class="mk">Complemento</div><div class="mi">☕</div><div class="mt">Libertação — Café e Açúcar</div><div class="mstars">★★★★★</div></div>
+      <div class="mcover"><div class="mk">Complemento</div><div class="mi">🧠</div><div class="mt">Desativação Neural no Exercício Mental</div><div class="mstars">★★★★★</div></div>
     </div>
-    <p class="bonus-note">Os complementos são <b>opcionais</b> e aparecem na tela de pagamento. Você escolhe quais quer adicionar — o guia principal já é completo por si só.</p>
+    <p class="bonus-price"><s>De R$ 79,90 cada</s> <b>por R$ 39,90</b> no checkout</p>
     <div class="center-cta">
-      <a href="https://pay.kiwify.com.br/Kyn1SRD" class="btn">Quero o guia + complementos →</a>
+      <a href="https://pay.kiwify.com.br/Kyn1SRD" class="btn">Quero o guia + os 5 complementos →</a>
     </div>
   </div>
 </section>
