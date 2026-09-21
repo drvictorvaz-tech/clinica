@@ -287,15 +287,25 @@ async def extrair_dados_audio(transcricao: str = Form(...)):
 #   1. reduz as imagens (RX, TCFC, RM, fotos) antes de enviar - sem perda que
 #      atrapalhe a leitura pela IA, pois ela ja reduz imagens acima de 1568 px;
 #   2. confere o tamanho total e, se ainda passar do limite, recomprime mais;
-#   3. se mesmo assim nao couber (ex.: PDFs enormes), devolve uma mensagem
-#      clara em portugues dizendo quais arquivos tirar.
+#   3. PDFs pesados (ex.: exames escaneados de 30 MB) sao convertidos em imagens
+#      leves, uma por pagina, em niveis progressivos de compressao;
+#   4. se mesmo assim nao couber, devolve uma mensagem clara em portugues
+#      dizendo o que tirar (nunca descarta paginas em silencio).
 LIMITE_TOTAL_BYTES = 28 * 1024 * 1024        # orcamento em base64 (margem sob 32 MB)
 MAX_ARQUIVOS = 20                            # teto de arquivos por analise
-IMG_LADO_MAX = 1568                          # px do maior lado (recomendado pela Anthropic)
-IMG_QUALIDADE = 85
-IMG_LADO_MAX_ECONOMICO = 1024                # 2a tentativa, se o total ainda estourar
-IMG_QUALIDADE_ECONOMICA = 70
+MAX_IMAGENS = 100                            # limite da API: 100 imagens por requisicao
+TOKENS_MAX_IMAGENS = 150_000                 # estimativa (largura x altura / 750 por imagem); janela da IA ~200 mil
 IMG_TIPOS_ACEITOS = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+_MB = 1024 * 1024
+MAX_UPLOAD_BYTES = 100 * _MB                 # o que voce pode ANEXAR por analise (o servidor reduz ate caber na IA)
+# nivel -> imagens (lado max px, qualidade JPEG) e, se houver, regra de conversao de PDF
+#   pdf_min : PDFs maiores que isso viram imagens de pagina; menores seguem como PDF original
+NIVEIS_COMPRESSAO = {
+    0: {"img": (1568, 85), "pdf_min": None},
+    1: {"img": (1024, 70), "pdf_min": None},
+    2: {"img": (1024, 70), "pdf_min": 1 * _MB, "pdf_img": (1400, 70)},
+    3: {"img": (1024, 60), "pdf_min": 200 * 1024, "pdf_img": (1100, 55)},
+}
 
 
 def _b64_tamanho(n_bytes: int) -> int:
@@ -303,9 +313,9 @@ def _b64_tamanho(n_bytes: int) -> int:
     return ((n_bytes + 2) // 3) * 4
 
 
-def _reduzir_imagem(file_bytes: bytes, media_type: str, lado_max: int = IMG_LADO_MAX, qualidade: int = IMG_QUALIDADE):
-    """Reduz a imagem e recodifica em JPEG. Devolve (bytes, media_type).
-    Se nao for possivel abrir a imagem, devolve o original sem mexer."""
+def _reduzir_imagem(file_bytes: bytes, media_type: str, lado_max: int = 1568, qualidade: int = 85):
+    """Reduz a imagem e recodifica em JPEG. Devolve (bytes, media_type, largura, altura).
+    Se nao for possivel abrir a imagem, devolve o original sem mexer (largura/altura = 0)."""
     try:
         from PIL import Image, ImageOps
         img = Image.open(io.BytesIO(file_bytes))
@@ -320,35 +330,83 @@ def _reduzir_imagem(file_bytes: bytes, media_type: str, lado_max: int = IMG_LADO
         img.thumbnail((lado_max, lado_max), Image.LANCZOS)   # so diminui, nunca amplia
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=qualidade, optimize=True)
-        return buf.getvalue(), "image/jpeg"
+        return buf.getvalue(), "image/jpeg", img.width, img.height
     except Exception:
-        return file_bytes, media_type
+        return file_bytes, media_type, 0, 0
 
 
-def _preparar_exames(arquivos_lidos, economico: bool = False):
-    """arquivos_lidos: lista de (nome, bytes, content_type).
-    Devolve (blocos_para_a_IA, nomes_ok, nomes_ignorados, total_base64)."""
-    lado = IMG_LADO_MAX_ECONOMICO if economico else IMG_LADO_MAX
-    qual = IMG_QUALIDADE_ECONOMICA if economico else IMG_QUALIDADE
-    blocos, nomes_ok, ignorados, total = [], [], [], 0
+def _pdf_para_imagens(pdf_bytes: bytes, lado_max: int, qualidade: int):
+    """Converte cada pagina do PDF em uma imagem JPEG leve.
+    Devolve (lista de (jpeg_bytes, largura, altura) ou None, numero_de_paginas).
+    None = nao foi possivel converter (biblioteca ausente, PDF protegido/corrompido
+    ou paginas demais); nesse caso o PDF segue como documento original."""
+    try:
+        import pypdfium2 as pdfium
+        pdf = pdfium.PdfDocument(pdf_bytes)
+        n = len(pdf)
+        if n == 0 or n > MAX_IMAGENS:
+            return None, n
+        paginas = []
+        for i in range(n):
+            pagina = pdf[i]
+            w, h = pagina.get_size()
+            escala = min(lado_max / max(w, h, 1), 4.0)
+            pil = pagina.render(scale=escala).to_pil().convert("RGB")
+            buf = io.BytesIO()
+            pil.save(buf, format="JPEG", quality=qualidade, optimize=True)
+            paginas.append((buf.getvalue(), pil.width, pil.height))
+            pagina.close()
+        pdf.close()
+        return paginas, n
+    except Exception:
+        return None, 0
+
+
+def _preparar_exames(arquivos_lidos, nivel: int = 0):
+    """arquivos_lidos: lista de (nome, bytes, content_type). nivel: chave de NIVEIS_COMPRESSAO.
+    Devolve dict: blocos (para a IA), nomes, ignorados, total (bytes em base64),
+    n_imgs (imagens enviadas), tokens (estimativa das imagens), paginas_pdf (por arquivo)."""
+    cfg = NIVEIS_COMPRESSAO[nivel]
+    lado, qual = cfg["img"]
+    blocos, nomes_ok, ignorados, paginas_pdf = [], [], [], {}
+    total = n_imgs = tokens = 0
+
+    def add_bloco(tipo, media_type, dados_bin):
+        nonlocal total
+        b64 = base64.standard_b64encode(dados_bin).decode("utf-8")
+        total += len(b64)
+        blocos.append({"type": tipo, "source": {"type": "base64", "media_type": media_type, "data": b64}})
+
     for nome, dados_bin, media_type in arquivos_lidos:
         media_type = (media_type or "").lower()
         if media_type.startswith("image/"):
-            dados_bin, media_type = _reduzir_imagem(dados_bin, media_type, lado, qual)
+            dados_bin, media_type, w, h = _reduzir_imagem(dados_bin, media_type, lado, qual)
             if media_type not in IMG_TIPOS_ACEITOS:
                 ignorados.append(nome)             # ex.: HEIC que nao deu para converter
                 continue
-            bloco_tipo = "image"
+            add_bloco("image", media_type, dados_bin)
+            n_imgs += 1
+            tokens += (w * h) // 750 if w and h else 1600
+            nomes_ok.append(nome)
         elif media_type == "application/pdf":
-            bloco_tipo = "document"
+            paginas, n_pag = (None, 0)
+            if cfg.get("pdf_min") is not None and len(dados_bin) > cfg["pdf_min"]:
+                paginas, n_pag = _pdf_para_imagens(dados_bin, *cfg["pdf_img"])
+            if paginas:
+                blocos.append({"type": "text", "text": f"[A seguir, as {n_pag} paginas, em ordem, do PDF '{nome}']"})
+                for jpeg, w, h in paginas:
+                    add_bloco("image", "image/jpeg", jpeg)
+                    n_imgs += 1
+                    tokens += (w * h) // 750
+                paginas_pdf[nome] = n_pag
+                nomes_ok.append(f"{nome} ({n_pag} pag.)")
+            else:
+                add_bloco("document", "application/pdf", dados_bin)
+                nomes_ok.append(nome)
         else:
             ignorados.append(nome)
-            continue
-        b64 = base64.standard_b64encode(dados_bin).decode("utf-8")
-        total += len(b64)
-        blocos.append({"type": bloco_tipo, "source": {"type": "base64", "media_type": media_type, "data": b64}})
-        nomes_ok.append(nome)
-    return blocos, nomes_ok, ignorados, total
+    return {"blocos": blocos, "nomes": nomes_ok, "ignorados": ignorados, "total": total,
+            "n_imgs": n_imgs, "tokens": tokens, "paginas_pdf": paginas_pdf}
 
 
 @app.post("/analisar-com-arquivos")
@@ -371,21 +429,36 @@ async def analisar_com_arquivos(
         if file_bytes:
             lidos.append((arquivo.filename or "arquivo", file_bytes, arquivo.content_type or ""))
 
-    # Reduz imagens e confere o tamanho total (roda em thread para nao travar o servidor)
-    orcamento = LIMITE_TOTAL_BYTES - len(prompt.encode("utf-8")) - 200_000
-    blocos, arquivos_adicionados, ignorados, total = await run_in_threadpool(_preparar_exames, lidos, False)
-    if total > orcamento:
-        blocos, arquivos_adicionados, ignorados, total = await run_in_threadpool(_preparar_exames, lidos, True)
-    if total > orcamento:
+    total_enviado = sum(len(b) for _, b, _ in lidos)
+    if total_enviado > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=(f"Os arquivos anexados somam {total_enviado / _MB:.1f} MB; o maximo por analise e {MAX_UPLOAD_BYTES // _MB} MB. "
+                    "Remova alguns arquivos e tente de novo.")
+        )
+
+    # Reduz imagens/PDFs em niveis progressivos ate caber (roda em thread para nao travar o servidor)
+    orcamento =LIMITE_TOTAL_BYTES - len(prompt.encode("utf-8")) - 200_000
+    res = None
+    for nivel in sorted(NIVEIS_COMPRESSAO):
+        res = await run_in_threadpool(_preparar_exames, lidos, nivel)
+        if res["total"] <= orcamento and res["n_imgs"] <= MAX_IMAGENS and res["tokens"] <= TOKENS_MAX_IMAGENS:
+            break
+    else:
         mb = lambda n: f"{n / 1024 / 1024:.1f} MB"
         maiores = sorted(lidos, key=lambda x: len(x[1]), reverse=True)[:3]
         lista = ", ".join(f"{n} ({mb(len(b))})" for n, b, _ in maiores)
+        if res["n_imgs"] > MAX_IMAGENS or res["tokens"] > TOKENS_MAX_IMAGENS:
+            motivo = (f"Os exames somam {res['n_imgs']} paginas/imagens, acima do limite da analise "
+                      f"({MAX_IMAGENS} imagens / ~{TOKENS_MAX_IMAGENS // 1000} mil unidades de leitura da IA). ")
+        else:
+            motivo = f"Os exames anexados somam {mb(res['total'])} mesmo depois de reduzidos; o limite e ~{mb(orcamento)}. "
         raise HTTPException(
             status_code=413,
-            detail=(f"Os exames anexados somam {mb(total)} mesmo depois de reduzidos; o limite e ~{mb(orcamento)}. "
-                    f"Remova ou comprima os maiores (em geral PDFs escaneados): {lista}. "
-                    "Dica: envie so as paginas relevantes do PDF ou descreva o achado no campo de texto.")
+            detail=(motivo + f"Maiores arquivos: {lista}. "
+                    "Envie so as paginas relevantes (ex.: laudos e resultados principais) ou descreva o achado no campo de texto.")
         )
+    blocos, arquivos_adicionados, ignorados = res["blocos"], res["nomes"], res["ignorados"]
 
     content = [{"type": "text", "text": prompt}] + blocos
     if arquivos_adicionados:

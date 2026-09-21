@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Victor Vaz — Análise Clínica Integrativa</title>
+<style>
+:root {
+  --primary: #1a4a6b;
+  --primary-light: #2d6a9f;
+  --accent: #2ecc71;
+  --accent-dark: #27ae60;
+  --warning: #e67e22;
+  --danger: #e74c3c;
+  --bg: #f0f4f8;
+  --card: #ffffff;
+  --text: #2c3e50;
+  --text-muted: #7f8c8d;
+  --border: #dce3ec;
+  --shadow: 0 2px 12px rgba(26,74,107,0.10);
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: white; padding: 18px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 3px 16px rgba(0,0,0,0.18);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 14px; }
+.logo-icon { width: 44px; height: 44px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.logo h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+.logo p { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
+.btn-historico {
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1px solid rgba(255,255,255,0.35); border-radius: 8px;
+  padding: 9px 16px; cursor: pointer; font-size: 13px; font-weight: 600;
+  text-decoration: none; display: flex; align-items: center; gap: 6px;
+  transition: background 0.2s; white-space: nowrap;
+}
+.btn-historico:hover { background: rgba(255,255,255,0.28); }
+.status-dot { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #95a5a6; animation: pulse 2s infinite; }
+.dot.online { background: var(--accent); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* LAYOUT */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media(max-width:900px){ .grid-2,.grid-3{ grid-template-columns:1fr; } }
+
+/* CARDS */
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin-bottom: 20px; border: 1px solid var(--border); }
+.card-title { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title .icon { font-size: 1.2rem; }
+
+/* TABS */
+.tabs { display: flex; gap: 4px; background: var(--bg); padding: 5px; border-radius: var(--radius); margin-bottom: 20px; }
+.tab { flex: 1; padding: 10px 8px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); transition: all 0.2s; text-align: center; }
+.tab.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* FORM */
+.section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin: 16px 0 8px; padding: 4px 10px; background: rgba(26,74,107,0.06); border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+@media(max-width:600px){ .form-row,.form-row-3{ grid-template-columns:1fr; } }
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+input, select, textarea {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px;
+  font-size: 0.88rem; color: var(--text); background: white;
+  transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(45,106,159,0.12);
+}
+textarea { resize: vertical; min-height: 70px; }
+.required::after { content: ' *'; color: var(--danger); }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; font-family: inherit; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,74,107,0.3); }
+.btn-success { background: var(--accent-dark); color: white; }
+.btn-success:hover { background: var(--accent); }
+.btn-warning { background: var(--warning); color: white; }
+.btn-warning:hover { opacity: 0.9; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: 0.9; }
+.btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); }
+.btn-outline:hover { background: var(--primary); color: white; }
+.btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: 10px; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+.btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+/* VOICE RECORDER */
+.recorder-area { background: linear-gradient(135deg, #f8fafc, #edf2f7); border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; }
+.recorder-area.recording { border-color: var(--danger); background: linear-gradient(135deg, #fff5f5, #fed7d7); animation: recordPulse 1.5s infinite; }
+@keyframes recordPulse { 0%,100%{border-color:var(--danger)} 50%{border-color:#fc8181} }
+.record-timer { font-size: 2rem; font-weight: 700; color: var(--danger); font-variant-numeric: tabular-nums; }
+.transcript-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 0.85rem; line-height: 1.6; max-height: 150px; overflow-y: auto; text-align: left; color: var(--text-muted); }
+
+/* FILE UPLOAD */
+.file-drop { border: 2px dashed var(--border); border-radius: var(--radius); padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; }
+.file-drop:hover, .file-drop.dragover { border-color: var(--primary-light); background: rgba(45,106,159,0.05); }
+.file-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.file-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; }
+.file-tag button { background: none; border: none; color: white; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0; }
+
+/* LOADING */
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(240,244,248,0.85); z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+.loading-overlay.show { display: flex; }
+.spinner { width: 52px; height: 52px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 1rem; color: var(--primary); font-weight: 600; animation: fadeInOut 2s infinite; }
+@keyframes fadeInOut { 0%,100%{opacity:0.6} 50%{opacity:1} }
+
+/* RESULTS */
+.results-area { display: none; }
+.results-area.show { display: block; }
+.section-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--primary); color: white; border-radius: 10px 10px 0 0; margin-top: 0; cursor: pointer; user-select: none; transition: background 0.2s; }
+.section-header:hover { background: #1e5a82; }
+.section-header .num { width: 28px; height: 28px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink:0; }
+.section-header .chevron { margin-left: auto; font-size: 1rem; transition: transform 0.25s; }
+.section-header.collapsed .chevron { transform: rotate(-90deg); }
+.section-body { background: white; border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; padding: 18px; margin-bottom: 16px; line-height: 1.7; font-size: 0.9rem; }
+.section-body.hidden { display: none; }
+.section-body h3 { color: var(--primary); margin: 14px 0 6px; font-size: 0.95rem; }
+.section-body ul, .section-body ol { padding-left: 20px; margin: 8px 0; }
+.section-body li { margin-bottom: 4px; }
+.section-body strong { color: var(--primary); }
+.section-body table.md-tbl { border-collapse:collapse; width:100%; margin:14px 0; font-size:0.85rem; border-radius:8px; overflow:hidden; box-shadow: 0 1px 4px rgba(26,74,107,0.1); }
+.section-body th { background:var(--primary); color:white; padding:9px 12px; text-align:left; font-weight:600; font-size:0.82rem; }
+.section-body td { padding:8px 12px; border-bottom:1px solid var(--border); }
+.section-body tr:last-child td { border-bottom:none; }
+.section-body tr:nth-child(even) td { background:#f4f8fc; }
+.section-body em { color: var(--warning); }
+/* Score buttons */
+.score-btns { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.score-btn { width: 36px; height: 36px; border: 2px solid var(--border); border-radius: 8px; background: white; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; color: var(--text); }
+.score-btn:hover { border-color: var(--primary); color: var(--primary); }
+.score-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.score-btn.active.high { background: var(--danger); border-color: var(--danger); }
+
+/* STAB BADGE */
+.stab-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+.stab-provavel { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.stab-possivel { background: #d1ecf1; color: #0c5460; border: 1px solid #17a2b8; }
+.stab-definido { background: #f8d7da; color: #721c24; border: 1px solid #dc3545; }
+
+/* 6 EIXOS */
+.eixos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 12px 0; }
+@media(max-width:600px){ .eixos-grid{ grid-template-columns: 1fr 1fr; } }
+.eixo-card { border-radius: 8px; padding: 12px; text-align: center; font-size: 0.78rem; font-weight: 600; }
+.eixo-1 { background: #e8f4fd; color: #1a5276; border: 1px solid #aed6f1; }
+.eixo-2 { background: #f5eef8; color: #6c3483; border: 1px solid #d7bde2; }
+.eixo-3 { background: #eafaf1; color: #1e8449; border: 1px solid #a9dfbf; }
+.eixo-4 { background: #fef9e7; color: #9a7d0a; border: 1px solid #f9e79f; }
+.eixo-5 { background: #fdedec; color: #922b21; border: 1px solid #f5b7b1; }
+.eixo-6 { background: #fdf2e9; color: #935116; border: 1px solid #fad7a0; }
+
+/* PROPOSTA */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: var(--radius); max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.modal-header { background: var(--primary); color: white; padding: 18px 22px; border-radius: var(--radius) var(--radius) 0 0; display: flex; justify-content: space-between; align-items: center; }
+.modal-body { padding: 22px; }
+.modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+.close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+
+.modal-price-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.modal-price-row:last-child { border-bottom: none; }
+.modal-price-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+.modal-price-row label { flex: 1; font-size: 0.88rem; cursor: pointer; }
+.price-input { width: 120px; }
+
+/* PRINT */
+.print-proposta { display: none; }
+@media print {
+  body > *:not(.print-proposta):not(.print-analise) { display: none !important; }
+  .print-proposta { display: block !important; }
+  .print-proposta { padding: 30px; font-family: 'Segoe UI', sans-serif; }
+  .print-analise { display: block !important; padding: 30px; font-family: 'Segoe UI', sans-serif; }
+}
+.print-analise { display: none; }
+
+/* ALERTS */
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; }
+.alert-danger { background: #fdecea; border: 1px solid #f5c6cb; color: #721c24; }
+.alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+.alert-info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+.alert-warning { background: #fff3cd; border: 1px solid #ffc107; color: #856404; }
+
+/* PATIENT SUMMARY BAR */
+.patient-bar { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+.patient-bar span { font-size: 0.83rem; }
+.patient-bar strong { color: var(--primary); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--primary); color: white; padding: 12px 20px; border-radius: 8px; font-size: 0.88rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 500; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
+/* ===== CHAT PANEL ===== */
+.btn-chat {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(124,58,237,0.4);
+}
+.btn-chat:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.5); }
+.chat-panel {
+  position: fixed;
+  top: 0; right: -420px;
+  width: 400px;
+  height: 100vh;
+  background: #0f172a;
+  border-left: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  z-index: 9999;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.4);
+}
+.chat-panel.open { right: 0; }
+.chat-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  flex-shrink: 0;
+}
+.chat-panel-header span { color: white; font-weight: 700; font-size: 0.95rem; }
+.chat-close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chat-msg {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.chat-msg.user {
+  background: #7c3aed;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.ia {
+  background: #1e293b;
+  color: #e2e8f0;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.ia table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 0.8rem; }
+.chat-msg.ia th, .chat-msg.ia td { border: 1px solid #334155; padding: 5px 8px; text-align: left; }
+.chat-msg.ia th { background: #334155; }
+.chat-typing { color: #64748b; font-style: italic; font-size: 0.8rem; align-self: flex-start; padding: 8px 12px; }
+.chat-input-area {
+  padding: 12px 16px;
+  background: #0f172a;
+  border-top: 1px solid #1e293b;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.chat-input-area textarea {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  resize: none;
+  outline: none;
+  max-height: 120px;
+}
+.chat-input-area textarea:focus { border-color: #7c3aed; }
+.chat-send-btn {
+  background: #7c3aed;
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.chat-send-btn:hover { background: #6d28d9; }
+.chat-context-badge {
+  background: #1e293b;
+  color: #64748b;
+  font-size: 0.72rem;
+  padding: 6px 12px;
+  text-align: center;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+.chat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9998;
+  display: none;
+}
+.chat-overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Analisando caso clínico...</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🦷</div>
+    <div>
+      <h1>Dr. Victor Vaz — Análise Clínica Integrativa</h1>
+      <p>DTM · Bruxismo · Sono · Dor Orofacial · Saúde Integrativa | CRO 4923 SC</p>
+    </div>
+  </div>
+  <div class="status-dot">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Verificando...</span>
+  </div>
+  <a href="historico.html" class="btn-historico">📋 Histórico</a>
+  <button onclick="toggleChat()" class="btn-chat" id="btnChat">💬 Consultar IA</button>
+</header>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL PROPOSTA -->
+<div class="modal-overlay" id="modalProposta">
+  <div class="modal">
+    <div class="modal-header">
+      <span>💰 Gerar Proposta de Tratamento</span>
+      <button class="close-btn" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px;">Selecione as modalidades indicadas e informe os valores para este paciente:</p>
+      
+      <div style="display:flex;gap:16px;margin-bottom:14px;padding:10px;background:#f0f4f8;border-radius:8px;font-size:0.85rem;align-items:center;flex-wrap:wrap;">
+        <strong style="color:var(--primary)">Exibir valores na proposta:</strong>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="separado" id="optSeparado" checked onchange="window._exibicaoValor=this.value">
+          Cada modalidade com seu valor
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="total" id="optTotal" onchange="window._exibicaoValor=this.value">
+          Só o valor total
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="radio" name="exibicaoValor" value="nenhum" id="optNenhum" onchange="window._exibicaoValor=this.value">
+          Sem valores (só modalidades)
+        </label>
+      </div>
+      <div id="modalidades-lista"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="gerarProposta()">⚡ Gerar Proposta com IA</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT PROPOSTA -->
+<div class="print-proposta" id="printProposta"></div>
+<div class="print-analise" id="printAnalise"></div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('analise',this)">🔬 Análise Clínica</button>
+    <button class="tab" onclick="switchTab('voz',this)">🎙️ Voz & Transcrição</button>
+    <button class="tab" onclick="switchTab('exames',this)">📎 Exames & Arquivos</button>
+    <button class="tab" onclick="switchTab('resultados',this)">📊 Resultados</button>
+  </div>
+
+  <!-- TAB: ANÁLISE -->
+  <div class="tab-content active" id="tab-analise">
+    <div class="card">
+      <div class="card-title"><span class="icon">👤</span> Identificação do Paciente</div>
+      <div class="form-row-3">
+        <div class="field"><label for="nome">Nome</label><input type="text" id="nome" placeholder="Nome completo"></div>
+        <div class="field"><label for="idade">Idade</label><input type="number" id="idade" placeholder="anos" min="0" max="120"></div>
+        <div class="field"><label for="sexo">Sexo</label>
+          <select id="sexo"><option value="">Selecione</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="profissao">Profissão</label><input type="text" id="profissao" placeholder="Profissão"></div>
+        <div class="field"><label for="ecivil">Estado Civil</label>
+          <select id="ecivil"><option value="">Selecione</option><option>Solteiro(a)</option><option>Casado(a)</option><option>Divorciado(a)</option><option>Viúvo(a)</option><option>União estável</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Nível de estresse percebido (0–10)</label>
+        <input type="hidden" id="estresse" value="5">
+        <div class="score-btns" id="estresseBtns">
+          <button type="button" class="score-btn" onclick="setScore('estresse',0)">0</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',1)">1</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',2)">2</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',3)">3</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',4)">4</button>
+          <button type="button" class="score-btn active" onclick="setScore('estresse',5)">5</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',6)">6</button>
+          <button type="button" class="score-btn" onclick="setScore('estresse',7)">7</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',8)">8</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',9)">9</button>
+          <button type="button" class="score-btn high" onclick="setScore('estresse',10)">10</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🩺</span> Queixa Principal e Dor</div>
+      <div class="field"><label class="required" for="queixa">Queixa principal</label>
+        <textarea id="queixa" placeholder="Descreva a queixa principal do paciente..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="evolucao">Tempo de evolução</label><input type="text" id="evolucao" placeholder="ex: 6 meses, 2 anos"></div>
+        <div class="field"><label for="evento">Evento desencadeante</label><input type="text" id="evento" placeholder="ex: trauma, estresse, extração"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="dor_local">Localização da dor</label><input type="text" id="dor_local" placeholder="ex: ATM direita, temporal bilateral"></div>
+        <div class="field"><label for="eva">EVA (0–10)</label>
+          <select id="eva"><option value="">Selecione</option><option>0 – Sem dor</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5 – Moderada</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10 – Insuportável</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="dpadrao">Padrão temporal</label>
+          <select id="dpadrao"><option value="">Selecione</option><option>Contínua</option><option>Intermitente</option><option>Episódica</option><option>Pior ao acordar</option><option>Pior ao final do dia</option><option>Noturna</option></select>
+        </div>
+        <div class="field"><label for="dpiora">Fatores de piora</label><input type="text" id="dpiora" placeholder="ex: mastigação, estresse, frio"></div>
+      </div>
+      <div class="field"><label for="sintomas">Sintomas associados</label>
+        <textarea id="sintomas" placeholder="ex: cefaleia, zumbido, otalgia, tontura, cervicalgia, travamento mandibular..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">😴</span> Eixo do Sono (STAB Eixo A)</div>
+      <div class="form-row">
+        <div class="field"><label for="sonoq">Qualidade do sono</label>
+          <select id="sonoq"><option value="">Selecione</option><option>Muito ruim</option><option>Ruim</option><option>Regular</option><option>Boa</option><option>Muito boa</option></select>
+        </div>
+        <div class="field"><label for="sonoh">Horas de sono por noite</label>
+          <select id="sonoh"><option value="">Selecione</option><option>Menos de 5h</option><option>5–6h</option><option>6–7h</option><option>7–8h</option><option>Mais de 8h</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="insonia">Insônia</label>
+          <select id="insonia"><option value="">Selecione</option><option>Não</option><option>Dificuldade em adormecer</option><option>Acorda durante a noite</option><option>Acorda cedo demais</option><option>Múltiplos tipos</option></select>
+        </div>
+        <div class="field"><label for="posicao">Posição ao dormir</label>
+          <select id="posicao"><option value="">Selecione</option><option>Decúbito dorsal</option><option>Decúbito lateral direito</option><option>Decúbito lateral esquerdo</option><option>Decúbito ventral</option><option>Varia</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="sonoobs">Observações do sono (ronco, apneia, bruxismo noturno, parassonias)</label>
+        <textarea id="sonoobs" placeholder="ex: ronco relatado pelo parceiro, paradas respiratórias, grinding noturno..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">⚙️</span> Bruxismo & Parafunções (STAB)</div>
+      <div class="form-row">
+        <div class="field"><label for="brux">Bruxismo relatado</label>
+          <select id="brux"><option value="">Selecione</option><option>Não</option><option>Apenas sono</option><option>Apenas vigília</option><option>Sono e vigília</option><option>Não sabe / Suspeita</option></select>
+        </div>
+        <div class="field"><label for="placa">Dispositivo intraoral atual</label>
+          <select id="placa"><option value="">Selecione</option><option>Nenhum</option><option>Placa oclusal/estabilizadora</option><option>Placa de avanço mandibular</option><option>Outro</option><option>Já usou (abandonou)</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="parafuncoes">Parafunções observadas</label>
+        <textarea id="parafuncoes" placeholder="ex: aperta dentes em vigília, morde objetos, range à noite, bracing mandibular, contato dental..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🦷</span> Exame Clínico ATM</div>
+      <div class="field"><label for="dtm_sinais">Sinais clínicos de DTM</label>
+        <textarea id="dtm_sinais" placeholder="ex: click ATM direita abertura, crepitação bilateral, dor à palpação masseter e temporal, deflexão à direita..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="abertura">Abertura bucal máxima (mm)</label><input type="text" id="abertura" placeholder="ex: 38mm sem dor, 45mm com dor"></div>
+        <div class="field"><label for="diagdtm">Diagnóstico DTM prévio</label><input type="text" id="diagdtm" placeholder="ex: artralgia ATM bilateral, dor miofascial"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🏥</span> Histórico Médico</div>
+      <div class="field"><label for="sistemicas">Doenças sistêmicas</label>
+        <textarea id="sistemicas" placeholder="ex: hipotireoidismo, fibromialgia, ansiedade, depressão, diabetes, SII..."></textarea>
+      </div>
+      <div class="field"><label for="tratant">Tratamentos anteriores</label>
+        <textarea id="tratant" placeholder="ex: uso de placa por 1 ano sem melhora, fisioterapia por 3 meses..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="meds">Medicamentos em uso</label>
+          <textarea id="meds" placeholder="ex: escitalopram 10mg, alprazolam 0,25mg SOS, omeprazol..."></textarea>
+        </div>
+        <div class="field"><label for="sups">Suplementos em uso</label>
+          <textarea id="sups" placeholder="ex: magnésio 400mg, vitamina D 5000UI, melatonina 0,5mg..."></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="labs">Exames laboratoriais recentes</label>
+          <textarea id="labs" placeholder="ex: TSH 3,2, D3 28ng/mL, magnésio 1,8, ferritina 22..."></textarea>
+        </div>
+        <div class="field"><label for="img">Exames de imagem</label>
+          <textarea id="img" placeholder="ex: TCFC: remodelação condilar bilateral, RMM ATM: DD com redução esquerda..."></textarea>
+        </div>
+      </div>
+      <div class="field"><label for="poli">Polissonografia</label>
+        <textarea id="poli" placeholder="ex: IAH 12/h (apneia leve), bruxismo do sono confirmado: 5,2 episódios/hora..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🌿</span> Contexto Integrativo</div>
+      <div class="field"><label for="hist">Histórico clínico relevante</label>
+        <textarea id="hist" placeholder="ex: histórico de trauma emocional, cirurgias, outras dores crônicas..."></textarea>
+      </div>
+      <div class="field"><label for="ctx">Contexto de vida</label>
+        <textarea id="ctx" placeholder="ex: trabalha 12h/dia sob pressão, divorciou-se há 1 ano, sedentário, dieta inflamatória..."></textarea>
+      </div>
+      <div class="field"><label for="obs">Observações clínicas do dentista</label>
+        <textarea id="obs" placeholder="Observações adicionais, impressão clínica, dados relevantes..."></textarea>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin: 10px 0 24px;">
+      <button class="btn btn-primary btn-lg" onclick="analisar()">
+        🔬 Gerar Análise Clínica Integrativa
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: VOZ -->
+  <div class="tab-content" id="tab-voz">
+    <div class="card">
+      <div class="card-title"><span class="icon">🎙️</span> Gravação da Consulta</div>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px;">Grave o áudio da consulta. A transcrição é feita automaticamente e os dados do paciente são extraídos e preenchidos no formulário.</p>
+
+      <div class="recorder-area" id="recorderArea">
+        <div id="recorderIdle">
+          <div style="font-size:3rem;margin-bottom:8px;">🎙️</div>
+          <p style="color:var(--text-muted);font-size:0.9rem;">Clique em Iniciar para começar a gravar</p>
+        </div>
+        <div id="recorderActive" style="display:none">
+          <div class="record-timer" id="recordTimer">00:00</div>
+          <p style="color:var(--danger);font-size:0.85rem;margin-top:6px;">● Gravando...</p>
+        </div>
+      </div>
+
+      <div class="btn-group" style="justify-content:center">
+        <button class="btn btn-danger" id="btnGravar" onclick="toggleGravacao()">🔴 Iniciar Gravação</button>
+        <button class="btn btn-outline" id="btnLimparTransc" onclick="limparTranscricao()" style="display:none">🗑️ Limpar</button>
+      </div>
+
+      <div id="transcricaoArea" style="display:none;margin-top:16px;">
+        <div class="section-label">📝 Transcrição</div>
+        <div class="transcript-box" id="transcricaoTexto"></div>
+        <div class="btn-group" style="margin-top:12px;">
+          <button class="btn btn-primary" onclick="preencherFormulario()">⚡ Extrair Dados e Preencher Formulário</button>
+          <button class="btn btn-outline" onclick="copiarTranscricao()">📋 Copiar Transcrição</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">💬</span> Inserir Transcrição Manualmente</div>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:12px;">Cole aqui uma transcrição já existente (do Google Meet, Otter.ai, etc.) para extrair os dados automaticamente:</p>
+      <textarea id="transcManual" placeholder="Cole a transcrição da consulta aqui..." style="min-height:120px;width:100%;"></textarea>
+      <div class="btn-group" style="margin-top:10px;">
+        <button class="btn btn-primary" onclick="preencherManual()">⚡ Extrair Dados da Transcrição</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EXAMES -->
+  <div class="tab-content" id="tab-exames">
+    <div class="card">
+      <div class="card-title"><span class="icon">📎</span> Upload de Exames</div>
+      <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:16px;">Faça upload de exames de imagem (RX, TCFC, RMM) e laudos laboratoriais (PDF). A IA irá incorporá-los à análise clínica.</p>
+
+      <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()"
+        ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+        <div style="font-size:2.5rem;margin-bottom:8px;">📁</div>
+        <p style="font-weight:600;color:var(--primary)">Arraste arquivos aqui ou clique para selecionar</p>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">Imagens (JPG, PNG) e PDFs — Múltiplos arquivos aceitos</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,.pdf" multiple style="display:none" onchange="addFiles(this.files)">
+
+      <div class="file-list" id="fileList"></div>
+
+      <div class="btn-group" style="margin-top:16px;">
+        <button class="btn btn-success" onclick="analisarComArquivos()">🔬 Analisar com Exames</button>
+        <button class="btn btn-outline" onclick="limparArquivos()">🗑️ Limpar Arquivos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RESULTADOS -->
+  <div class="tab-content" id="tab-resultados">
+    <div id="resultadoVazio" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+      <div style="font-size:3rem;margin-bottom:12px;">🔬</div>
+      <p style="font-size:1rem;">Nenhuma análise gerada ainda.</p>
+      <p style="font-size:0.85rem;margin-top:6px;">Preencha o formulário e clique em <strong>Gerar Análise Clínica</strong>.</p>
+    </div>
+
+    <div class="results-area" id="resultsArea">
+      <div class="patient-bar" id="patientBar"></div>
+
+      <div id="section-correlacoes">
+        <div class="section-header" onclick="toggleSection('text-correlacoes',this)"><div class="num">1</div><strong>CORRELAÇÕES CLÍNICAS</strong><span class="chevron">▼</span></div>
+        <div class="section-body" id="text-correlacoes"></div>
+      </div>
+      <div id="section-hipoteses">
+        <div class="section-header" onclick="toggleSection('text-hipoteses',this)"><div class="num">2</div><strong>HIPÓTESES DIAGNÓSTICAS INTEGRADAS</strong><span class="chevron">▼</span></div>
+        <div class="section-body" id="text-hipoteses"></div>
+      </div>
+      <div id="section-exames">
+        <div class="section-header" onclick="toggleSection('text-exames',this)"><div class="num">3</div><strong>EXAMES COMPLEMENTARES SUGERIDOS</strong><span class="chevron">▼</span></div>
+        <div class="section-body" id="text-exames"></div>
+      </div>
+      <div id="section-plano">
+        <div class="section-header" onclick="toggleSection('text-plano',this)"><div class="num">4</div><strong>PLANO DE TRATAMENTO INTEGRATIVO</strong><span class="chevron">▼</span></div>
+        <div class="section-body" id="text-plano"></div>
+      </div>
+      <div id="section-resumo">
+        <div class="section-header" onclick="toggleSection('text-resumo',this)"><div class="num">5</div><strong>RESUMO PARA O PACIENTE</strong><span class="chevron">▼</span></div>
+        <div class="section-body" id="text-resumo"></div>
+      </div>
+
+      <div class="btn-group" style="margin-top:20px;justify-content:center;">
+        <button class="btn btn-success btn-lg" id="btnProposta" onclick="abrirModal()">💰 Gerar Proposta de Tratamento</button>
+        <button class="btn btn-outline" onclick="downloadAnalise()">⬇️ Download Análise</button>
+        <button class="btn btn-outline" onclick="imprimirAnalise()">🖨️ Imprimir</button>
+        <button class="btn btn-outline" onclick="novaAnalise()">🔄 Nova Análise</button>
+        <button class="btn btn-outline" 
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+const API = 'https://clinica-production-22e0.up.railway.app';
+
+// ---- STATUS ----
+async function checkStatus() {
+  try {
+    const r = await fetch(API+'/status');
+    if(r.ok){ 
+      document.getElementById('statusDot').classList.add('online');
+      document.getElementById('statusText').textContent = 'Online';
+    }
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Offline';
+  }
+}
+checkStatus();
+
+// ---- TABS ----
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ---- TOAST ----
+function showToast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// ---- LOADING ----
+function showLoading(msg='Analisando caso clínico...') {
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+// ---- GET DADOS ----
+function getDados() {
+  return {
+    nome: v('nome'), idade: v('idade'), sexo: v('sexo'),
+    profissao: v('profissao'), ecivil: v('ecivil'),
+    estresse: document.getElementById('estresse').value,
+    queixa: v('queixa'), evolucao: v('evolucao'), evento: v('evento'),
+    dor_local: v('dor_local'), eva: v('eva').split(' ')[0],
+    dpadrao: v('dpadrao'), dpiora: v('dpiora'), sintomas: v('sintomas'),
+    sonoq: v('sonoq'), sonoh: v('sonoh').split('h')[0].replace('Menos de ','<').replace('Mais de ','>'),
+    insonia: v('insonia'), posicao: v('posicao'), sonoobs: v('sonoobs'),
+    brux: v('brux'), placa: v('placa'), parafuncoes: v('parafuncoes'),
+    dtm_sinais: v('dtm_sinais'), abertura: v('abertura'), diagdtm: v('diagdtm'),
+    sistemicas: v('sistemicas'), tratant: v('tratant'), meds: v('meds'),
+    sups: v('sups'), labs: v('labs'), img: v('img'), poli: v('poli'),
+    hist: v('hist'), ctx: v('ctx'), obs: v('obs')
+  };
+}
+function v(id) { return (document.getElementById(id)||{}).value||''; }
+
+// ---- ANALISAR ----
+async function analisar() {
+  const dados = getDados();
+  if(!dados.queixa.trim()){ showToast('⚠️ Preencha a queixa principal'); return; }
+  showLoading('Gerando análise integrativa pelos 6 eixos...');
+  try {
+    const r = await fetch(API+'/analisar', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(dados)
+    });
+    if(!r.ok) throw new Error(await lerErro(r));
+    const data = await r.json();
+    mostrarResultados(data, dados);
+    salvarAnaliseAutomatico(data, dados);
+        setChatContexto(JSON.stringify(data, null, 2), dados.nome || 'Paciente');
+    switchTab('resultados', document.querySelectorAll('.tab')[3]);
+  } catch(e) {
+    hideLoading();
+    showToast('❌ Erro: '+e.message, 5000);
+  }
+  hideLoading();
+}
+
+// Extrai a mensagem legivel do erro do servidor ({"detail": "..."}).
+async function lerErro(r) {
+  const txt = await r.text();
+  try {
+    const j = JSON.parse(txt);
+    let d = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+    if (r.status === 413 || /request_too_large|Error code: 413/.test(d)) {
+      if (!/Remova|Muitos arquivos/.test(d)) d = 'Os exames anexados são grandes demais. Remova alguns arquivos (ou PDFs escaneados pesados) e tente de novo.';
+    }
+    return d;
+  } catch(_) { return txt; }
+}
+
+// ---- ANALISAR COM ARQUIVOS ----
+let uploadedFiles = [];
+async function analisarComArquivos() {
+  const dados = getDados();
+  if(!dados.queixa.trim()){ showToast('⚠️ Preencha a queixa principal na aba Análise Clínica'); return; }
+  showLoading('Analisando com exames e arquivos... (PDFs grandes podem levar 1 a 2 minutos)');
+  try {
+    const formData = new FormData();
+    formData.append('dados', JSON.stringify(dados));
+    uploadedFiles.forEach(f => formData.append('arquivos', f));
+    const r = await fetch(API+'/analisar-com-arquivos', {method:'POST', body:formData});
+    if(!r.ok) throw new Error(await lerErro(r));
+    const data = await r.json();
+    mostrarResultados(data, dados);
+    salvarAnaliseAutomatico(data, dados);
+        setChatContexto(JSON.stringify(data, null, 2), dados.nome || 'Paciente');
+    switchTab('resultados', document.querySelectorAll('.tab')[3]);
+    if ((data.arquivos_ignorados||[]).length) showToast('⚠️ Não foi possível ler: ' + data.arquivos_ignorados.join(', '), 6000);
+  } catch(e) {
+    hideLoading();
+    showToast('❌ Erro: '+e.message, 8000);
+  }
+  hideLoading();
+}
+
+// ---- MOSTRAR RESULTADOS ----
+let ultimaAnalise = null;
+function mostrarResultados(data, dados) {
+  ultimaAnalise = {data, dados};
+  document.getElementById('resultadoVazio').style.display='none';
+  document.getElementById('resultsArea').classList.add('show');
+
+  // Patient bar
+  let pb = '';
+  if(dados.nome) pb += `<span>👤 <strong>${dados.nome}</strong></span>`;
+  if(dados.idade) pb += `<span>🎂 <strong>${dados.idade} anos</strong></span>`;
+  if(dados.sexo) pb += `<span>⚧ <strong>${dados.sexo}</strong></span>`;
+  if(dados.queixa) pb += `<span>🩺 <strong>${dados.queixa.substring(0,50)}${dados.queixa.length>50?'...':''}</strong></span>`;
+  document.getElementById('patientBar').innerHTML = pb;
+
+  // Sections — if only correlacoes has content (parsing fallback), redistribute
+  let corr = data.correlacoes||'', hip = data.hipoteses||'', exa = data.exames||'', pla = data.plano||'', res = data.resumo||'';
+  const semConteudo = !hip && !exa && !pla && !res && corr;
+  if (semConteudo) {
+    // Try to split by numbered sections in the raw text
+    const partes = corr.split(/\n(?=\d+[\.\)]\s)/);
+    if (partes.length >= 3) {
+      corr = partes[0]; hip = partes[1]||''; exa = partes[2]||''; pla = partes[3]||''; res = partes[4]||'';
+    }
+  }
+  renderMd('text-correlacoes', corr);
+  renderMd('text-hipoteses', hip);
+  renderMd('text-exames', exa);
+  renderMd('text-plano', pla);
+  renderMd('text-resumo', res);
+  // Show sections that have content, hide empty ones
+  ['correlacoes','hipoteses','exames','plano','resumo'].forEach(s => {
+    const body = document.getElementById('text-'+(s==='resumo'?'resumo':s));
+    const sec = document.getElementById('section-'+(s==='resumo'?'resumo':s));
+    if(sec) sec.style.display = body && body.innerHTML.trim() ? 'block' : 'none';
+  });
+}
+
+function toggleSection(bodyId, header) {
+  const body = document.getElementById(bodyId);
+  body.classList.toggle('hidden');
+  header.classList.toggle('collapsed');
+}
+
+function setScore(fieldId, val) {
+  document.getElementById(fieldId).value = val;
+  const btns = document.querySelectorAll('#' + fieldId + 'Btns .score-btn');
+  btns.forEach((b, i) => {
+    b.classList.remove('active');
+    if (i === val) b.classList.add('active');
+  });
+}
+
+function renderMd(id, txt) {
+    if (!txt || !txt.trim()) return;
+    const lines = txt.split('\n');
+    const out = [];
+    let inTbl = false, rows = [];
+    for (const ln of lines) {
+      const lt = ln.trim();
+      if (lt.startsWith('|') && lt.endsWith('|')) {
+        if (!inTbl) { inTbl = true; rows = []; }
+        if (!lt.replace(/\|/g,'').replace(/-/g,'').replace(/:/g,'').trim()) continue;
+        rows.push(lt.split('|').slice(1,-1).map(c=>c.trim().replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')));
+      } else {
+        if (inTbl) {
+          let t='<table class="md-tbl">';
+          rows.forEach((r,i)=>{t+='<tr>'+r.map(c=>i===0?'<th>'+c+'</th>':'<td>'+c+'</td>').join('')+'</tr>';});
+          t+='</table>'; out.push(t); inTbl=false; rows=[];
+        }
+        out.push(ln);
+      }
+    }
+    if (inTbl) { let t='<table class="md-tbl">'; rows.forEach((r,i)=>{t+='<tr>'+r.map(c=>i===0?'<th>'+c+'</th>':'<td>'+c+'</td>').join('')+'</tr>';}); t+='</table>'; out.push(t); }
+    let html = out.join('\n')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/^#{1,3}\s+(.+)$/gm,'<h3>$1</h3>')
+      .replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g, s=>'<ul>'+s+'</ul>')
+      .replace(/<\/table>\n/g,'</table>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+    document.getElementById(id).innerHTML = '<p>'+html+'</p>';
+  }
+
+function novaAnalise() {
+  document.getElementById('resultsArea').classList.remove('show');
+  document.getElementById('resultadoVazio').style.display='block';
+  switchTab('analise', document.querySelectorAll('.tab')[0]);
+}
+
+// ---- GRAVAÇÃO ----
+let recognition = null, recTimer = null, recSeconds = 0, recActive = false;
+let transcricaoFinal = '';
+
+function toggleGravacao() {
+  if(!recActive) iniciarGravacao();
+  else pararGravacao();
+}
+
+function iniciarGravacao() {
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    showToast('❌ Navegador não suporta gravação. Use Chrome.', 4000); return;
+  }
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'pt-BR';
+  transcricaoFinal = '';
+  recognition.onresult = e => {
+    let interim='', final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript+' ';
+      else interim+=e.results[i][0].transcript;
+    }
+    transcricaoFinal += final;
+    document.getElementById('transcricaoTexto').textContent = transcricaoFinal + interim;
+  };
+  recognition.onerror = e => { showToast('Erro de gravação: '+e.error); pararGravacao(); };
+  recognition.start();
+  recActive = true; recSeconds = 0;
+  document.getElementById('btnGravar').textContent = '⏹ Parar Gravação';
+  document.getElementById('btnGravar').className = 'btn btn-warning';
+  document.getElementById('recorderArea').classList.add('recording');
+  document.getElementById('recorderIdle').style.display='none';
+  document.getElementById('recorderActive').style.display='block';
+  recTimer = setInterval(()=>{
+    recSeconds++;
+    const m=String(Math.floor(recSeconds/60)).padStart(2,'0');
+    const s=String(recSeconds%60).padStart(2,'0');
+    document.getElementById('recordTimer').textContent=`${m}:${s}`;
+  },1000);
+}
+
+function pararGravacao() {
+  if(recognition) recognition.stop();
+  if(recTimer) clearInterval(recTimer);
+  recActive = false;
+  document.getElementById('btnGravar').textContent = '🔴 Iniciar Gravação';
+  document.getElementById('btnGravar').className = 'btn btn-danger';
+  document.getElementById('recorderArea').classList.remove('recording');
+  document.getElementById('recorderIdle').style.display='block';
+  document.getElementById('recorderActive').style.display='none';
+  if(transcricaoFinal.trim()){
+    document.getElementById('transcricaoArea').style.display='block';
+    document.getElementById('btnLimparTransc').style.display='inline-flex';
+    document.getElementById('transcricaoTexto').textContent = transcricaoFinal;
+  }
+}
+
+function limparTranscricao() {
+  transcricaoFinal='';
+  document.getElementById('transcricaoTexto').textContent='';
+  document.getElementById('transcricaoArea').style.display='none';
+  document.getElementById('btnLimparTransc').style.display='none';
+}
+
+function copiarTranscricao() {
+  navigator.clipboard.writeText(transcricaoFinal||document.getElementById('transcricaoTexto').textContent);
+  showToast('✅ Transcrição copiada!');
+}
+
+async function preencherFormulario() {
+  const txt = transcricaoFinal || document.getElementById('transcricaoTexto').textContent;
+  if(!txt.trim()){ showToast('Sem transcrição para extrair'); return; }
+  await extrairDados(txt);
+}
+
+async function preencherManual() {
+  const txt = document.getElementById('transcManual').value;
+  if(!txt.trim()){ showToast('Cole uma transcrição antes'); return; }
+  await extrairDados(txt);
+}
+
+async function extrairDados(txt) {
+  showLoading('Extraindo dados da transcrição...');
+  try {
+    const fd = new FormData(); fd.append('transcricao', txt);
+    const r = await fetch(API+'/extrair-dados-audio', {method:'POST', body:fd});
+    if(!r.ok) throw new Error('Erro na API');
+    const d = await r.json();
+    // Preencher campos
+    const mapa = {
+      nome:'nome',idade:'idade',sexo:'sexo',profissao:'profissao',ecivil:'ecivil',
+      queixa:'queixa',evolucao:'evolucao',evento:'evento',dpadrao:'dpadrao',dpiora:'dpiora',
+      sonoq:'sonoq',sonoh:'sonoh',insonia:'insonia',posicao:'posicao',sonoobs:'sonoobs',
+      brux:'brux',placa:'placa',abertura:'abertura',diagdtm:'diagdtm',sistemicas:'sistemicas',
+      tratant:'tratant',meds:'meds',sups:'sups',labs:'labs',hist:'hist',ctx:'ctx',obs:'obs'
+    };
+    let preenchidos=0;
+    Object.entries(mapa).forEach(([campo,id])=>{
+      if(d[campo]){
+        const el=document.getElementById(id);
+        if(el){ el.value=d[campo]; preenchidos++; }
+      }
+    });
+    hideLoading();
+    showToast(`✅ ${preenchidos} campos preenchidos automaticamente!`);
+    switchTab('analise', document.querySelectorAll('.tab')[0]);
+  } catch(e) {
+    hideLoading(); showToast('❌ Erro: '+e.message, 4000);
+  }
+}
+
+// ---- ARQUIVOS ----
+function addFiles(files) {
+  Array.from(files).forEach(f=>{
+    if(!uploadedFiles.find(x=>x.name===f.name)) uploadedFiles.push(f);
+  });
+  renderFileList();
+}
+function removeFile(name) { uploadedFiles=uploadedFiles.filter(f=>f.name!==name); renderFileList(); }
+function limparArquivos() { uploadedFiles=[]; renderFileList(); }
+function renderFileList() {
+  const fl = document.getElementById('fileList');
+  const mb = n => (n/1024/1024).toFixed(1)+' MB';
+  const total = uploadedFiles.reduce((s,f)=>s+f.size,0);
+  const pdfs = uploadedFiles.filter(f=>f.type==='application/pdf').reduce((s,f)=>s+f.size,0);
+  fl.innerHTML = uploadedFiles.map(f=>
+    `<div class="file-tag">📄 ${f.name} (${mb(f.size)}) <button onclick="removeFile('${f.name}')">×</button></div>`
+  ).join('') + (uploadedFiles.length
+    ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">Total: ${mb(total)} de 100 MB permitidos — imagens e PDFs pesados são reduzidos automaticamente.` +
+      (total > 100*1024*1024 ? ` <strong style="color:#c0392b">Atenção: passou de 100 MB; remova alguns arquivos.</strong>` : '') +
+      (pdfs > 10*1024*1024 ? ` PDFs grandes são convertidos em imagens e a análise pode levar 1 a 2 minutos.` : '') + `</div>`
+    : '');
+}
+function dragOver(e){e.preventDefault();document.getElementById('fileDrop').classList.add('dragover');}
+function dragLeave(e){document.getElementById('fileDrop').classList.remove('dragover');}
+function dropFiles(e){e.preventDefault();document.getElementById('fileDrop').classList.remove('dragover');addFiles(e.dataTransfer.files);}
+
+// ---- PROPOSTA ----
+const MODALIDADES = [
+  {id:'avaliacao',nome:'Avaliação Multidisciplinar'},
+  {id:'placa_estab',nome:'Placa Oclusal / Placa Estabilizadora'},
+  {id:'placa_avanco',nome:'Placa de Avanço Mandibular (Ronco/Apneia)'},
+  {id:'terapia_manual',nome:'Terapia Manual e Fisioterapia Orofacial'},
+  {id:'exercicios',nome:'Exercícios de Fortalecimento e Alongamento'},
+  {id:'agulhamento',nome:'Agulhamento Seco (Dry Needling)'},
+  {id:'laser',nome:'Laser Terapia (Fotobiomodulação)'},
+  {id:'ozonio',nome:'Ozonioterapia'},
+  {id:'viscosupl',nome:'Viscossuplementação da ATM'},
+  {id:'ldn',nome:'LDN – Baixa Dose de Naltrexona'},
+  {id:'suplementacao',nome:'Suplementação Funcional e Ortomolecular'},
+  {id:'disbiose',nome:'Controle da Disbiose Intestinal / Probióticos'},
+  {id:'sono',nome:'Regulação do Sono (Higiene + Dispositivos)'},
+  {id:'estresse',nome:'Controle do Estresse e Ansiedade'},
+  {id:'atividade',nome:'Orientações de Atividade Física e Postura'},
+  {id:'retorno',nome:'Consultas de Retorno e Acompanhamento'},
+];
+
+let savedPrices = JSON.parse(localStorage.getItem('vv_prices')||'{}');
+
+function abrirModal() {
+  const lista = document.getElementById('modalidades-lista');
+  lista.innerHTML = MODALIDADES.map(m=>`
+    <div class="modal-price-row">
+      <input type="checkbox" id="chk_${m.id}" value="${m.nome}" checked>
+      <label for="chk_${m.id}">${m.nome}</label>
+      <input type="text" class="price-input" id="price_${m.id}" placeholder="R$ 0,00" value="${savedPrices[m.id]||''}">
+    </div>
+  `).join('');
+  document.getElementById('modalProposta').classList.add('show');
+}
+function fecharModal() { document.getElementById('modalProposta').classList.remove('show'); }
+
+async function gerarProposta() {
+  const selecionadas = MODALIDADES.filter(m=>document.getElementById('chk_'+m.id)?.checked).map(m=>m.nome);
+  const precos = {};
+  MODALIDADES.forEach(m=>{ const el=document.getElementById('price_'+m.id); if(el?.value){ precos[m.id]=el.value; savedPrices[m.id]=el.value; } });
+  localStorage.setItem('vv_prices', JSON.stringify(savedPrices));
+  fecharModal();
+  if(!ultimaAnalise){ showToast('⚠️ Gere uma análise primeiro'); return; }
+  showLoading('Gerando proposta de tratamento personalizada...');
+  try {
+    const body = {
+      nome: ultimaAnalise.dados.nome||'Paciente',
+      queixa: ultimaAnalise.dados.queixa,
+      hipoteses: ultimaAnalise.data.hipoteses||'',
+      plano: ultimaAnalise.data.plano||'',
+      resumo_paciente: ultimaAnalise.data.resumo||'',
+      modalidades_selecionadas: selecionadas
+    };
+    const r = await fetch(API+'/gerar-proposta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('Erro na API');
+    const prop = await r.json();
+    hideLoading();
+    renderProposta(prop, precos);
+  } catch(e){
+    hideLoading(); showToast('❌ Erro: '+e.message,4000);
+  }
+}
+
+function renderProposta(prop, precos) {
+  const agora = new Date().toLocaleDateString('pt-BR');
+  const modoExibicao = window._exibicaoValor || 'separado';
+  let total = 0;
+
+  (prop.modalidades||[]).forEach(m=>{
+    const idKey = MODALIDADES.find(x=>x.nome===m.nome)?.id||'';
+    if(precos[idKey]){
+      const num = parseFloat(precos[idKey].replace(/[^0-9,]/g,'').replace(',','.'));
+      if(!isNaN(num)) total+=num;
+    }
+  });
+
+  const showValorColuna = modoExibicao === 'separado';
+  const linhas = (prop.modalidades||[]).map(m=>{
+    const idKey = MODALIDADES.find(x=>x.nome===m.nome)?.id||'';
+    const preco = precos[idKey]||'A consultar';
+    const valorCell = showValorColuna ? `<td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:600;color:#1a4a6b;white-space:nowrap">${preco}</td>` : '';
+    return `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee">${m.nome}</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#555;font-size:0.85rem">${m.justificativa||''}</td>${valorCell}</tr>`;
+  }).join('');
+
+  const thInvestimento = showValorColuna ? `<th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Investimento</th>` : '';
+  const tfoot = total > 0 && modoExibicao !== 'nenhum'
+    ? `<tfoot><tr><td colspan="2" style="padding:10px 12px;font-weight:700;color:#1a4a6b;">Total estimado:</td><td style="padding:10px 12px;font-weight:700;color:#1a4a6b;">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr></tfoot>`
+    : '';
+
+  const html = `
+    <div style="max-width:700px;margin:0 auto;font-family:'Segoe UI',sans-serif;">
+      <div style="background:linear-gradient(135deg,#1a4a6b,#2d6a9f);color:white;padding:28px;text-align:center;border-radius:12px 12px 0 0;">
+        <div style="font-size:2rem;margin-bottom:6px;">🦷</div>
+        <h1 style="font-size:1.4rem;margin-bottom:4px;">Dr. Victor Vaz</h1>
+        <p style="opacity:0.85;font-size:0.85rem;">Especialista em DTM, Bruxismo e Sono | CRO 4923 SC</p>
+        <p style="opacity:0.75;font-size:0.78rem;margin-top:4px;">Rua 2300, 527, Centro — Balneário Camboriú, SC | 47999356119</p>
+      </div>
+      <div style="background:white;border:1px solid #dce3ec;padding:24px;">
+        <h2 style="color:#1a4a6b;margin-bottom:6px;">Proposta de Tratamento Personalizado</h2>
+        <p style="color:#7f8c8d;font-size:0.85rem;margin-bottom:16px;">Paciente: <strong>${prop.nome_paciente||'—'}</strong> | Data: ${agora}</p>
+        <div style="background:#f0f4f8;border-left:4px solid #2d6a9f;padding:14px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:0.9rem;line-height:1.6;">${prop.introducao||''}</div>
+        <h3 style="color:#1a4a6b;margin-bottom:10px;">Modalidades de Tratamento</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+          <thead><tr style="background:#f0f4f8;">
+            <th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Tratamento</th>
+            <th style="padding:10px 12px;text-align:left;color:#1a4a6b;">Indicação</th>
+            ${thInvestimento}
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+          ${tfoot}
+        </table>
+        ${prop.timeline?`<div style="margin-top:20px;background:#eafaf1;border:1px solid #a9dfbf;padding:14px;border-radius:8px;"><strong style="color:#1e8449;">⏱️ Cronograma:</strong><br><span style="font-size:0.88rem">${prop.timeline}</span></div>`:''}
+        ${prop.proximos_passos?`<div style="margin-top:12px;background:#fef9e7;border:1px solid #f9e79f;padding:14px;border-radius:8px;"><strong style="color:#9a7d0a;">📋 Próximos passos:</strong><br><span style="font-size:0.88rem">${prop.proximos_passos}</span></div>`:''}
+        ${prop.observacoes?`<div style="margin-top:12px;background:#f8fafc;border:1px solid #dce3ec;padding:14px;border-radius:8px;font-size:0.85rem;color:#555;">${prop.observacoes}</div>`:''}
+        <div style="margin-top:24px;text-align:center;border-top:1px solid #eee;padding-top:16px;">
+          <p style="font-size:0.75rem;color:#999;">Proposta gerada em ${agora} | Válida por 30 dias</p>
+          <p style="font-size:0.75rem;color:#999;">Esta proposta pode ser ajustada conforme evolução clínica e necessidades do paciente.</p>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('printProposta').innerHTML = html;
+
+  const win = window.open('','_blank','width=760,height=700');
+  win.document.write(`<html><head><title>Proposta — ${prop.nome_paciente||'Paciente'}</title>
+    <style>body{font-family:'Segoe UI',sans-serif;padding:20px;background:#f0f4f8;}button{padding:10px 24px;background:#1a4a6b;color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;margin-bottom:16px;}</style></head>
+    <body><button onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>${html}</body></html>`);
+  win.document.close();
+}
+
+// ========================
+// AUTO-SAVE AO HISTÓRICO
+// ========================
+async function salvarAnaliseAutomatico(data, dados) {
+  try {
+    const payload = {
+      nome_paciente: (dados.nome || '').trim() || 'Paciente sem nome',
+      dados_paciente: {
+        nome: dados.nome, idade: dados.idade, sexo: dados.sexo,
+        profissao: dados.profissao, estresse: dados.estresse,
+        queixa: dados.queixa, evolucao: dados.evolucao,
+        eva: dados.eva, sonoq: dados.sonoq, brux: dados.brux
+      },
+      resultado: {
+        correlacoes: data.correlacoes || '',
+        hipoteses: data.hipoteses || '',
+        exames: data.exames || '',
+        plano: data.plano || '',
+        resumo_paciente: data.resumo_paciente || ''
+      },
+      analise_bruta: data.analise_bruta || ''
+    };
+    const r = await fetch(API + '/salvar-analise', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      showToast('💾 Análise salva no histórico do paciente!');
+    }
+  } catch(e) {
+    console.warn('Auto-save histórico falhou (não crítico):', e.message);
+    showToast('⚠️ Análise não salva no histórico: ' + (e.message || 'verifique conexão'), 'warn');
+  }
+}
+
+function downloadAnalise() {
+  const nome = (document.getElementById('nome').value || 'Paciente').trim();
+  const data = new Date().toLocaleDateString('pt-BR');
+  const sections = [
+    { title: 'CORRELAÇÕES CLÍNICAS', id: 'text-correlacoes' },
+    { title: 'HIPÓTESES DIAGNÓSTICAS INTEGRADAS', id: 'text-hipoteses' },
+    { title: 'EXAMES COMPLEMENTARES SUGERIDOS', id: 'text-exames' },
+    { title: 'PLANO DE TRATAMENTO INTEGRATIVO', id: 'text-plano' },
+    { title: 'RESUMO EXECUTIVO', id: 'text-resumo' }
+  ];
+  let txt = 'ANÁLISE CLÍNICA IA - Dr. Victor Vaz\n';
+  txt += 'Paciente: ' + nome + '\n';
+  txt += 'Data: ' + data + '\n';
+  txt += '='.repeat(60) + '\n\n';
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.innerText.trim()) {
+      txt += s.title + '\n' + '-'.repeat(50) + '\n';
+      txt += el.innerText.trim() + '\n\n';
+    }
+  });
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'analise_' + nome.replace(/\s+/g,'_') + '_' + new Date().toISOString().slice(0,10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('⬇️ Download iniciado!');
+}
+
+function imprimirAnalise() {
+  const nome = (document.getElementById('nome').value || 'Paciente').trim();
+  const data = new Date().toLocaleDateString('pt-BR');
+  const sections = [
+    { title: 'CORRELAÇÕES CLÍNICAS', id: 'text-correlacoes' },
+    { title: 'HIPÓTESES DIAGNÓSTICAS INTEGRADAS', id: 'text-hipoteses' },
+    { title: 'EXAMES COMPLEMENTARES SUGERIDOS', id: 'text-exames' },
+    { title: 'PLANO DE TRATAMENTO INTEGRATIVO', id: 'text-plano' },
+    { title: 'RESUMO EXECUTIVO', id: 'text-resumo' }
+  ];
+  let html = '<h2 style="color:#1a56a0">Análise Clínica IA — Dr. Victor Vaz</h2>';
+  html += '<p><strong>Paciente:</strong> ' + nome + ' &nbsp;|&nbsp; <strong>Data:</strong> ' + data + '</p><hr>';
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.innerHTML.trim()) {
+      html += '<h3 style="color:#0d3b72;margin-top:20px">' + s.title + '</h3>';
+      html += '<div>' + el.innerHTML + '</div>';
+    }
+  });
+  const div = document.getElementById('printAnalise');
+  div.innerHTML = html;
+  window.print();
+  setTimeout(() => { div.innerHTML = ''; }, 2000);
+}
+</script>
+
+<!-- CHAT OVERLAY -->
+<div class="chat-overlay" id="chatOverlay" onclick="toggleChat()"></div>
+
+<!-- CHAT PANEL -->
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-header">
+    <span>💬 Consultor IA — Dr. Victor</span>
+    <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-context-badge" id="chatContextBadge">📋 Sem análise carregada ainda</div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg ia">Olá! Estou pronto para discutir o caso clínico com você. Assim que uma análise for gerada, terei todo o contexto disponível. Pode perguntar à vontade! 🩺</div>
+  </div>
+  <div class="chat-input-area">
+    <textarea id="chatInput" placeholder="Tire dúvidas sobre a análise atual..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+    <button class="chat-send-btn" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<script>
+// ===== CHAT =====
+let chatHistorico = [];
+let chatContextoAtual = '';
+
+function toggleChat() {
+  const panel = document.getElementById('chatPanel');
+  const overlay = document.getElementById('chatOverlay');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('chatInput').focus();
+  }
+}
+
+function setChatContexto(analise, nomePaciente) {
+  chatContextoAtual = analise;
+  chatHistorico = [];
+  const badge = document.getElementById('chatContextBadge');
+  if (nomePaciente) {
+    badge.innerHTML = '📋 Contexto carregado: <strong>' + nomePaciente + '</strong>';
+    badge.style.color = '#22c55e';
+  }
+}
+
+function renderChatMd(text) {
+  // Basic markdown: tables, bold, italic
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>');
+  // Tables
+  const lines = html.split('\n');
+  let result = [];
+  let inTable = false;
+  let tableRows = [];
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (l.startsWith('|') && l.endsWith('|')) {
+      if (!inTable) { inTable = true; tableRows = []; }
+      if (!l.replace(/\|/g,'').replace(/-/g,'').trim()) continue; // separator
+      const cells = l.split('|').slice(1,-1).map(c => c.trim());
+      tableRows.push(cells);
+    } else {
+      if (inTable) {
+        let tbl = '<table>';
+        tableRows.forEach((row, ri) => {
+          tbl += '<tr>' + row.map(c => ri===0 ? '<th>'+c+'</th>' : '<td>'+c+'</td>').join('') + '</tr>';
+        });
+        tbl += '</table>';
+        result.push(tbl);
+        inTable = false; tableRows = [];
+      }
+      result.push(l ? '<p style="margin:4px 0">'+l+'</p>' : '<br>');
+    }
+  }
+  if (inTable) {
+    let tbl = '<table>';
+    tableRows.forEach((row, ri) => {
+      tbl += '<tr>' + row.map(c => ri===0 ? '<th>'+c+'</th>' : '<td>'+c+'</td>').join('') + '</tr>';
+    });
+    tbl += '</table>';
+    result.push(tbl);
+  }
+  return result.join('');
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const msgsDiv = document.getElementById('chatMessages');
+
+  // Add user message
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-msg user';
+  userDiv.textContent = msg;
+  msgsDiv.appendChild(userDiv);
+
+  // Typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'chat-typing';
+  typingDiv.textContent = 'IA digitando...';
+  msgsDiv.appendChild(typingDiv);
+  msgsDiv.scrollTop = msgsDiv.scrollHeight;
+
+  try {
+    const resp = await fetch(API + '/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        mensagem: msg,
+        contexto_analise: chatContextoAtual,
+        historico: chatHistorico
+      })
+    });
+    const data = await resp.json();
+    const resposta = data.resposta || 'Sem resposta.';
+
+    // Save to history
+    chatHistorico.push({role:'user', content: msg});
+    chatHistorico.push({role:'assistant', content: resposta});
+    if (chatHistorico.length > 20) chatHistorico = chatHistorico.slice(-20);
+
+    typingDiv.remove();
+
+    const iaDiv = document.createElement('div');
+    iaDiv.className = 'chat-msg ia';
+    iaDiv.innerHTML = renderChatMd(resposta);
+    msgsDiv.appendChild(iaDiv);
+  } catch(e) {
+    typingDiv.remove();
+    const errDiv = document.createElement('div');
+    errDiv.className = 'chat-msg ia';
+    errDiv.textContent = '⚠️ Erro ao conectar. Verifique a conexão.';
+    msgsDiv.appendChild(errDiv);
+  }
+  msgsDiv.scrollTop = msgsDiv.scrollHeight;
+}
+</script>
+</body>
+</html>
