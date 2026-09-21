@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List
 import anthropic
 import os
+import io
 import base64
 import json
 import re
@@ -276,6 +278,79 @@ async def extrair_dados_audio(transcricao: str = Form(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
+# Limites de envio de exames para a API da Anthropic
+# ---------------------------------------------------------------------------
+# A API da Anthropic recusa qualquer requisicao acima de ~32 MB (erro 413
+# "request_too_large") e imagens individuais acima de 5 MB. Como cada arquivo
+# vai em base64 (~33% maior), o servidor agora:
+#   1. reduz as imagens (RX, TCFC, RM, fotos) antes de enviar - sem perda que
+#      atrapalhe a leitura pela IA, pois ela ja reduz imagens acima de 1568 px;
+#   2. confere o tamanho total e, se ainda passar do limite, recomprime mais;
+#   3. se mesmo assim nao couber (ex.: PDFs enormes), devolve uma mensagem
+#      clara em portugues dizendo quais arquivos tirar.
+LIMITE_TOTAL_BYTES = 28 * 1024 * 1024        # orcamento em base64 (margem sob 32 MB)
+MAX_ARQUIVOS = 20                            # teto de arquivos por analise
+IMG_LADO_MAX = 1568                          # px do maior lado (recomendado pela Anthropic)
+IMG_QUALIDADE = 85
+IMG_LADO_MAX_ECONOMICO = 1024                # 2a tentativa, se o total ainda estourar
+IMG_QUALIDADE_ECONOMICA = 70
+IMG_TIPOS_ACEITOS = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+
+def _b64_tamanho(n_bytes: int) -> int:
+    """Tamanho em base64 de n_bytes."""
+    return ((n_bytes + 2) // 3) * 4
+
+
+def _reduzir_imagem(file_bytes: bytes, media_type: str, lado_max: int = IMG_LADO_MAX, qualidade: int = IMG_QUALIDADE):
+    """Reduz a imagem e recodifica em JPEG. Devolve (bytes, media_type).
+    Se nao for possivel abrir a imagem, devolve o original sem mexer."""
+    try:
+        from PIL import Image, ImageOps
+        img = Image.open(io.BytesIO(file_bytes))
+        img = ImageOps.exif_transpose(img)          # respeita a rotacao da foto
+        if img.mode in ("RGBA", "LA", "P"):         # tira transparencia (JPEG nao tem)
+            img = img.convert("RGBA")
+            fundo = Image.new("RGB", img.size, (255, 255, 255))
+            fundo.paste(img, mask=img.split()[-1])
+            img = fundo
+        elif img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        img.thumbnail((lado_max, lado_max), Image.LANCZOS)   # so diminui, nunca amplia
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=qualidade, optimize=True)
+        return buf.getvalue(), "image/jpeg"
+    except Exception:
+        return file_bytes, media_type
+
+
+def _preparar_exames(arquivos_lidos, economico: bool = False):
+    """arquivos_lidos: lista de (nome, bytes, content_type).
+    Devolve (blocos_para_a_IA, nomes_ok, nomes_ignorados, total_base64)."""
+    lado = IMG_LADO_MAX_ECONOMICO if economico else IMG_LADO_MAX
+    qual = IMG_QUALIDADE_ECONOMICA if economico else IMG_QUALIDADE
+    blocos, nomes_ok, ignorados, total = [], [], [], 0
+    for nome, dados_bin, media_type in arquivos_lidos:
+        media_type = (media_type or "").lower()
+        if media_type.startswith("image/"):
+            dados_bin, media_type = _reduzir_imagem(dados_bin, media_type, lado, qual)
+            if media_type not in IMG_TIPOS_ACEITOS:
+                ignorados.append(nome)             # ex.: HEIC que nao deu para converter
+                continue
+            bloco_tipo = "image"
+        elif media_type == "application/pdf":
+            bloco_tipo = "document"
+        else:
+            ignorados.append(nome)
+            continue
+        b64 = base64.standard_b64encode(dados_bin).decode("utf-8")
+        total += len(b64)
+        blocos.append({"type": bloco_tipo, "source": {"type": "base64", "media_type": media_type, "data": b64}})
+        nomes_ok.append(nome)
+    return blocos, nomes_ok, ignorados, total
+
+
 @app.post("/analisar-com-arquivos")
 async def analisar_com_arquivos(
     dados: str = Form(...),
@@ -286,22 +361,33 @@ async def analisar_com_arquivos(
     dados_dict = json.loads(dados)
     if not dados_dict.get("queixa"):
         raise HTTPException(status_code=400, detail="Queixa principal e obrigatoria")
-    content = []
+    if len(arquivos) > MAX_ARQUIVOS:
+        raise HTTPException(status_code=413, detail=f"Muitos arquivos ({len(arquivos)}). Envie no maximo {MAX_ARQUIVOS} por analise.")
+
     prompt = montar_prompt(dados_dict)
-    content.append({"type": "text", "text": prompt})
-    arquivos_adicionados = []
+    lidos = []
     for arquivo in arquivos:
         file_bytes = await arquivo.read()
-        if not file_bytes:
-            continue
-        file_b64 = base64.standard_b64encode(file_bytes).decode("utf-8")
-        media_type = arquivo.content_type or ""
-        if media_type.startswith("image/"):
-            content.append({"type": "image", "source": {"type": "base64", "media_type": media_type, "data": file_b64}})
-            arquivos_adicionados.append(arquivo.filename)
-        elif media_type == "application/pdf":
-            content.append({"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": file_b64}})
-            arquivos_adicionados.append(arquivo.filename)
+        if file_bytes:
+            lidos.append((arquivo.filename or "arquivo", file_bytes, arquivo.content_type or ""))
+
+    # Reduz imagens e confere o tamanho total (roda em thread para nao travar o servidor)
+    orcamento = LIMITE_TOTAL_BYTES - len(prompt.encode("utf-8")) - 200_000
+    blocos, arquivos_adicionados, ignorados, total = await run_in_threadpool(_preparar_exames, lidos, False)
+    if total > orcamento:
+        blocos, arquivos_adicionados, ignorados, total = await run_in_threadpool(_preparar_exames, lidos, True)
+    if total > orcamento:
+        mb = lambda n: f"{n / 1024 / 1024:.1f} MB"
+        maiores = sorted(lidos, key=lambda x: len(x[1]), reverse=True)[:3]
+        lista = ", ".join(f"{n} ({mb(len(b))})" for n, b, _ in maiores)
+        raise HTTPException(
+            status_code=413,
+            detail=(f"Os exames anexados somam {mb(total)} mesmo depois de reduzidos; o limite e ~{mb(orcamento)}. "
+                    f"Remova ou comprima os maiores (em geral PDFs escaneados): {lista}. "
+                    "Dica: envie so as paginas relevantes do PDF ou descreva o achado no campo de texto.")
+        )
+
+    content = [{"type": "text", "text": prompt}] + blocos
     if arquivos_adicionados:
         content.append({"type": "text", "text": f"\nArquivos: {', '.join(arquivos_adicionados)}. Analise e incorpore os achados."})
     try:
@@ -309,7 +395,7 @@ async def analisar_com_arquivos(
         message = client.messages.create(model="claude-sonnet-4-6", max_tokens=8000, system=SYSTEM, messages=[{"role": "user", "content": content}])
         texto = message.content[0].text
         secoes = parsear_secoes(texto)
-        return {"correlacoes": secoes.get("correlacoes", ""), "hipoteses": secoes.get("hipoteses", ""), "exames": secoes.get("exames", ""), "plano": secoes.get("plano", ""), "resumo": secoes.get("resumo", ""), "areas_detectadas": arquivos_adicionados, "fontes": [], "analise_bruta": texto}
+        return {"correlacoes": secoes.get("correlacoes", ""), "hipoteses": secoes.get("hipoteses", ""), "exames": secoes.get("exames", ""), "plano": secoes.get("plano", ""), "resumo": secoes.get("resumo", ""), "areas_detectadas": arquivos_adicionados, "arquivos_ignorados": ignorados, "fontes": [], "analise_bruta": texto}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

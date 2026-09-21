@@ -755,7 +755,7 @@ async function analisar() {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(dados)
     });
-    if(!r.ok) throw new Error(await r.text());
+    if(!r.ok) throw new Error(await lerErro(r));
     const data = await r.json();
     mostrarResultados(data, dados);
     salvarAnaliseAutomatico(data, dados);
@@ -766,6 +766,19 @@ async function analisar() {
     showToast('❌ Erro: '+e.message, 5000);
   }
   hideLoading();
+}
+
+// Extrai a mensagem legivel do erro do servidor ({"detail": "..."}).
+async function lerErro(r) {
+  const txt = await r.text();
+  try {
+    const j = JSON.parse(txt);
+    let d = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+    if (r.status === 413 || /request_too_large|Error code: 413/.test(d)) {
+      if (!/Remova|Muitos arquivos/.test(d)) d = 'Os exames anexados são grandes demais. Remova alguns arquivos (ou PDFs escaneados pesados) e tente de novo.';
+    }
+    return d;
+  } catch(_) { return txt; }
 }
 
 // ---- ANALISAR COM ARQUIVOS ----
@@ -779,15 +792,16 @@ async function analisarComArquivos() {
     formData.append('dados', JSON.stringify(dados));
     uploadedFiles.forEach(f => formData.append('arquivos', f));
     const r = await fetch(API+'/analisar-com-arquivos', {method:'POST', body:formData});
-    if(!r.ok) throw new Error(await r.text());
+    if(!r.ok) throw new Error(await lerErro(r));
     const data = await r.json();
     mostrarResultados(data, dados);
     salvarAnaliseAutomatico(data, dados);
         setChatContexto(JSON.stringify(data, null, 2), dados.nome || 'Paciente');
     switchTab('resultados', document.querySelectorAll('.tab')[3]);
+    if ((data.arquivos_ignorados||[]).length) showToast('⚠️ Não foi possível ler: ' + data.arquivos_ignorados.join(', '), 6000);
   } catch(e) {
     hideLoading();
-    showToast('❌ Erro: '+e.message, 5000);
+    showToast('❌ Erro: '+e.message, 8000);
   }
   hideLoading();
 }
@@ -1007,9 +1021,15 @@ function removeFile(name) { uploadedFiles=uploadedFiles.filter(f=>f.name!==name)
 function limparArquivos() { uploadedFiles=[]; renderFileList(); }
 function renderFileList() {
   const fl = document.getElementById('fileList');
+  const mb = n => (n/1024/1024).toFixed(1)+' MB';
+  const total = uploadedFiles.reduce((s,f)=>s+f.size,0);
+  const pdfs = uploadedFiles.filter(f=>f.type==='application/pdf').reduce((s,f)=>s+f.size,0);
   fl.innerHTML = uploadedFiles.map(f=>
-    `<div class="file-tag">📄 ${f.name} <button onclick="removeFile('${f.name}')">×</button></div>`
-  ).join('');
+    `<div class="file-tag">📄 ${f.name} (${mb(f.size)}) <button onclick="removeFile('${f.name}')">×</button></div>`
+  ).join('') + (uploadedFiles.length
+    ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:8px;">Total: ${mb(total)} — imagens são reduzidas automaticamente.` +
+      (pdfs > 20*1024*1024 ? ` <strong style="color:#c0392b">Atenção: PDFs somam ${mb(pdfs)} e não são reduzidos; o limite é ~27 MB.</strong>` : '') + `</div>`
+    : '');
 }
 function dragOver(e){e.preventDefault();document.getElementById('fileDrop').classList.add('dragover');}
 function dragLeave(e){document.getElementById('fileDrop').classList.remove('dragover');}
